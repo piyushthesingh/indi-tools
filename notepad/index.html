@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Word Counter — indi.tools</title>
+  <meta name="description" content="Count words, characters, and sentences instantly. Paste messy text and the roughboard strips formatting and cleans up extra blank lines. Runs entirely in your browser.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+
+  <style>
+    /* ─── RESET ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ─── TOKENS (indi.tools) ─── */
+    :root {
+      --yellow:      #00D4C2;
+      --black:       #0C0C0C;
+      --white:       #FFFFFF;
+      --green:       #009E60;
+      --gray-bg:     #F2F2F0;
+      --gray-border: #C8C8C8;
+      --muted:       #888888;
+
+      --shadow-sm:    3px 3px 0 var(--black);
+      --shadow-md:    5px 5px 0 var(--black);
+      --shadow-muted: 4px 4px 0 var(--gray-border);
+
+      --border:       2.5px solid var(--black);
+      --border-muted: 2px solid var(--gray-border);
+
+      --font:  'Space Grotesk', sans-serif;
+      --mono:  'DM Mono', monospace;
+      --max-w: 1380px;
+      --px:    clamp(1rem, 2.5vw, 1.75rem);
+    }
+
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body {
+      font-family: var(--font);
+      background: var(--gray-bg);
+      color: var(--black);
+      min-height: 100vh;
+      line-height: 1.55;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ─── HEADER ─── */
+    header {
+      background-color: var(--yellow);
+      background-image: radial-gradient(circle, rgba(0,0,0,0.14) 1.5px, transparent 1.5px);
+      background-size: 22px 22px;
+      border-bottom: var(--border);
+      padding: 0.875rem var(--px) 1rem;
+    }
+
+    .header-inner { max-width: var(--max-w); margin: 0 auto; }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: rgba(0,0,0,0.5);
+    }
+    .breadcrumb a { color: var(--black); text-decoration: none; font-weight: 500; }
+    .breadcrumb a:hover { text-decoration: underline; }
+
+    .btn-connect {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: var(--font);
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-decoration: none;
+      color: var(--black);
+      background: var(--white);
+      border: var(--border);
+      padding: 0.55rem 1.1rem;
+      box-shadow: var(--shadow-sm);
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+    .btn-connect:hover  { transform: translate(-2px,-2px); box-shadow: var(--shadow-md); }
+    .btn-connect:active { transform: translate(2px,2px); box-shadow: none; }
+
+    .page-title {
+      font-size: clamp(1.35rem, 3vw, 1.75rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 0.3rem;
+    }
+
+    .page-subtitle {
+      font-size: 0.78rem;
+      font-weight: 500;
+      line-height: 1.5;
+      white-space: nowrap;
+      margin-bottom: 0.6rem;
+    }
+
+    .header-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      font-family: var(--mono);
+      font-size: 0.67rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      padding: 0.28rem 0.6rem;
+      background: var(--black);
+      color: var(--yellow);
+      white-space: nowrap;
+    }
+
+    /* ─── MAIN — 15% breathing room each side, content in middle 70% ─── */
+    main {
+      flex: 1;
+      padding: 1.5rem 15% 3rem;
+    }
+
+    /* ─── TOOL LAYOUT — desktop: roughboard left 70%, stats right 30% ─── */
+    .tool-layout {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 1.25rem;
+      align-items: start;
+    }
+
+    /* ─── ROUGHBOARD — left column ─── */
+    .roughboard-wrap {
+      background: var(--white);
+      border: var(--border);
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .roughboard-head {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      border-bottom: var(--border);
+      flex-wrap: wrap;
+    }
+
+    .roughboard-label {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+    }
+
+    .roughboard-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      font-family: var(--font);
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.35rem 0.9rem;
+      background: var(--white);
+      color: var(--black);
+      border: var(--border);
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      white-space: nowrap;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+    .btn-action:hover  { transform: translate(-2px,-2px); box-shadow: var(--shadow-md); }
+    .btn-action:active { transform: translate(2px,2px);  box-shadow: none; }
+
+    .btn-clear {
+      display: inline-flex;
+      align-items: center;
+      font-family: var(--font);
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.35rem 0.9rem;
+      background: var(--black);
+      color: var(--white);
+      border: var(--border);
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      white-space: nowrap;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+    .btn-clear:hover  { transform: translate(-2px,-2px); box-shadow: var(--shadow-md); }
+    .btn-clear:active { transform: translate(2px,2px);  box-shadow: none; }
+
+    textarea#roughboard {
+      display: block;
+      flex: 1;
+      width: 100%;
+      min-height: 420px;
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      line-height: 1.75;
+      padding: 1.25rem 1.5rem;
+      border: none;
+      outline: none;
+      background: var(--white);
+      color: var(--black);
+      caret-color: var(--yellow);
+      resize: none;
+    }
+
+    textarea#roughboard::placeholder {
+      color: var(--gray-border);
+      font-style: italic;
+    }
+
+    .roughboard-foot {
+      flex-shrink: 0;
+      border-top: var(--border-muted);
+      padding: 0.6rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .roughboard-hint {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      color: var(--gray-border);
+    }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--green);
+      flex-shrink: 0;
+    }
+
+    .live-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse-dot 1.8s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.4; transform: scale(0.7); }
+    }
+
+    /* ─── STATS PANEL — right column, always 2×3 ─── */
+    .stats-panel {
+      position: sticky;
+      top: 1.5rem;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      border: var(--border);
+      box-shadow: var(--shadow-md);
+      background: var(--white);
+    }
+
+    .stat-card {
+      padding: 1rem 1.1rem 0.9rem;
+      border-right: var(--border);
+      border-bottom: var(--border);
+    }
+
+    /* 2-col: no right on col-2, no bottom on row-3 */
+    .stat-card:nth-child(even) { border-right: none; }
+    .stat-card:nth-child(n+5)  { border-bottom: none; }
+
+    .stat-label {
+      display: block;
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 0.45rem;
+    }
+
+    .stat-value {
+      font-size: 1.7rem;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stat-card--primary .stat-value {
+      font-size: 2.05rem;
+    }
+
+    .stat-sub {
+      font-family: var(--mono);
+      font-size: 0.58rem;
+      color: var(--gray-border);
+      margin-top: 0.3rem;
+    }
+
+    /* ─── TOAST ─── */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(1rem);
+      background: var(--black);
+      color: var(--white);
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      padding: 0.6rem 1.25rem;
+      border: var(--border);
+      box-shadow: var(--shadow-md);
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      white-space: nowrap;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+
+    .toast.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ─── FOOTER ─── */
+    footer {
+      background: var(--yellow);
+      border-top: var(--border);
+      padding: 0.875rem var(--px);
+    }
+
+    .footer-inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .footer-copy { font-family: var(--mono); font-size: 0.78rem; color: var(--black); }
+    .footer-made { font-family: var(--mono); font-size: 0.78rem; color: rgba(0,0,0,0.48); }
+
+    /* ─── MOBILE — stack: stats on top, roughboard below ─── */
+    @media (max-width: 640px) {
+      main {
+        padding: 1.25rem var(--px) 2.5rem;
+      }
+
+      .page-subtitle {
+        white-space: normal;
+        font-size: 0.82rem;
+      }
+
+      .tool-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+      }
+
+      /* swap order so stats appear above roughboard */
+      .roughboard-wrap { order: 2; }
+      .stats-panel     { order: 1; position: static; }
+
+      /* stats: 3-col across full mobile width */
+      .stats-grid { grid-template-columns: repeat(3, 1fr); }
+
+      /* reset 2-col rules */
+      .stat-card:nth-child(even) { border-right: var(--border); }
+      .stat-card:nth-child(n+5)  { border-bottom: var(--border); }
+
+      /* apply 3-col rules */
+      .stat-card:nth-child(3n)  { border-right: none; }
+      .stat-card:nth-child(n+4) { border-bottom: none; }
+
+      /* roomier sizes on full-width mobile */
+      .stat-card                       { padding: 1.1rem 1.25rem 1rem; }
+      .stat-label                      { font-size: 0.62rem; }
+      .stat-value                      { font-size: 2rem; }
+      .stat-card--primary .stat-value  { font-size: 2.4rem; }
+      .stat-sub                        { font-size: 0.62rem; }
+
+      textarea#roughboard { min-height: 300px; resize: vertical; }
+    }
+
+    /* Very small phones: 2-col stats */
+    @media (max-width: 420px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+
+      /* reset 3-col */
+      .stat-card:nth-child(3n)  { border-right: var(--border); }
+      .stat-card:nth-child(n+4) { border-bottom: var(--border); }
+
+      /* 2-col */
+      .stat-card:nth-child(even) { border-right: none; }
+      .stat-card:nth-child(n+5)  { border-bottom: none; }
+
+      .stat-value                     { font-size: 1.75rem; }
+      .stat-card--primary .stat-value { font-size: 2rem; }
+    }
+
+    @media (max-width: 380px) {
+      .roughboard-head { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══ HEADER ═══ -->
+  <header>
+    <div class="header-inner">
+      <div class="header-nav">
+        <nav class="breadcrumb">
+          <a href="/">← indi.tools</a>
+          <span>/</span>
+          <span>Word Counter</span>
+        </nav>
+        <a href="https://piyushthesingh.com" class="btn-connect" target="_blank" rel="noopener noreferrer">
+          Connect with us
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+            <path d="M2.5 10.5L10.5 2.5M10.5 2.5H4.5M10.5 2.5V8.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+      <h1 class="page-title">Word Counter</h1>
+      <p class="page-subtitle">Paste messy text from anywhere — Word, email, the web. Formatting is stripped, extra blank lines are collapsed, counts update live.</p>
+      <div class="header-tags">
+        <span class="tag">✦ Paste &amp; go</span>
+        <span class="tag">⚡ Live counts</span>
+        <span class="tag">🔒 In-browser only</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══ MAIN ═══ -->
+  <main>
+    <div class="tool-layout">
+
+      <!-- LEFT ~70%: Roughboard -->
+      <div class="roughboard-wrap">
+        <div class="roughboard-head">
+          <span class="roughboard-label">Roughboard — paste anything</span>
+          <div class="roughboard-actions">
+            <button class="btn-action" onclick="cleanText()" title="Collapse extra blank lines and trim trailing spaces">
+              Clean up
+            </button>
+            <button class="btn-action" onclick="copyText()">
+              Copy text
+            </button>
+            <button class="btn-clear" onclick="clearAll()">
+              Clear
+            </button>
+          </div>
+        </div>
+
+        <textarea
+          id="roughboard"
+          placeholder="Paste or type here…&#10;&#10;Rich text from Word, Google Docs, email, or the web is automatically converted to plain text. Extra blank lines are collapsed on paste."
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck="true"
+          aria-label="Text input area"
+        ></textarea>
+
+        <div class="roughboard-foot">
+          <span class="roughboard-hint">Tip: Pasting from any source strips fonts, colours, and size differences automatically.</span>
+          <span class="live-badge"><span class="live-dot"></span> Live</span>
+        </div>
+      </div>
+
+      <!-- RIGHT ~30%: Stats — 2 columns × 3 rows -->
+      <div class="stats-panel">
+        <div class="stats-grid" role="region" aria-label="Text statistics">
+
+          <div class="stat-card stat-card--primary">
+            <span class="stat-label">Words</span>
+            <div class="stat-value" id="stat-words">0</div>
+          </div>
+
+          <div class="stat-card stat-card--primary">
+            <span class="stat-label">Characters</span>
+            <div class="stat-value" id="stat-chars">0</div>
+            <div class="stat-sub">incl. spaces</div>
+          </div>
+
+          <div class="stat-card stat-card--primary">
+            <span class="stat-label">Sentences</span>
+            <div class="stat-value" id="stat-sentences">0</div>
+          </div>
+
+          <div class="stat-card">
+            <span class="stat-label">No-space chars</span>
+            <div class="stat-value" id="stat-nospace">0</div>
+          </div>
+
+          <div class="stat-card">
+            <span class="stat-label">Paragraphs</span>
+            <div class="stat-value" id="stat-paragraphs">0</div>
+          </div>
+
+          <div class="stat-card">
+            <span class="stat-label">Reading time</span>
+            <div class="stat-value" id="stat-readtime">—</div>
+            <div class="stat-sub">at 200 wpm</div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ═══ FOOTER ═══ -->
+  <footer>
+    <div class="footer-inner">
+      <span class="footer-copy">© 2026 indi.tools</span>
+      <span class="footer-made">Built with care in India 🇮🇳</span>
+    </div>
+  </footer>
+
+  <!-- Toast -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+  // ─────────────────────────────────────────────────────────────
+  //  COUNTING
+  // ─────────────────────────────────────────────────────────────
+
+  function countWords(text) {
+    const t = text.trim();
+    if (!t) return 0;
+    return t.split(/\s+/).length;
+  }
+
+  function countSentences(text) {
+    const t = text.trim();
+    if (!t) return 0;
+    const matches = t.match(/[.!?]+/g);
+    if (!matches) return 1;
+    return matches.length;
+  }
+
+  function countParagraphs(text) {
+    const t = text.trim();
+    if (!t) return 0;
+    return t.split(/\n\s*\n+/).filter(p => p.trim().length > 0).length;
+  }
+
+  function readingTime(words) {
+    if (words === 0) return '—';
+    const mins = words / 200;
+    if (mins < 1) return '< 1 min';
+    return `${Math.ceil(mins)} min`;
+  }
+
+  function fmt(n) {
+    return n.toLocaleString('en-IN');
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  UPDATE STATS
+  // ─────────────────────────────────────────────────────────────
+
+  function updateStats() {
+    const text = document.getElementById('roughboard').value;
+
+    const words      = countWords(text);
+    const chars      = text.length;
+    const nospace    = text.replace(/\s/g, '').length;
+    const sentences  = countSentences(text);
+    const paragraphs = countParagraphs(text);
+    const rt         = readingTime(words);
+
+    document.getElementById('stat-words').textContent      = fmt(words);
+    document.getElementById('stat-chars').textContent      = fmt(chars);
+    document.getElementById('stat-nospace').textContent    = fmt(nospace);
+    document.getElementById('stat-sentences').textContent  = fmt(sentences);
+    document.getElementById('stat-paragraphs').textContent = fmt(paragraphs);
+    document.getElementById('stat-readtime').textContent   = rt;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  PASTE — strip rich text, clean up blank lines
+  // ─────────────────────────────────────────────────────────────
+
+  const ta = document.getElementById('roughboard');
+
+  ta.addEventListener('paste', function(e) {
+    e.preventDefault();
+
+    // Plain text only — strips all rich formatting (fonts, sizes, colours)
+    const raw = (e.clipboardData || window.clipboardData).getData('text/plain');
+    const cleaned = normalise(raw);
+
+    const start = this.selectionStart;
+    const end   = this.selectionEnd;
+    this.value  = this.value.substring(0, start) + cleaned + this.value.substring(end);
+
+    const newPos = start + cleaned.length;
+    this.setSelectionRange(newPos, newPos);
+
+    updateStats();
+  });
+
+  ta.addEventListener('input', updateStats);
+
+  function normalise(text) {
+    return text
+      .split('\n')
+      .map(line => line.trimEnd())
+      .join('\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  ACTIONS
+  // ─────────────────────────────────────────────────────────────
+
+  function cleanText() {
+    if (!ta.value.trim()) return;
+    ta.value = normalise(ta.value);
+    updateStats();
+    showToast('Cleaned up');
+  }
+
+  function copyText() {
+    if (!ta.value.trim()) { showToast('Nothing to copy'); return; }
+    navigator.clipboard.writeText(ta.value).then(() => {
+      showToast('Copied to clipboard');
+    }).catch(() => {
+      ta.select();
+      document.execCommand('copy');
+      showToast('Copied');
+    });
+  }
+
+  function clearAll() {
+    ta.value = '';
+    updateStats();
+    ta.focus();
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  TOAST
+  // ─────────────────────────────────────────────────────────────
+
+  let toastTimer = null;
+
+  function showToast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('visible'), 2000);
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  KEYBOARD SHORTCUT — Cmd/Ctrl+Shift+K to clean
+  // ─────────────────────────────────────────────────────────────
+
+  document.addEventListener('keydown', function(e) {
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'K') {
+      e.preventDefault();
+      cleanText();
+    }
+  });
+</script>
+
+</body>
+</html>
