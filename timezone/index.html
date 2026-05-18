@@ -1,1 +1,1522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Timezone Converter — indi.tools</title>
+  <meta name="description" content="Compare any two timezones instantly. Auto-detects your location. Live analog clocks, editable times. Runs entirely in your browser.">
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+
+  <style>
+    /* ─── RESET ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ─── TOKENS (indi.tools) ─── */
+    :root {
+      --yellow:      #00D4C2;
+      --black:       #0C0C0C;
+      --white:       #FFFFFF;
+      --green:       #009E60;
+      --red:         #C0392B;
+      --gray-bg:     #F2F2F0;
+      --gray-border: #C8C8C8;
+      --muted:       #888888;
+
+      --shadow-sm:   3px 3px 0 var(--black);
+      --shadow-md:   5px 5px 0 var(--black);
+      --shadow-muted:4px 4px 0 var(--gray-border);
+
+      --border:      2.5px solid var(--black);
+      --border-muted:2px solid var(--gray-border);
+
+      --font:  'Space Grotesk', sans-serif;
+      --mono:  'DM Mono', monospace;
+      --max-w: 900px;
+      --px:    clamp(1.25rem, 5vw, 2.5rem);
+    }
+
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body {
+      font-family: var(--font);
+      background: var(--gray-bg);
+      color: var(--black);
+      min-height: 100vh;
+      line-height: 1.55;
+    }
+
+    /* ─── HEADER ─── */
+    header {
+      background-color: var(--yellow);
+      background-image: radial-gradient(circle, rgba(0,0,0,0.14) 1.5px, transparent 1.5px);
+      background-size: 22px 22px;
+      border-bottom: var(--border);
+      padding: clamp(1.5rem, 4vw, 2.5rem) var(--px);
+    }
+
+    .header-inner { max-width: var(--max-w); margin: 0 auto; }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.1rem;
+      flex-wrap: wrap;
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: rgba(0,0,0,0.5);
+    }
+    .breadcrumb a { color: var(--black); text-decoration: none; font-weight: 500; }
+    .breadcrumb a:hover { text-decoration: underline; }
+
+    .btn-connect {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: var(--font);
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-decoration: none;
+      color: var(--black);
+      background: var(--white);
+      border: var(--border);
+      padding: 0.55rem 1.1rem;
+      box-shadow: var(--shadow-sm);
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+    .btn-connect:hover  { transform: translate(-2px,-2px); box-shadow: var(--shadow-md); }
+    .btn-connect:active { transform: translate(2px,2px); box-shadow: none; }
+
+    .page-title {
+      font-size: clamp(1.75rem, 5vw, 2.4rem);
+      font-weight: 700;
+      letter-spacing: -0.035em;
+      line-height: 1.1;
+      margin-bottom: 0.5rem;
+    }
+
+    .page-subtitle {
+      font-size: 0.875rem;
+      font-weight: 500;
+      line-height: 1.55;
+      max-width: 480px;
+      margin-bottom: 1rem;
+    }
+
+    .header-tags { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      font-family: var(--mono);
+      font-size: 0.67rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      padding: 0.28rem 0.6rem;
+      background: var(--black);
+      color: var(--yellow);
+      white-space: nowrap;
+    }
+
+    /* ─── MAIN ─── */
+    main {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 2rem var(--px) 4rem;
+    }
+
+    /* ─── CUSTOM MODE BANNER ─── */
+    .custom-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      background: var(--black);
+      color: var(--white);
+      padding: 0.75rem 1.1rem;
+      border: var(--border);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .custom-banner__text {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.75);
+    }
+    .custom-banner__text strong { color: var(--yellow); }
+
+    .btn-reset {
+      font-family: var(--font);
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.4rem 0.9rem;
+      background: var(--yellow);
+      color: var(--black);
+      border: 2px solid var(--yellow);
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+      box-shadow: 2px 2px 0 var(--yellow);
+      white-space: nowrap;
+    }
+    .btn-reset:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 rgba(0,212,194,0.6); }
+
+    /* ─── COMPARISON GRID ─── */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      align-items: start;
+    }
+
+    @media (max-width: 640px) {
+      .compare-grid { grid-template-columns: 1fr; }
+      .diff-col { order: 3; }
+    }
+
+    /* ─── CLOCK CARD ─── */
+    .clock-card {
+      background: var(--white);
+      border: var(--border);
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .clock-card__head {
+      padding: 0.75rem 1rem;
+      border-bottom: var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .clock-card__label {
+      font-family: var(--mono);
+      font-size: 0.67rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+    }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--green);
+    }
+
+    .live-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse-dot 1.8s ease-in-out infinite;
+    }
+
+    .custom-badge {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--yellow);
+      background: var(--black);
+      padding: 0.15rem 0.4rem;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.4; transform: scale(0.7); }
+    }
+
+    .clock-card__body { padding: 1.25rem 1rem 0; }
+
+    /* City name button */
+    .city-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      width: 100%;
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+      padding: 0;
+      margin-bottom: 1rem;
+      font-family: var(--font);
+    }
+
+    .city-btn__flag { font-size: 1.4rem; line-height: 1; flex-shrink: 0; }
+
+    .city-btn__text { flex: 1; min-width: 0; }
+    .city-btn__name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--black);
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .city-btn__name svg { opacity: 0.4; flex-shrink: 0; }
+    .city-btn:hover .city-btn__name svg { opacity: 1; }
+
+    .city-btn__country {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--muted);
+    }
+
+    /* Analog clock canvas */
+    .clock-face-wrap {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    canvas {
+      display: block;
+      margin: 0 auto;
+      border-radius: 50%;
+      border: var(--border);
+      background: var(--white);
+      width: 168px;
+      height: 168px;
+    }
+
+    /* Digital time */
+    .digital-time {
+      text-align: center;
+      margin-bottom: 0.25rem;
+    }
+
+    .digital-time__main {
+      font-size: 2.1rem;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .digital-time__ampm {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-left: 0.2rem;
+    }
+
+    .digital-time__date {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-align: center;
+      margin-bottom: 0.15rem;
+    }
+
+    .digital-time__tz {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--gray-border);
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    /* Time input row */
+    .time-input-area {
+      border-top: var(--border);
+      padding: 0.875rem 1rem;
+    }
+
+    .time-input-label {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .time-inputs {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .time-inputs input[type="number"] {
+      width: 52px;
+      font-family: var(--mono);
+      font-size: 1.2rem;
+      font-weight: 500;
+      text-align: center;
+      padding: 0.4rem 0.2rem;
+      border: var(--border);
+      background: var(--white);
+      color: var(--black);
+      outline: none;
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+    .time-inputs input[type="number"]::-webkit-outer-spin-button,
+    .time-inputs input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .time-inputs input[type="number"]:focus { box-shadow: 0 0 0 3px rgba(0,212,194,0.3); }
+
+    .time-sep {
+      font-family: var(--mono);
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--muted);
+      line-height: 1;
+    }
+
+    .ampm-btn {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      font-weight: 500;
+      padding: 0.4rem 0.6rem;
+      border: var(--border);
+      background: var(--gray-bg);
+      color: var(--black);
+      cursor: pointer;
+      transition: background 0.1s, color 0.1s;
+      letter-spacing: 0.05em;
+      margin-left: 0.2rem;
+    }
+    .ampm-btn.active { background: var(--black); color: var(--white); }
+    .ampm-btn:hover:not(.active) { background: var(--gray-border); }
+
+    /* ─── DIFF COLUMN ─── */
+    .diff-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding-top: 3.5rem;
+      min-width: 100px;
+    }
+
+    @media (max-width: 640px) {
+      .diff-col {
+        padding-top: 0;
+        flex-direction: row;
+        justify-content: center;
+        min-width: unset;
+      }
+    }
+
+    .diff-box {
+      background: var(--white);
+      border: var(--border);
+      box-shadow: var(--shadow-sm);
+      padding: 0.875rem 0.75rem;
+      text-align: center;
+      width: 100%;
+    }
+
+    .diff-box__hours {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+      margin-bottom: 0.15rem;
+    }
+
+    .diff-box__dir {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .diff-box__desc {
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.45;
+      margin-top: 0.4rem;
+    }
+
+    .diff-same {
+      background: var(--yellow);
+      border: var(--border);
+      padding: 0.6rem 0.75rem;
+      text-align: center;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .diff-arrows {
+      font-size: 1.1rem;
+      color: var(--gray-border);
+      font-family: var(--mono);
+    }
+
+    /* ─── SECTION LABEL ─── */
+    .section-label {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      border-bottom: var(--border);
+      padding-bottom: 0.7rem;
+      margin-bottom: 1rem;
+    }
+
+    /* ─── QUICK CITIES ─── */
+    .quick-section { margin-bottom: 2rem; }
+
+    .quick-cities {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .quick-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-family: var(--font);
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.45rem 0.9rem;
+      background: var(--white);
+      border: var(--border);
+      box-shadow: var(--shadow-muted);
+      border-color: var(--gray-border);
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s;
+      color: var(--black);
+    }
+    .quick-chip:hover  { transform: translate(-2px,-2px); box-shadow: 5px 5px 0 var(--gray-border); background: var(--gray-bg); }
+    .quick-chip:active { transform: translate(1px,1px); box-shadow: none; }
+    .quick-chip__flag  { font-size: 1rem; }
+
+    /* ─── WORLD CLOCK LIST ─── */
+    .world-section { margin-bottom: 2rem; }
+
+    .world-list { display: flex; flex-direction: column; gap: 0; }
+
+    .world-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.875rem 1rem;
+      background: var(--white);
+      border: var(--border);
+      border-bottom: none;
+    }
+    .world-row:last-child { border-bottom: var(--border); }
+
+    .world-row__flag { font-size: 1.2rem; flex-shrink: 0; }
+
+    .world-row__info { flex: 1; min-width: 0; }
+    .world-row__city {
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .world-row__country {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      color: var(--muted);
+    }
+
+    .world-row__time-group { text-align: right; flex-shrink: 0; }
+    .world-row__time {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+    }
+    .world-row__meta {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      color: var(--muted);
+    }
+
+    .world-row__offset {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      font-weight: 500;
+      padding: 0.15rem 0.45rem;
+      background: var(--gray-bg);
+      border: var(--border-muted);
+      color: var(--muted);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* 24h timeline bar */
+    .world-row__bar {
+      width: 90px;
+      height: 8px;
+      background: var(--gray-bg);
+      border: 1.5px solid var(--gray-border);
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .world-row__bar-fill {
+      position: absolute;
+      top: 0; height: 100%;
+      background: var(--yellow);
+      opacity: 0.6;
+    }
+
+    .world-row__bar-cursor {
+      position: absolute;
+      top: 0;
+      width: 2px;
+      height: 100%;
+      background: var(--black);
+    }
+
+    .world-row__remove {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: var(--gray-border);
+      padding: 0.2rem;
+      flex-shrink: 0;
+      transition: color 0.1s;
+      line-height: 1;
+      font-family: var(--mono);
+    }
+    .world-row__remove:hover { color: var(--red); }
+
+    /* Add city button */
+    .btn-add-city {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 0.875rem 1rem;
+      background: var(--gray-bg);
+      border: var(--border-muted);
+      border-top: none;
+      cursor: pointer;
+      font-family: var(--font);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+      transition: background 0.1s, color 0.1s;
+    }
+    .btn-add-city:hover { background: var(--white); color: var(--black); }
+
+    /* ─── TIMEZONE DROPDOWN ─── */
+    .tz-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 200;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    .tz-panel {
+      background: var(--white);
+      border: var(--border);
+      box-shadow: var(--shadow-md);
+      width: 100%;
+      max-width: 440px;
+      max-height: 70vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tz-panel__head {
+      padding: 0.875rem 1rem;
+      border-bottom: var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .tz-panel__title {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      font-weight: 500;
+    }
+
+    .tz-panel__close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.1rem;
+      line-height: 1;
+      color: var(--muted);
+      padding: 0.1rem 0.2rem;
+      font-family: var(--mono);
+    }
+    .tz-panel__close:hover { color: var(--black); }
+
+    .tz-search {
+      padding: 0.75rem 1rem;
+      border-bottom: var(--border);
+    }
+
+    .tz-search input {
+      width: 100%;
+      font-family: var(--font);
+      font-size: 0.9rem;
+      padding: 0.55rem 0.75rem;
+      border: var(--border);
+      background: var(--gray-bg);
+      color: var(--black);
+      outline: none;
+    }
+    .tz-search input:focus { box-shadow: 0 0 0 3px rgba(0,212,194,0.3); }
+    .tz-search input::placeholder { color: var(--gray-border); font-family: var(--mono); font-size: 0.82rem; }
+
+    .tz-list {
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .tz-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      border-bottom: 1.5px solid var(--gray-bg);
+      transition: background 0.08s;
+    }
+    .tz-item:hover { background: var(--gray-bg); }
+    .tz-item:last-child { border-bottom: none; }
+
+    .tz-item__flag { font-size: 1.1rem; flex-shrink: 0; }
+    .tz-item__name { flex: 1; font-size: 0.875rem; font-weight: 600; }
+    .tz-item__country { font-family: var(--mono); font-size: 0.62rem; color: var(--muted); }
+    .tz-item__time { font-family: var(--mono); font-size: 0.78rem; color: var(--muted); white-space: nowrap; }
+
+    .tz-empty {
+      padding: 2rem 1rem;
+      text-align: center;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    /* ─── FOOTER ─── */
+    footer {
+      background: var(--yellow);
+      border-top: var(--border);
+      padding: 1.25rem var(--px);
+    }
+
+    .footer-inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .footer-copy { font-family: var(--mono); font-size: 0.78rem; color: var(--black); }
+    .footer-made { font-family: var(--mono); font-size: 0.78rem; color: rgba(0,0,0,0.48); }
+
+    /* ─── UTILS ─── */
+    .hidden { display: none !important; }
+
+    @media (max-width: 480px) {
+      canvas { width: 140px; height: 140px; }
+      .world-row__bar { display: none; }
+      .digital-time__main { font-size: 1.75rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══ HEADER ═══ -->
+  <header>
+    <div class="header-inner">
+      <div class="header-nav">
+        <nav class="breadcrumb">
+          <a href="/">← indi.tools</a>
+          <span>/</span>
+          <span>Timezone Converter</span>
+        </nav>
+        <a href="https://piyushthesingh.com" class="btn-connect" target="_blank" rel="noopener noreferrer">
+          Connect with us
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+            <path d="M2.5 10.5L10.5 2.5M10.5 2.5H4.5M10.5 2.5V8.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+      <h1 class="page-title">Timezone Converter</h1>
+      <p class="page-subtitle">Compare any two timezones with live clocks. Auto-detects your location. Edit times to see instant conversions.</p>
+      <div class="header-tags">
+        <span class="tag">🌍 Auto-detect</span>
+        <span class="tag">⚡ Real-time</span>
+        <span class="tag">🔒 In-browser only</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- Custom time mode banner -->
+    <div id="custom-banner" class="custom-banner hidden">
+      <div class="custom-banner__text">
+        <strong>Custom time mode</strong> — clocks are frozen. Edit either time input to convert.
+      </div>
+      <button class="btn-reset" onclick="resetToLive()">↺ Back to live</button>
+    </div>
+
+    <!-- ═══ COMPARISON CLOCKS ═══ -->
+    <div class="compare-grid">
+
+      <!-- LEFT CLOCK -->
+      <div class="clock-card" id="card-left">
+        <div class="clock-card__head">
+          <span class="clock-card__label">Your location</span>
+          <span class="live-badge" id="badge-left"><span class="live-dot"></span> Live</span>
+        </div>
+        <div class="clock-card__body">
+          <button class="city-btn" onclick="openDropdown('left')" id="city-btn-left">
+            <span class="city-btn__flag" id="flag-left">🌍</span>
+            <span class="city-btn__text">
+              <span class="city-btn__name" id="city-name-left">
+                Detecting…
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+              <span class="city-btn__country" id="city-country-left"></span>
+            </span>
+          </button>
+          <div class="clock-face-wrap">
+            <canvas id="canvas-left" width="168" height="168"></canvas>
+          </div>
+          <div class="digital-time">
+            <div class="digital-time__main">
+              <span id="dig-time-left">--:--</span><span class="digital-time__ampm" id="dig-ampm-left"></span>
+            </div>
+          </div>
+          <div class="digital-time__date" id="dig-date-left">---</div>
+          <div class="digital-time__tz" id="dig-tz-left">---</div>
+        </div>
+        <div class="time-input-area">
+          <div class="time-input-label">Edit time to convert</div>
+          <div class="time-inputs">
+            <input type="number" id="inp-h-left"  min="1" max="12" placeholder="HH" oninput="onTimeInput('left')">
+            <span class="time-sep">:</span>
+            <input type="number" id="inp-m-left"  min="0" max="59" placeholder="MM" oninput="onTimeInput('left')">
+            <button class="ampm-btn active" id="ampm-left" onclick="toggleAmPm('left')">AM</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- DIFF COLUMN -->
+      <div class="diff-col" id="diff-col">
+        <div class="diff-box" id="diff-box">
+          <div class="diff-box__hours" id="diff-hours">—</div>
+          <div class="diff-box__dir"   id="diff-dir">ahead</div>
+          <div class="diff-box__desc"  id="diff-desc"></div>
+        </div>
+        <div class="diff-arrows" id="diff-arrows">↕</div>
+      </div>
+
+      <!-- RIGHT CLOCK -->
+      <div class="clock-card" id="card-right">
+        <div class="clock-card__head">
+          <span class="clock-card__label">Compare with</span>
+          <span class="live-badge" id="badge-right"><span class="live-dot"></span> Live</span>
+        </div>
+        <div class="clock-card__body">
+          <button class="city-btn" onclick="openDropdown('right')" id="city-btn-right">
+            <span class="city-btn__flag" id="flag-right">🌍</span>
+            <span class="city-btn__text">
+              <span class="city-btn__name" id="city-name-right">
+                Select city
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+              <span class="city-btn__country" id="city-country-right"></span>
+            </span>
+          </button>
+          <div class="clock-face-wrap">
+            <canvas id="canvas-right" width="168" height="168"></canvas>
+          </div>
+          <div class="digital-time">
+            <div class="digital-time__main">
+              <span id="dig-time-right">--:--</span><span class="digital-time__ampm" id="dig-ampm-right"></span>
+            </div>
+          </div>
+          <div class="digital-time__date" id="dig-date-right">---</div>
+          <div class="digital-time__tz"   id="dig-tz-right">---</div>
+        </div>
+        <div class="time-input-area">
+          <div class="time-input-label">Edit time to convert</div>
+          <div class="time-inputs">
+            <input type="number" id="inp-h-right" min="1" max="12" placeholder="HH" oninput="onTimeInput('right')">
+            <span class="time-sep">:</span>
+            <input type="number" id="inp-m-right" min="0" max="59" placeholder="MM" oninput="onTimeInput('right')">
+            <button class="ampm-btn active" id="ampm-right" onclick="toggleAmPm('right')">AM</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /compare-grid -->
+
+    <!-- ═══ QUICK CITIES ═══ -->
+    <div class="quick-section">
+      <div class="section-label">Quick add to compare</div>
+      <div class="quick-cities" id="quick-cities"></div>
+    </div>
+
+    <!-- ═══ WORLD CLOCK LIST ═══ -->
+    <div class="world-section">
+      <div class="section-label">World clocks</div>
+      <div class="world-list" id="world-list"></div>
+      <button class="btn-add-city" onclick="openDropdown('world')">
+        + Add another city
+      </button>
+    </div>
+
+  </main>
+
+  <!-- ═══ FOOTER ═══ -->
+  <footer>
+    <div class="footer-inner">
+      <span class="footer-copy">© 2026 indi.tools</span>
+      <span class="footer-made">Built with care in India 🇮🇳</span>
+    </div>
+  </footer>
+
+  <!-- ═══ TIMEZONE DROPDOWN ═══ -->
+  <div id="tz-overlay" class="tz-overlay hidden" onclick="onOverlayClick(event)">
+    <div class="tz-panel" onclick="event.stopPropagation()">
+      <div class="tz-panel__head">
+        <span class="tz-panel__title" id="tz-panel-title">Select timezone</span>
+        <button class="tz-panel__close" onclick="closeDropdown()">✕</button>
+      </div>
+      <div class="tz-search">
+        <input type="text" id="tz-search-input" placeholder="Search city or country…" oninput="filterDropdown(this.value)" autocomplete="off">
+      </div>
+      <div class="tz-list" id="tz-list"></div>
+    </div>
+  </div>
+
+<script>
+  // ─────────────────────────────────────────────────────────────
+  //  TIMEZONE DATA
+  // ─────────────────────────────────────────────────────────────
+  const TZ_DATA = [
+    // Americas
+    { city:"New York",      country:"USA",          flag:"🇺🇸", tz:"America/New_York"                    },
+    { city:"Los Angeles",   country:"USA",          flag:"🇺🇸", tz:"America/Los_Angeles"                 },
+    { city:"Chicago",       country:"USA",          flag:"🇺🇸", tz:"America/Chicago"                     },
+    { city:"Denver",        country:"USA",          flag:"🇺🇸", tz:"America/Denver"                      },
+    { city:"Phoenix",       country:"USA",          flag:"🇺🇸", tz:"America/Phoenix"                     },
+    { city:"Anchorage",     country:"USA",          flag:"🇺🇸", tz:"America/Anchorage"                   },
+    { city:"Honolulu",      country:"USA",          flag:"🇺🇸", tz:"Pacific/Honolulu"                    },
+    { city:"Toronto",       country:"Canada",       flag:"🇨🇦", tz:"America/Toronto"                     },
+    { city:"Vancouver",     country:"Canada",       flag:"🇨🇦", tz:"America/Vancouver"                   },
+    { city:"Montreal",      country:"Canada",       flag:"🇨🇦", tz:"America/Montreal"                    },
+    { city:"São Paulo",     country:"Brazil",       flag:"🇧🇷", tz:"America/Sao_Paulo"                   },
+    { city:"Buenos Aires",  country:"Argentina",    flag:"🇦🇷", tz:"America/Argentina/Buenos_Aires"      },
+    { city:"Mexico City",   country:"Mexico",       flag:"🇲🇽", tz:"America/Mexico_City"                 },
+    { city:"Bogotá",        country:"Colombia",     flag:"🇨🇴", tz:"America/Bogota"                      },
+    { city:"Santiago",      country:"Chile",        flag:"🇨🇱", tz:"America/Santiago"                    },
+    { city:"Lima",          country:"Peru",         flag:"🇵🇪", tz:"America/Lima"                        },
+    // Europe
+    { city:"London",        country:"UK",           flag:"🇬🇧", tz:"Europe/London"                       },
+    { city:"Paris",         country:"France",       flag:"🇫🇷", tz:"Europe/Paris"                        },
+    { city:"Berlin",        country:"Germany",      flag:"🇩🇪", tz:"Europe/Berlin"                       },
+    { city:"Madrid",        country:"Spain",        flag:"🇪🇸", tz:"Europe/Madrid"                       },
+    { city:"Rome",          country:"Italy",        flag:"🇮🇹", tz:"Europe/Rome"                         },
+    { city:"Amsterdam",     country:"Netherlands",  flag:"🇳🇱", tz:"Europe/Amsterdam"                    },
+    { city:"Zurich",        country:"Switzerland",  flag:"🇨🇭", tz:"Europe/Zurich"                       },
+    { city:"Stockholm",     country:"Sweden",       flag:"🇸🇪", tz:"Europe/Stockholm"                    },
+    { city:"Copenhagen",    country:"Denmark",      flag:"🇩🇰", tz:"Europe/Copenhagen"                   },
+    { city:"Helsinki",      country:"Finland",      flag:"🇫🇮", tz:"Europe/Helsinki"                     },
+    { city:"Warsaw",        country:"Poland",       flag:"🇵🇱", tz:"Europe/Warsaw"                       },
+    { city:"Vienna",        country:"Austria",      flag:"🇦🇹", tz:"Europe/Vienna"                       },
+    { city:"Prague",        country:"Czech Rep.",   flag:"🇨🇿", tz:"Europe/Prague"                       },
+    { city:"Lisbon",        country:"Portugal",     flag:"🇵🇹", tz:"Europe/Lisbon"                       },
+    { city:"Athens",        country:"Greece",       flag:"🇬🇷", tz:"Europe/Athens"                       },
+    { city:"Istanbul",      country:"Turkey",       flag:"🇹🇷", tz:"Europe/Istanbul"                     },
+    { city:"Moscow",        country:"Russia",       flag:"🇷🇺", tz:"Europe/Moscow"                       },
+    { city:"Dublin",        country:"Ireland",      flag:"🇮🇪", tz:"Europe/Dublin"                       },
+    { city:"Brussels",      country:"Belgium",      flag:"🇧🇪", tz:"Europe/Brussels"                     },
+    // Asia
+    { city:"Dubai",         country:"UAE",          flag:"🇦🇪", tz:"Asia/Dubai"                          },
+    { city:"Riyadh",        country:"Saudi Arabia", flag:"🇸🇦", tz:"Asia/Riyadh"                         },
+    { city:"Tel Aviv",      country:"Israel",       flag:"🇮🇱", tz:"Asia/Jerusalem"                      },
+    { city:"Tehran",        country:"Iran",         flag:"🇮🇷", tz:"Asia/Tehran"                         },
+    { city:"Karachi",       country:"Pakistan",     flag:"🇵🇰", tz:"Asia/Karachi"                        },
+    { city:"Mumbai",        country:"India",        flag:"🇮🇳", tz:"Asia/Kolkata"                        },
+    { city:"New Delhi",     country:"India",        flag:"🇮🇳", tz:"Asia/Kolkata"                        },
+    { city:"Bangalore",     country:"India",        flag:"🇮🇳", tz:"Asia/Kolkata"                        },
+    { city:"Kolkata",       country:"India",        flag:"🇮🇳", tz:"Asia/Kolkata"                        },
+    { city:"Dhaka",         country:"Bangladesh",   flag:"🇧🇩", tz:"Asia/Dhaka"                          },
+    { city:"Colombo",       country:"Sri Lanka",    flag:"🇱🇰", tz:"Asia/Colombo"                        },
+    { city:"Kathmandu",     country:"Nepal",        flag:"🇳🇵", tz:"Asia/Kathmandu"                      },
+    { city:"Bangkok",       country:"Thailand",     flag:"🇹🇭", tz:"Asia/Bangkok"                        },
+    { city:"Jakarta",       country:"Indonesia",    flag:"🇮🇩", tz:"Asia/Jakarta"                        },
+    { city:"Kuala Lumpur",  country:"Malaysia",     flag:"🇲🇾", tz:"Asia/Kuala_Lumpur"                   },
+    { city:"Singapore",     country:"Singapore",    flag:"🇸🇬", tz:"Asia/Singapore"                      },
+    { city:"Hong Kong",     country:"China",        flag:"🇭🇰", tz:"Asia/Hong_Kong"                      },
+    { city:"Shanghai",      country:"China",        flag:"🇨🇳", tz:"Asia/Shanghai"                       },
+    { city:"Beijing",       country:"China",        flag:"🇨🇳", tz:"Asia/Shanghai"                       },
+    { city:"Seoul",         country:"S. Korea",     flag:"🇰🇷", tz:"Asia/Seoul"                          },
+    { city:"Tokyo",         country:"Japan",        flag:"🇯🇵", tz:"Asia/Tokyo"                          },
+    { city:"Taipei",        country:"Taiwan",       flag:"🇹🇼", tz:"Asia/Taipei"                         },
+    { city:"Manila",        country:"Philippines",  flag:"🇵🇭", tz:"Asia/Manila"                         },
+    { city:"Ho Chi Minh",   country:"Vietnam",      flag:"🇻🇳", tz:"Asia/Ho_Chi_Minh"                    },
+    { city:"Yangon",        country:"Myanmar",      flag:"🇲🇲", tz:"Asia/Yangon"                         },
+    // Africa
+    { city:"Cairo",         country:"Egypt",        flag:"🇪🇬", tz:"Africa/Cairo"                        },
+    { city:"Nairobi",       country:"Kenya",        flag:"🇰🇪", tz:"Africa/Nairobi"                      },
+    { city:"Lagos",         country:"Nigeria",      flag:"🇳🇬", tz:"Africa/Lagos"                        },
+    { city:"Johannesburg",  country:"S. Africa",    flag:"🇿🇦", tz:"Africa/Johannesburg"                 },
+    { city:"Casablanca",    country:"Morocco",      flag:"🇲🇦", tz:"Africa/Casablanca"                   },
+    { city:"Addis Ababa",   country:"Ethiopia",     flag:"🇪🇹", tz:"Africa/Addis_Ababa"                  },
+    { city:"Accra",         country:"Ghana",        flag:"🇬🇭", tz:"Africa/Accra"                        },
+    // Oceania
+    { city:"Sydney",        country:"Australia",    flag:"🇦🇺", tz:"Australia/Sydney"                    },
+    { city:"Melbourne",     country:"Australia",    flag:"🇦🇺", tz:"Australia/Melbourne"                  },
+    { city:"Brisbane",      country:"Australia",    flag:"🇦🇺", tz:"Australia/Brisbane"                   },
+    { city:"Perth",         country:"Australia",    flag:"🇦🇺", tz:"Australia/Perth"                      },
+    { city:"Auckland",      country:"New Zealand",  flag:"🇳🇿", tz:"Pacific/Auckland"                    },
+  ];
+
+  const QUICK_CITIES = ["New York","London","Tokyo","Dubai","Singapore","Sydney","Los Angeles","Paris","Mumbai","São Paulo"];
+
+  // ─────────────────────────────────────────────────────────────
+  //  STATE
+  // ─────────────────────────────────────────────────────────────
+  const state = {
+    left:         null,    // { city, country, flag, tz }
+    right:        null,
+    customTime:   null,    // null = live | { h24Left, minLeft, h24Right, minRight }
+    worldClocks:  [],      // [{ city, country, flag, tz }, ...]
+    openDropdown: null,    // 'left' | 'right' | 'world'
+  };
+
+  // ─────────────────────────────────────────────────────────────
+  //  UTILITIES
+  // ─────────────────────────────────────────────────────────────
+
+  function getTimeInTZ(tz) {
+    const now = new Date();
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: tz, hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
+    }).formatToParts(now);
+    return {
+      h24: parseInt(parts.find(p => p.type === 'hour').value),
+      min: parseInt(parts.find(p => p.type === 'minute').value),
+      sec: parseInt(parts.find(p => p.type === 'second').value),
+      ms:  now.getMilliseconds(),
+    };
+  }
+
+  function getUTCOffsetMins(tz) {
+    const now = new Date();
+    const ref = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 12, 0, 0));
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: tz, hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+    }).formatToParts(ref);
+    const h = parseInt(parts.find(p => p.type === 'hour').value);
+    const m = parseInt(parts.find(p => p.type === 'minute').value);
+    let offset = (h * 60 + m) - 720;
+    if (offset > 720)  offset -= 1440;
+    if (offset < -720) offset += 1440;
+    return offset;
+  }
+
+  function formatOffset(mins) {
+    const sign = mins >= 0 ? '+' : '−';
+    const abs  = Math.abs(mins);
+    const h    = Math.floor(abs / 60);
+    const m    = abs % 60;
+    return m === 0 ? `UTC${sign}${h}` : `UTC${sign}${h}:${String(m).padStart(2,'0')}`;
+  }
+
+  function getTZAbbr(tz) {
+    const parts = new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'short' }).formatToParts(new Date());
+    return parts.find(p => p.type === 'timeZoneName')?.value || '';
+  }
+
+  function getDateStr(tz) {
+    return new Intl.DateTimeFormat('en-US', {
+      timeZone: tz, weekday: 'short', day: 'numeric', month: 'short',
+    }).format(new Date());
+  }
+
+  function fmt12(h24, min) {
+    const ampm  = h24 >= 12 ? 'PM' : 'AM';
+    const h12   = h24 % 12 || 12;
+    return { display: `${String(h12).padStart(2,'0')}:${String(min).padStart(2,'0')}`, ampm };
+  }
+
+  function convertTime(fromTz, toTz, h24, min) {
+    const diff  = getUTCOffsetMins(toTz) - getUTCOffsetMins(fromTz);
+    const total = h24 * 60 + min + diff;
+    const norm  = ((total % 1440) + 1440) % 1440;
+    return { h24: Math.floor(norm / 60), min: norm % 60 };
+  }
+
+  function diffLabel(fromTz, toTz) {
+    const diff = getUTCOffsetMins(toTz) - getUTCOffsetMins(fromTz);
+    if (diff === 0) return null;
+    const abs  = Math.abs(diff);
+    const h    = Math.floor(abs / 60);
+    const m    = abs % 60;
+    const str  = m === 0 ? `${h}h` : `${h}h ${m}m`;
+    return { str, ahead: diff > 0 };
+  }
+
+  function findCity(tz) {
+    return TZ_DATA.find(c => c.tz === tz) || { city: tz.split('/').pop().replace(/_/g,' '), country: '', flag: '🌐', tz };
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  ANALOG CLOCK DRAWING
+  // ─────────────────────────────────────────────────────────────
+  const TAU = Math.PI * 2;
+
+  function drawClock(canvas, h24, min, sec, ms) {
+    const ctx = canvas.getContext('2d');
+    const S   = canvas.width;
+    const cx  = S / 2, cy = S / 2;
+    const r   = S / 2 - 3;
+
+    ctx.clearRect(0, 0, S, S);
+
+    // Face
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, TAU);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fill();
+
+    // Hour & minute tick marks
+    for (let i = 0; i < 60; i++) {
+      const a   = (i / 60) * TAU - Math.PI / 2;
+      const isH = i % 5 === 0;
+      const len = isH ? (i % 15 === 0 ? 14 : 9) : 5;
+      const w   = isH ? (i % 15 === 0 ? 3 : 2) : 1;
+      ctx.beginPath();
+      ctx.moveTo(cx + (r - 2) * Math.cos(a), cy + (r - 2) * Math.sin(a));
+      ctx.lineTo(cx + (r - 2 - len) * Math.cos(a), cy + (r - 2 - len) * Math.sin(a));
+      ctx.strokeStyle = isH ? '#0C0C0C' : '#C8C8C8';
+      ctx.lineWidth = w;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    }
+
+    // Hour hand
+    const hA = ((h24 % 12) + min / 60 + sec / 3600) / 12 * TAU - Math.PI / 2;
+    hand(ctx, cx, cy, hA, r * 0.48, 5, '#0C0C0C');
+
+    // Minute hand
+    const mA = (min + sec / 60) / 60 * TAU - Math.PI / 2;
+    hand(ctx, cx, cy, mA, r * 0.7, 3.5, '#0C0C0C');
+
+    // Second hand (smooth with ms interpolation)
+    const smoothSec = sec + ms / 1000;
+    const sA = smoothSec / 60 * TAU - Math.PI / 2;
+
+    ctx.beginPath();
+    ctx.moveTo(cx + r * 0.2 * Math.cos(sA + Math.PI), cy + r * 0.2 * Math.sin(sA + Math.PI));
+    ctx.lineTo(cx + r * 0.82 * Math.cos(sA), cy + r * 0.82 * Math.sin(sA));
+    ctx.strokeStyle = '#00D4C2';
+    ctx.lineWidth   = 1.5;
+    ctx.lineCap     = 'round';
+    ctx.stroke();
+
+    // Center
+    ctx.beginPath(); ctx.arc(cx, cy, 5, 0, TAU);
+    ctx.fillStyle = '#0C0C0C'; ctx.fill();
+    ctx.beginPath(); ctx.arc(cx, cy, 2.5, 0, TAU);
+    ctx.fillStyle = '#00D4C2'; ctx.fill();
+  }
+
+  function hand(ctx, cx, cy, angle, len, width, color) {
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + len * Math.cos(angle), cy + len * Math.sin(angle));
+    ctx.strokeStyle = color;
+    ctx.lineWidth   = width;
+    ctx.lineCap     = 'round';
+    ctx.stroke();
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  RENDER
+  // ─────────────────────────────────────────────────────────────
+  function renderCard(side, h24, min, sec, ms, isCustom) {
+    const data = state[side];
+    if (!data) return;
+
+    // Analog clock
+    drawClock(document.getElementById(`canvas-${side}`), h24, min, sec, ms);
+
+    // Digital time
+    const { display, ampm } = fmt12(h24, min);
+    document.getElementById(`dig-time-${side}`).textContent  = display;
+    document.getElementById(`dig-ampm-${side}`).textContent  = ampm;
+    document.getElementById(`dig-date-${side}`).textContent  = getDateStr(data.tz);
+
+    const abbr   = getTZAbbr(data.tz);
+    const offset = formatOffset(getUTCOffsetMins(data.tz));
+    document.getElementById(`dig-tz-${side}`).textContent = `${abbr} · ${offset}`;
+
+    // Live / custom badge
+    const badge = document.getElementById(`badge-${side}`);
+    if (isCustom) {
+      badge.innerHTML = '<span class="custom-badge">Custom</span>';
+    } else {
+      badge.innerHTML = '<span class="live-dot"></span> Live';
+      badge.className = 'live-badge';
+    }
+
+    // Sync inputs if in live mode (don't overwrite while user is typing)
+    if (!isCustom) {
+      const h12 = h24 % 12 || 12;
+      const ampmBtn = document.getElementById(`ampm-${side}`);
+      const curAm   = ampmBtn.textContent === 'AM';
+      const shouldAm = h24 < 12;
+      document.getElementById(`inp-h-${side}`).value = h12;
+      document.getElementById(`inp-m-${side}`).value = String(min).padStart(2,'0');
+      if (curAm !== shouldAm) {
+        ampmBtn.textContent = shouldAm ? 'AM' : 'PM';
+        ampmBtn.classList.toggle('active', shouldAm);
+      }
+    }
+  }
+
+  function renderDiff() {
+    if (!state.left || !state.right) return;
+    const d = diffLabel(state.left.tz, state.right.tz);
+    if (!d) {
+      document.getElementById('diff-box').innerHTML =
+        '<div class="diff-same">Same timezone</div>';
+      return;
+    }
+    const rightCity = state.right.city;
+    const leftCity  = state.left.city;
+    document.getElementById('diff-hours').textContent = d.str;
+    document.getElementById('diff-dir').textContent   = d.ahead ? 'ahead' : 'behind';
+    document.getElementById('diff-desc').textContent  =
+      d.ahead
+        ? `${rightCity} is ${d.str} ahead of ${leftCity}`
+        : `${rightCity} is ${d.str} behind ${leftCity}`;
+  }
+
+  function renderCityBtn(side) {
+    const data = state[side];
+    if (!data) return;
+    document.getElementById(`flag-${side}`).textContent        = data.flag;
+    document.getElementById(`city-name-${side}`).innerHTML     =
+      `${data.city} <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    document.getElementById(`city-country-${side}`).textContent = data.country;
+  }
+
+  function renderWorldClocks() {
+    const list = document.getElementById('world-list');
+    if (state.worldClocks.length === 0) {
+      list.innerHTML = '';
+      return;
+    }
+    list.innerHTML = state.worldClocks.map((c, i) => {
+      const t      = getTimeInTZ(c.tz);
+      const { display, ampm } = fmt12(t.h24, t.min);
+      const abbr   = getTZAbbr(c.tz);
+      const offset = formatOffset(getUTCOffsetMins(c.tz));
+      const pct    = ((t.h24 * 60 + t.min) / 1440 * 100).toFixed(1);
+
+      return `<div class="world-row">
+        <span class="world-row__flag">${c.flag}</span>
+        <div class="world-row__info">
+          <div class="world-row__city">${c.city}</div>
+          <div class="world-row__country">${c.country}</div>
+        </div>
+        <div class="world-row__time-group">
+          <div class="world-row__time">${display} <small style="font-size:0.72rem;font-weight:500;color:var(--muted)">${ampm}</small></div>
+          <div class="world-row__meta">${getDateStr(c.tz)}</div>
+        </div>
+        <div class="world-row__offset">${abbr} ${offset}</div>
+        <div class="world-row__bar">
+          <div class="world-row__bar-fill" style="left:0;width:${pct}%"></div>
+          <div class="world-row__bar-cursor" style="left:${pct}%"></div>
+        </div>
+        <button class="world-row__remove" onclick="removeWorldClock(${i})" title="Remove">✕</button>
+      </div>`;
+    }).join('');
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  TICK LOOP (rAF for smooth second hand)
+  // ─────────────────────────────────────────────────────────────
+  let lastSecond = -1;
+
+  function tick() {
+    requestAnimationFrame(tick);
+
+    const now = new Date();
+    const ms  = now.getMilliseconds();
+
+    if (state.customTime) {
+      // Custom mode: draw clocks with custom times, no ticking hands (except ms for smooth)
+      const ct = state.customTime;
+      drawClock(document.getElementById('canvas-left'),  ct.h24L, ct.minL, 0, ms);
+      drawClock(document.getElementById('canvas-right'), ct.h24R, ct.minR, 0, ms);
+    } else {
+      // Live mode
+      if (state.left) {
+        const t = getTimeInTZ(state.left.tz);
+        drawClock(document.getElementById('canvas-left'), t.h24, t.min, t.sec, ms);
+
+        // Update digital + inputs once per second
+        if (t.sec !== lastSecond) {
+          renderCard('left',  t.h24, t.min, t.sec, ms, false);
+        }
+      }
+      if (state.right) {
+        const t = getTimeInTZ(state.right.tz);
+        drawClock(document.getElementById('canvas-right'), t.h24, t.min, t.sec, ms);
+        if (t.sec !== lastSecond) {
+          renderCard('right', t.h24, t.min, t.sec, ms, false);
+        }
+      }
+      const curSec = now.getSeconds();
+      if (curSec !== lastSecond) {
+        lastSecond = curSec;
+        if (now.getSeconds() % 10 === 0) renderWorldClocks(); // refresh world list every 10s
+      }
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  TIME INPUT HANDLING
+  // ─────────────────────────────────────────────────────────────
+  function onTimeInput(side) {
+    const hEl   = document.getElementById(`inp-h-${side}`);
+    const mEl   = document.getElementById(`inp-m-${side}`);
+    const ampm  = document.getElementById(`ampm-${side}`).textContent;
+    const h12   = parseInt(hEl.value);
+    const min   = parseInt(mEl.value);
+
+    if (isNaN(h12) || isNaN(min) || h12 < 1 || h12 > 12 || min < 0 || min > 59) return;
+
+    const h24Source = ampm === 'PM' ? (h12 === 12 ? 12 : h12 + 12) : (h12 === 12 ? 0 : h12);
+
+    // Determine other side
+    const other = side === 'left' ? 'right' : 'left';
+
+    let h24L, minL, h24R, minR;
+    if (side === 'left') {
+      h24L = h24Source; minL = min;
+      if (state.right) {
+        const conv = convertTime(state.left.tz, state.right.tz, h24Source, min);
+        h24R = conv.h24; minR = conv.min;
+      }
+    } else {
+      h24R = h24Source; minR = min;
+      if (state.left) {
+        const conv = convertTime(state.right.tz, state.left.tz, h24Source, min);
+        h24L = conv.h24; minL = conv.min;
+      }
+    }
+
+    state.customTime = { h24L, minL, h24R, minR };
+
+    // Update the other card's display
+    if (other === 'left' && state.left) {
+      const { display, ampm: ap } = fmt12(h24L, minL);
+      document.getElementById('dig-time-left').textContent  = display;
+      document.getElementById('dig-ampm-left').textContent  = ap;
+      document.getElementById(`inp-h-left`).value           = h24L % 12 || 12;
+      document.getElementById(`inp-m-left`).value           = String(minL).padStart(2,'0');
+      document.getElementById('ampm-left').textContent      = h24L >= 12 ? 'PM' : 'AM';
+    }
+    if (other === 'right' && state.right) {
+      const { display, ampm: ap } = fmt12(h24R, minR);
+      document.getElementById('dig-time-right').textContent = display;
+      document.getElementById('dig-ampm-right').textContent = ap;
+      document.getElementById(`inp-h-right`).value          = h24R % 12 || 12;
+      document.getElementById(`inp-m-right`).value          = String(minR).padStart(2,'0');
+      document.getElementById('ampm-right').textContent     = h24R >= 12 ? 'PM' : 'AM';
+    }
+
+    // Update custom badges
+    document.getElementById('badge-left').innerHTML  = '<span class="custom-badge">Custom</span>';
+    document.getElementById('badge-right').innerHTML = '<span class="custom-badge">Custom</span>';
+    document.getElementById('custom-banner').classList.remove('hidden');
+  }
+
+  function toggleAmPm(side) {
+    const btn  = document.getElementById(`ampm-${side}`);
+    const isAm = btn.textContent === 'AM';
+    btn.textContent = isAm ? 'PM' : 'AM';
+    // Re-trigger conversion
+    onTimeInput(side);
+  }
+
+  function resetToLive() {
+    state.customTime = null;
+    document.getElementById('custom-banner').classList.add('hidden');
+    // Badges restore on next tick
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  DROPDOWN
+  // ─────────────────────────────────────────────────────────────
+  function openDropdown(target) {
+    state.openDropdown = target;
+    const titles = { left: 'Your timezone', right: 'Compare timezone', world: 'Add to world clocks' };
+    document.getElementById('tz-panel-title').textContent = titles[target] || 'Select timezone';
+    document.getElementById('tz-search-input').value = '';
+    filterDropdown('');
+    document.getElementById('tz-overlay').classList.remove('hidden');
+    setTimeout(() => document.getElementById('tz-search-input').focus(), 80);
+  }
+
+  function closeDropdown() {
+    document.getElementById('tz-overlay').classList.add('hidden');
+    state.openDropdown = null;
+  }
+
+  function onOverlayClick(e) { if (e.target === e.currentTarget) closeDropdown(); }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDropdown(); });
+
+  function filterDropdown(query) {
+    const q     = query.toLowerCase().trim();
+    const items = q ? TZ_DATA.filter(c =>
+      c.city.toLowerCase().includes(q) ||
+      c.country.toLowerCase().includes(q) ||
+      c.tz.toLowerCase().includes(q)
+    ) : TZ_DATA;
+
+    const list = document.getElementById('tz-list');
+    if (items.length === 0) {
+      list.innerHTML = '<div class="tz-empty">No cities found. Try a different search.</div>';
+      return;
+    }
+
+    list.innerHTML = items.map(c => {
+      const t = getTimeInTZ(c.tz);
+      const { display, ampm } = fmt12(t.h24, t.min);
+      return `<div class="tz-item" onclick="selectCity(${JSON.stringify(c).replace(/"/g, '&quot;')})">
+        <span class="tz-item__flag">${c.flag}</span>
+        <div>
+          <div class="tz-item__name">${c.city}</div>
+          <div class="tz-item__country">${c.country}</div>
+        </div>
+        <div class="tz-item__time">${display} ${ampm}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function selectCity(cityData) {
+    const target = state.openDropdown;
+    closeDropdown();
+
+    if (target === 'left' || target === 'right') {
+      state[target] = cityData;
+      renderCityBtn(target);
+      renderDiff();
+      resetToLive();
+    } else if (target === 'world') {
+      // Avoid duplicates
+      if (!state.worldClocks.find(c => c.tz === cityData.tz && c.city === cityData.city)) {
+        state.worldClocks.push(cityData);
+        renderWorldClocks();
+      }
+    }
+  }
+
+  function removeWorldClock(idx) {
+    state.worldClocks.splice(idx, 1);
+    renderWorldClocks();
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  QUICK CITIES
+  // ─────────────────────────────────────────────────────────────
+  function buildQuickCities() {
+    const container = document.getElementById('quick-cities');
+    const cities    = QUICK_CITIES.map(name => TZ_DATA.find(c => c.city === name)).filter(Boolean);
+    container.innerHTML = cities.map(c =>
+      `<button class="quick-chip" onclick='setRight(${JSON.stringify(c).replace(/'/g,"&#39;")})'>
+        <span class="quick-chip__flag">${c.flag}</span>${c.city}
+      </button>`
+    ).join('');
+  }
+
+  function setRight(cityData) {
+    state.right = cityData;
+    renderCityBtn('right');
+    renderDiff();
+    resetToLive();
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  INIT
+  // ─────────────────────────────────────────────────────────────
+  function init() {
+    // Detect local timezone
+    const localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const localCity = findCity(localTz);
+    state.left = localCity;
+    renderCityBtn('left');
+
+    // Default right: London (unless local is London)
+    const defaultRight = localTz.includes('London') ? TZ_DATA.find(c => c.city === 'New York') : TZ_DATA.find(c => c.city === 'London');
+    state.right = defaultRight;
+    renderCityBtn('right');
+    renderDiff();
+
+    // Default world clocks
+    const defaultWorld = ['New York', 'Dubai', 'Tokyo'].map(name => TZ_DATA.find(c => c.city === name)).filter(Boolean);
+    const worldSet = new Set([localCity.city, state.right.city]);
+    defaultWorld.filter(c => !worldSet.has(c.city)).forEach(c => state.worldClocks.push(c));
+    renderWorldClocks();
+
+    buildQuickCities();
+    requestAnimationFrame(tick);
+
+    // Full world clock refresh every second
+    setInterval(renderWorldClocks, 1000);
+  }
+
+  init();
+</script>
+
+</body>
+</html>
