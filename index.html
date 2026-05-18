@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Primary Meta -->
+  <title>indi.tools — Small tools, zero nonsense</title>
+  <meta name="description" content="A privacy-first collection of small, useful web tools. Everything runs in your browser — no sign-ups, no servers, no data leaving your device.">
+  <meta name="theme-color" content="#FFE600">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="indi.tools — Small tools, zero nonsense">
+  <meta property="og:description" content="Browser-native tools for makers. No sign-ups. No servers. Your data stays yours.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://indi.tools">
+
+  <!-- Favicon (add actual file later) -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+
+  <style>
+    /* ─────────────────────────────────────
+       RESET
+    ───────────────────────────────────── */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* ─────────────────────────────────────
+       DESIGN TOKENS
+    ───────────────────────────────────── */
+    :root {
+      --yellow:        #00D4C2;
+      --black:         #0C0C0C;
+      --white:         #FFFFFF;
+      --green:         #009E60;
+      --gray-bg:       #F2F2F0;
+      --gray-border:   #C8C8C8;
+      --muted:         #888888;
+
+      --shadow-sm:     3px 3px 0 var(--black);
+      --shadow-md:     5px 5px 0 var(--black);
+      --shadow-lg:     7px 7px 0 var(--black);
+      --shadow-muted:  4px 4px 0 var(--gray-border);
+
+      --border:        2.5px solid var(--black);
+      --border-muted:  2px solid var(--gray-border);
+
+      --font:          'Space Grotesk', sans-serif;
+      --mono:          'DM Mono', monospace;
+
+      --max-w:         1160px;
+      --px:            clamp(1.25rem, 5vw, 3rem);
+      --gap:           1.25rem;
+    }
+
+    /* ─────────────────────────────────────
+       BASE
+    ───────────────────────────────────── */
+    html {
+      font-size: 16px;
+      -webkit-text-size-adjust: 100%;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--white);
+      color: var(--black);
+      line-height: 1.55;
+    }
+
+    /* Skip-to-content for keyboard users */
+    .skip-link {
+      position: absolute;
+      top: -9999px;
+      left: 1rem;
+      background: var(--black);
+      color: var(--yellow);
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      padding: 0.5rem 1rem;
+      text-decoration: none;
+      z-index: 100;
+    }
+
+    .skip-link:focus {
+      top: 1rem;
+    }
+
+    /* ─────────────────────────────────────
+       HEADER
+    ───────────────────────────────────── */
+    header {
+      background-color: var(--yellow);
+      /* Dot-grid texture — the only decoration, adds depth without being decorative */
+      background-image: radial-gradient(circle, rgba(0,0,0,0.14) 1.5px, transparent 1.5px);
+      background-size: 22px 22px;
+      border-bottom: var(--border);
+      padding: clamp(2.25rem, 5vw, 3.5rem) var(--px) clamp(2rem, 4vw, 3rem);
+    }
+
+    .header-inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+    }
+
+    /* Wordmark */
+    .site-name {
+      font-family: var(--font);
+      font-size: clamp(3.25rem, 11vw, 6.5rem);
+      font-weight: 700;
+      letter-spacing: -0.045em;
+      line-height: 1;
+      color: var(--black);
+      display: inline-flex;
+      align-items: baseline;
+    }
+
+    .site-name__indi {
+      /* the primary brand part */
+    }
+
+    .site-name__tld {
+      font-size: 0.58em;
+      font-weight: 600;
+      opacity: 0.45;
+      letter-spacing: -0.02em;
+    }
+
+    /* Tagline */
+    .tagline {
+      font-size: clamp(1rem, 2.5vw, 1.2rem);
+      font-weight: 500;
+      margin-top: 1rem;
+      max-width: 480px;
+      line-height: 1.45;
+    }
+
+    /* Header actions */
+    .header-actions {
+      margin-top: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-connect {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: var(--font);
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-decoration: none;
+      color: var(--black);
+      background: var(--white);
+      border: var(--border);
+      padding: 0.575rem 1.15rem;
+      box-shadow: var(--shadow-sm);
+      letter-spacing: 0.01em;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+
+    .btn-connect:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn-connect:active {
+      transform: translate(2px, 2px);
+      box-shadow: none;
+    }
+
+    .btn-connect:focus-visible {
+      outline: 3px solid var(--black);
+      outline-offset: 2px;
+    }
+
+    /* ─────────────────────────────────────
+       PRIVACY BAND
+    ───────────────────────────────────── */
+    .privacy-band {
+      background: var(--black);
+      border-bottom: var(--border);
+      padding: 1rem var(--px);
+    }
+
+    .privacy-band__inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    /* The badge itself — the core selling point */
+    .privacy-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      background: var(--yellow);
+      color: var(--black);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      padding: 0.35rem 0.75rem;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .privacy-sub {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: rgba(255, 255, 255, 0.55);
+      line-height: 1.5;
+    }
+
+    /* ─────────────────────────────────────
+       MAIN
+    ───────────────────────────────────── */
+    main {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 3rem var(--px) 5.5rem;
+    }
+
+    /* Section header row */
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      border-bottom: var(--border);
+      padding-bottom: 0.875rem;
+      margin-bottom: 1.75rem;
+    }
+
+    .section-label {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+    }
+
+    .tool-count {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .tool-count strong {
+      color: var(--black);
+      font-weight: 500;
+    }
+
+    /* ─────────────────────────────────────
+       TOOLS GRID
+    ───────────────────────────────────── */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+      gap: var(--gap);
+    }
+
+    @media (min-width: 920px) {
+      .tools-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    /* ─────────────────────────────────────
+       TOOL CARD — BASE STYLES
+    ───────────────────────────────────── */
+    .card {
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem;
+      border: var(--border);
+      background: var(--white);
+      box-shadow: var(--shadow-sm);
+      text-decoration: none;
+      color: var(--black);
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+      position: relative;
+    }
+
+    /* LIVE card interactions */
+    .card--live:hover {
+      transform: translate(-3px, -3px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .card--live:active {
+      transform: translate(2px, 2px);
+      box-shadow: none;
+    }
+
+    .card--live:focus-visible {
+      outline: 3px solid var(--black);
+      outline-offset: 2px;
+    }
+
+    /* COMING SOON card — visually suppressed */
+    .card--soon {
+      background: var(--gray-bg);
+      border: var(--border-muted);
+      box-shadow: var(--shadow-muted);
+      cursor: default;
+      background-image: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 12px,
+        rgba(0, 0, 0, 0.03) 12px,
+        rgba(0, 0, 0, 0.03) 24px
+      );
+    }
+
+    .card--soon:hover {
+      transform: none;
+      box-shadow: var(--shadow-muted);
+    }
+
+    /* ─────────────────────────────────────
+       CARD INNER ELEMENTS
+    ───────────────────────────────────── */
+
+    /* Status badge */
+    .card__badge {
+      display: inline-block;
+      align-self: flex-start;
+      font-family: var(--mono);
+      font-size: 0.64rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 0.2rem 0.5rem;
+      margin-bottom: 1.1rem;
+    }
+
+    .card__badge--live {
+      background: var(--green);
+      color: var(--white);
+    }
+
+    .card__badge--soon {
+      background: transparent;
+      color: var(--muted);
+      border: 1.5px solid var(--gray-border);
+    }
+
+    /* Icon area */
+    .card__icon {
+      font-size: 1.75rem;
+      line-height: 1;
+      margin-bottom: 0.875rem;
+    }
+
+    .card--soon .card__icon {
+      filter: grayscale(1) opacity(0.4);
+    }
+
+    /* Tool name */
+    .card__name {
+      font-family: var(--font);
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: -0.015em;
+      line-height: 1.25;
+      margin-bottom: 0.5rem;
+      text-wrap: balance;
+    }
+
+    .card--soon .card__name {
+      color: var(--muted);
+    }
+
+    /* Description */
+    .card__desc {
+      font-size: 0.875rem;
+      line-height: 1.55;
+      color: var(--muted);
+      flex-grow: 1;
+    }
+
+    .card--soon .card__desc {
+      color: var(--gray-border);
+    }
+
+    /* CTA link row (live cards only) */
+    .card__action {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      margin-top: 1.25rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--black);
+      letter-spacing: 0.01em;
+    }
+
+    /* ─────────────────────────────────────
+       FOOTER
+    ───────────────────────────────────── */
+    footer {
+      background: var(--yellow);
+      border-top: var(--border);
+      padding: 1.25rem var(--px);
+    }
+
+    .footer-inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .footer-copy {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--black);
+    }
+
+    .footer-made {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: rgba(0, 0, 0, 0.48);
+    }
+
+    /* ─────────────────────────────────────
+       SMALL SCREEN ADJUSTMENTS
+    ───────────────────────────────────── */
+    @media (max-width: 480px) {
+      .tools-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .footer-inner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .privacy-band__inner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.625rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <a class="skip-link" href="#tools">Skip to tools</a>
+
+  <!-- ─── HEADER ─── -->
+  <header>
+    <div class="header-inner">
+
+      <h1 class="site-name" aria-label="indi.tools">
+        <span class="site-name__indi">indi</span><span class="site-name__tld">.tools</span>
+      </h1>
+
+      <!--
+        TAGLINE OPTIONS — uncomment one, delete the others:
+
+        1. "Sharp little tools that live entirely in your browser."
+        2. "Useful. Fast. Private. No account required, ever."
+        3. "The tab you keep open when you actually need to get something done."
+      -->
+      <p class="tagline">Sharp little tools that live entirely in your browser.</p>
+
+      <div class="header-actions">
+        <a
+          href="https://piyushthesingh.com"
+          class="btn-connect"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Connect with us
+          <!-- External-link arrow -->
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+            <path d="M2.5 10.5L10.5 2.5M10.5 2.5H4.5M10.5 2.5V8.5"
+              stroke="currentColor" stroke-width="1.75"
+              stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ─── PRIVACY BAND ─── -->
+  <div class="privacy-band" role="complementary" aria-label="Privacy guarantee">
+    <div class="privacy-band__inner">
+
+      <div class="privacy-badge">
+        <!-- Shield-check icon -->
+        <svg width="12" height="14" viewBox="0 0 12 14" fill="none" aria-hidden="true">
+          <path d="M6 1L1 3.2V7C1 10.1 3.3 12.6 6 13C8.7 12.6 11 10.1 11 7V3.2L6 1Z"
+            stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M3.5 7L5.1 8.6L8.5 5.2"
+            stroke="currentColor" stroke-width="1.5"
+            stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Your data never touches our servers
+      </div>
+
+      <p class="privacy-sub">
+        Every tool runs entirely in your browser — no accounts, no telemetry, nothing uploaded.
+      </p>
+
+    </div>
+  </div>
+
+  <!-- ─── MAIN CONTENT ─── -->
+  <main>
+
+    <div class="section-header">
+      <span class="section-label">Tools</span>
+      <span class="tool-count"><strong>2</strong> live &middot; <strong>4</strong> coming soon</span>
+    </div>
+
+    <div class="tools-grid" id="tools" role="list">
+
+      <!-- Colorblindness Test — LIVE -->
+      <a href="/colorblindness" class="card card--live" role="listitem">
+        <span class="card__badge card__badge--live">Live</span>
+        <span class="card__icon" aria-hidden="true">👁</span>
+        <h2 class="card__name">Colorblindness Test</h2>
+        <p class="card__desc">
+          Check your color vision with Ishihara-style plates.
+          No camera required, no data sent anywhere.
+        </p>
+        <span class="card__action" aria-hidden="true">
+          Open tool
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <path d="M2.5 10.5L10.5 2.5M10.5 2.5H4.5M10.5 2.5V8.5"
+              stroke="currentColor" stroke-width="1.75"
+              stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+      </a>
+
+      <!-- Timezone Converter — LIVE -->
+      <a href="/timezone" class="card card--live" role="listitem">
+        <span class="card__badge card__badge--live">Live</span>
+        <span class="card__icon" aria-hidden="true">🕐</span>
+        <h2 class="card__name">Timezone Converter</h2>
+        <p class="card__desc">
+          Convert times across cities and zones instantly.
+          Built for people who schedule across borders.
+        </p>
+        <span class="card__action" aria-hidden="true">
+          Open tool
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <path d="M2.5 10.5L10.5 2.5M10.5 2.5H4.5M10.5 2.5V8.5"
+              stroke="currentColor" stroke-width="1.75"
+              stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+      </a>
+
+      <!-- QR Code Generator — COMING SOON -->
+      <div class="card card--soon" role="listitem" aria-label="QR Code Generator — coming soon">
+        <span class="card__badge card__badge--soon">Soon</span>
+        <span class="card__icon" aria-hidden="true">⬛</span>
+        <h2 class="card__name">QR Code Generator</h2>
+        <p class="card__desc">
+          Generate QR codes from any URL or text.
+          Download as PNG or SVG — no tracking pixels embedded.
+        </p>
+      </div>
+
+      <!-- Image Compressor — COMING SOON -->
+      <div class="card card--soon" role="listitem" aria-label="Image Compressor — coming soon">
+        <span class="card__badge card__badge--soon">Soon</span>
+        <span class="card__icon" aria-hidden="true">🗜</span>
+        <h2 class="card__name">Image Compressor</h2>
+        <p class="card__desc">
+          Squeeze JPEG and PNG files right in the browser.
+          Nothing leaves your machine.
+        </p>
+      </div>
+
+      <!-- EMI Calculator — COMING SOON -->
+      <div class="card card--soon" role="listitem" aria-label="EMI Calculator — coming soon">
+        <span class="card__badge card__badge--soon">Soon</span>
+        <!-- Using the rupee symbol as a text "icon" — deliberately Indian -->
+        <span class="card__icon" aria-hidden="true" style="font-family: var(--mono); font-size: 1.75rem; line-height: 1;">₹</span>
+        <h2 class="card__name">EMI Calculator</h2>
+        <p class="card__desc">
+          Calculate loan EMIs with full amortization breakdown.
+          Your numbers stay on your device.
+        </p>
+      </div>
+
+      <!-- Word Counter — COMING SOON -->
+      <div class="card card--soon" role="listitem" aria-label="Word Counter — coming soon">
+        <span class="card__badge card__badge--soon">Soon</span>
+        <span class="card__icon" aria-hidden="true">✍</span>
+        <h2 class="card__name">Word Counter</h2>
+        <p class="card__desc">
+          Words, characters, sentences, reading time.
+          Paste and go — no clipboard permissions requested.
+        </p>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ─── FOOTER ─── -->
+  <footer>
+    <div class="footer-inner">
+      <span class="footer-copy">© 2025 indi.tools</span>
+      <span class="footer-made">Built with care in India 🇮🇳</span>
+    </div>
+  </footer>
+
+</body>
+</html>
