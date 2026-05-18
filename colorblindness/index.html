@@ -34,8 +34,7 @@
 
       --font:  'Space Grotesk', sans-serif;
       --mono:  'DM Mono', monospace;
-      --max-w: 660px;
-      --px:    clamp(1.25rem, 5vw, 2.5rem);
+      --px:    clamp(1rem, 2.5vw, 1.75rem);
     }
 
     html { font-size: 16px; scroll-behavior: smooth; }
@@ -46,6 +45,8 @@
       color: var(--black);
       min-height: 100vh;
       line-height: 1.55;
+      display: flex;
+      flex-direction: column;
     }
 
     /* ─── HEADER ─── */
@@ -54,17 +55,15 @@
       background-image: radial-gradient(circle, rgba(0,0,0,0.14) 1.5px, transparent 1.5px);
       background-size: 22px 22px;
       border-bottom: var(--border);
-      padding: clamp(1.5rem, 4vw, 2.5rem) var(--px);
+      padding: 0.875rem var(--px) 1rem;
     }
-
-    .header-inner { max-width: var(--max-w); margin: 0 auto; }
 
     .header-nav {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 1rem;
-      margin-bottom: 1.1rem;
+      margin-bottom: 0.6rem;
     }
 
     .breadcrumb {
@@ -102,12 +101,10 @@
     footer {
       background: var(--yellow);
       border-top: var(--border);
-      padding: 1.25rem var(--px);
+      padding: 0.875rem var(--px);
     }
 
     .footer-inner {
-      max-width: var(--max-w);
-      margin: 0 auto;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -128,22 +125,22 @@
     }
 
     .page-title {
-      font-size: clamp(1.75rem, 5vw, 2.4rem);
+      font-size: clamp(1.35rem, 3vw, 1.75rem);
       font-weight: 700;
-      letter-spacing: -0.035em;
+      letter-spacing: -0.03em;
       line-height: 1.1;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.3rem;
     }
 
     .page-subtitle {
-      font-size: 0.875rem;
+      font-size: 0.78rem;
       font-weight: 500;
-      line-height: 1.55;
-      max-width: 430px;
-      margin-bottom: 1rem;
+      line-height: 1.5;
+      white-space: nowrap;
+      margin-bottom: 0.6rem;
     }
 
-    .header-tags { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .header-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; }
 
     .tag {
       display: inline-flex;
@@ -161,9 +158,8 @@
 
     /* ─── MAIN ─── */
     main {
-      max-width: var(--max-w);
-      margin: 0 auto;
-      padding: 2rem var(--px) 4rem;
+      flex: 1;
+      padding: 1.5rem 15% 3rem;
     }
 
     /* ─── SECTION LABEL ─── */
@@ -647,6 +643,11 @@
 
     /* ─── UTILS ─── */
     .hidden { display: none !important; }
+
+    @media (max-width: 640px) {
+      main { padding: 1.25rem var(--px) 2.5rem; }
+      .page-subtitle { white-space: normal; font-size: 0.82rem; }
+    }
 
     @media (max-width: 480px) {
       canvas { width: 240px; height: 240px; }
