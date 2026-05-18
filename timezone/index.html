@@ -753,6 +753,49 @@
     /* ─── UTILS ─── */
     .hidden { display: none !important; }
 
+    /* Seconds span — desktop hidden, mobile shown */
+    .dig-sec {
+      display: none;
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+    }
+
+    /* Clock toggle button — desktop hidden, mobile shown */
+    .clock-toggle-btn { display: none; }
+
+    @media (max-width: 640px) {
+      .dig-sec { display: inline; }
+
+      .clock-face-wrap { display: none; }
+      .clock-face-wrap.is-open {
+        display: block;
+        margin-bottom: 1rem;
+      }
+
+      .clock-toggle-btn {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: 0.55rem 0;
+        margin-bottom: 0.75rem;
+        background: none;
+        border: none;
+        border-bottom: var(--border-muted);
+        cursor: pointer;
+        font-family: var(--mono);
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+      }
+      .clock-toggle-btn:hover { color: var(--black); }
+      .clock-toggle-icon { font-size: 0.6rem; }
+    }
+
     @media (max-width: 480px) {
       canvas { width: 140px; height: 140px; }
       .world-row__bar { display: none; }
@@ -818,12 +861,16 @@
               <span class="city-btn__country" id="city-country-left"></span>
             </span>
           </button>
-          <div class="clock-face-wrap">
+          <button class="clock-toggle-btn" id="clock-toggle-left" onclick="toggleClock('left')">
+            <span>Analog clock</span>
+            <span class="clock-toggle-icon" id="clock-toggle-icon-left">▼</span>
+          </button>
+          <div class="clock-face-wrap" id="clock-wrap-left">
             <canvas id="canvas-left" width="168" height="168"></canvas>
           </div>
           <div class="digital-time">
             <div class="digital-time__main">
-              <span id="dig-time-left">--:--</span><span class="digital-time__ampm" id="dig-ampm-left"></span>
+              <span id="dig-time-left">--:--</span><span class="dig-sec" id="dig-sec-left">:--</span><span class="digital-time__ampm" id="dig-ampm-left"></span>
             </div>
           </div>
           <div class="digital-time__date" id="dig-date-left">---</div>
@@ -867,12 +914,16 @@
               <span class="city-btn__country" id="city-country-right"></span>
             </span>
           </button>
-          <div class="clock-face-wrap">
+          <button class="clock-toggle-btn" id="clock-toggle-right" onclick="toggleClock('right')">
+            <span>Analog clock</span>
+            <span class="clock-toggle-icon" id="clock-toggle-icon-right">▼</span>
+          </button>
+          <div class="clock-face-wrap" id="clock-wrap-right">
             <canvas id="canvas-right" width="168" height="168"></canvas>
           </div>
           <div class="digital-time">
             <div class="digital-time__main">
-              <span id="dig-time-right">--:--</span><span class="digital-time__ampm" id="dig-ampm-right"></span>
+              <span id="dig-time-right">--:--</span><span class="dig-sec" id="dig-sec-right">:--</span><span class="digital-time__ampm" id="dig-ampm-right"></span>
             </div>
           </div>
           <div class="digital-time__date" id="dig-date-right">---</div>
@@ -1189,6 +1240,7 @@
     const { display, ampm } = fmt12(h24, min);
     document.getElementById(`dig-time-${side}`).textContent  = display;
     document.getElementById(`dig-ampm-${side}`).textContent  = ampm;
+    document.getElementById(`dig-sec-${side}`).textContent   = `:${String(sec).padStart(2,'0')}`;
     document.getElementById(`dig-date-${side}`).textContent  = getDateStr(data.tz);
 
     const abbr   = getTZAbbr(data.tz);
@@ -1377,6 +1429,8 @@
     document.getElementById('badge-left').innerHTML  = '<span class="custom-badge">Custom</span>';
     document.getElementById('badge-right').innerHTML = '<span class="custom-badge">Custom</span>';
     document.getElementById('custom-banner').classList.remove('hidden');
+    document.getElementById('dig-sec-left').textContent  = ':00';
+    document.getElementById('dig-sec-right').textContent = ':00';
   }
 
   function toggleAmPm(side) {
@@ -1385,6 +1439,13 @@
     btn.textContent = isAm ? 'PM' : 'AM';
     // Re-trigger conversion
     onTimeInput(side);
+  }
+
+  function toggleClock(side) {
+    const wrap   = document.getElementById(`clock-wrap-${side}`);
+    const icon   = document.getElementById(`clock-toggle-icon-${side}`);
+    const isOpen = wrap.classList.toggle('is-open');
+    icon.textContent = isOpen ? '▲' : '▼';
   }
 
   function resetToLive() {
