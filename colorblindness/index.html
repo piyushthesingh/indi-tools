@@ -1,1 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Colorblindness Test — indi.tools</title>
+  <meta name="description" content="Check your color vision with Ishihara-style plates. No camera required. Everything runs in your browser.">
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+
+  <style>
+    /* ─── RESET ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ─── TOKENS (matching indi.tools exactly) ─── */
+    :root {
+      --yellow:       #00D4C2;
+      --black:        #0C0C0C;
+      --white:        #FFFFFF;
+      --green:        #009E60;
+      --red:          #C0392B;
+      --gray-bg:      #F2F2F0;
+      --gray-border:  #C8C8C8;
+      --muted:        #888888;
+
+      --shadow-sm:    3px 3px 0 var(--black);
+      --shadow-md:    5px 5px 0 var(--black);
+      --shadow-muted: 4px 4px 0 var(--gray-border);
+
+      --border:       2.5px solid var(--black);
+      --border-muted: 2px solid var(--gray-border);
+
+      --font:  'Space Grotesk', sans-serif;
+      --mono:  'DM Mono', monospace;
+      --max-w: 660px;
+      --px:    clamp(1.25rem, 5vw, 2.5rem);
+    }
+
+    html { font-size: 16px; scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      background: var(--gray-bg);
+      color: var(--black);
+      min-height: 100vh;
+      line-height: 1.55;
+    }
+
+    /* ─── HEADER ─── */
+    header {
+      background-color: var(--yellow);
+      background-image: radial-gradient(circle, rgba(0,0,0,0.14) 1.5px, transparent 1.5px);
+      background-size: 22px 22px;
+      border-bottom: var(--border);
+      padding: clamp(1.5rem, 4vw, 2.5rem) var(--px);
+    }
+
+    .header-inner { max-width: var(--max-w); margin: 0 auto; }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.1rem;
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: rgba(0,0,0,0.5);
+    }
+    .breadcrumb a { color: var(--black); text-decoration: none; font-weight: 500; }
+    .breadcrumb a:hover { text-decoration: underline; }
+
+    .btn-connect {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: var(--font);
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-decoration: none;
+      color: var(--black);
+      background: var(--white);
+      border: var(--border);
+      padding: 0.55rem 1.1rem;
+      box-shadow: var(--shadow-sm);
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+    .btn-connect:hover  { transform: translate(-2px,-2px); box-shadow: var(--shadow-md); }
+    .btn-connect:active { transform: translate(2px,2px); box-shadow: none; }
+
+    /* ─── FOOTER ─── */
+    footer {
+      background: var(--yellow);
+      border-top: var(--border);
+      padding: 1.25rem var(--px);
+    }
+
+    .footer-inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .footer-copy {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--black);
+    }
+
+    .footer-made {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: rgba(0,0,0,0.48);
+    }
+
+    .page-title {
+      font-size: clamp(1.75rem, 5vw, 2.4rem);
+      font-weight: 700;
+      letter-spacing: -0.035em;
+      line-height: 1.1;
+      margin-bottom: 0.5rem;
+    }
+
+    .page-subtitle {
+      font-size: 0.875rem;
+      font-weight: 500;
+      line-height: 1.55;
+      max-width: 430px;
+      margin-bottom: 1rem;
+    }
+
+    .header-tags { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      font-family: var(--mono);
+      font-size: 0.67rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      padding: 0.28rem 0.6rem;
+      background: var(--black);
+      color: var(--yellow);
+      white-space: nowrap;
+    }
+
+    /* ─── MAIN ─── */
+    main {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 2rem var(--px) 4rem;
+    }
+
+    /* ─── SECTION LABEL ─── */
+    .section-label {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      border-bottom: var(--border);
+      padding-bottom: 0.7rem;
+      margin-bottom: 1.1rem;
+    }
+
+    /* ─── PREVIOUS SCORE BANNER (start screen) ─── */
+    .prev-banner {
+      background: var(--white);
+      border: var(--border);
+      box-shadow: var(--shadow-sm);
+      padding: 0.875rem 1.1rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .prev-banner__label {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 0.2rem;
+    }
+
+    .prev-banner__verdict {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .prev-banner__pill {
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      font-weight: 500;
+      background: var(--gray-bg);
+      border: var(--border-muted);
+      padding: 0.25rem 0.65rem;
+      white-space: nowrap;
+    }
+
+    /* ─── DIFFICULTY CARDS ─── */
+    .diff-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.875rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 500px) { .diff-grid { grid-template-columns: 1fr; } }
+
+    .diff-card {
+      background: var(--white);
+      border: var(--border);
+      box-shadow: var(--shadow-sm);
+      padding: 1.1rem;
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+      user-select: none;
+    }
+
+    .diff-card:hover  { transform: translate(-2px,-2px); box-shadow: var(--shadow-md); }
+    .diff-card:active { transform: translate(2px,2px); box-shadow: none; }
+
+    .diff-card.selected {
+      background: var(--yellow);
+      border-color: var(--black);
+    }
+
+    .diff-card__level {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+    }
+
+    .diff-card.selected .diff-card__level { color: rgba(0,0,0,0.55); }
+
+    .diff-card__name {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.25rem;
+    }
+
+    .diff-card__plates {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .diff-card__desc {
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    /* ─── NAME INPUT ─── */
+    input[type="text"] {
+      width: 100%;
+      font-family: var(--font);
+      font-size: 0.9rem;
+      padding: 0.65rem 0.9rem;
+      border: var(--border);
+      background: var(--white);
+      color: var(--black);
+      outline: none;
+      margin-bottom: 1rem;
+    }
+
+    input[type="text"]:focus { box-shadow: 0 0 0 3px rgba(0,212,194,0.35); }
+    input[type="text"]::placeholder { color: var(--gray-border); font-family: var(--mono); font-size: 0.82rem; }
+
+    /* ─── BUTTONS ─── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      font-family: var(--font);
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 0.65rem 1.4rem;
+      border: var(--border);
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+      letter-spacing: 0.01em;
+      background: none;
+    }
+
+    .btn-primary {
+      background: var(--black);
+      color: var(--white);
+      box-shadow: var(--shadow-sm);
+      width: 100%;
+    }
+
+    .btn-primary:hover  { transform: translate(-2px,-2px); box-shadow: var(--shadow-md); }
+    .btn-primary:active { transform: translate(2px,2px); box-shadow: none; }
+
+    .btn-ghost {
+      background: var(--white);
+      color: var(--black);
+      box-shadow: var(--shadow-muted);
+      border-color: var(--gray-border);
+    }
+
+    .btn-ghost:hover  { transform: translate(-2px,-2px); box-shadow: 5px 5px 0 var(--gray-border); }
+    .btn-ghost:active { transform: translate(2px,2px); box-shadow: none; }
+
+    /* ─── PROGRESS ─── */
+    .progress-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+
+    .progress-label {
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .progress-count {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    .progress-track {
+      height: 9px;
+      background: var(--white);
+      border: 2px solid var(--black);
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--yellow);
+      transition: width 0.35s ease;
+    }
+
+    /* ─── PLATE CARD ─── */
+    .plate-card {
+      background: var(--white);
+      border: var(--border);
+      box-shadow: var(--shadow-md);
+      padding: 1.5rem 1.5rem 1.25rem;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .plate-hint {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 1.1rem;
+    }
+
+    canvas {
+      display: block;
+      margin: 0 auto;
+      border-radius: 50%;
+      width: 280px;
+      height: 280px;
+      border: var(--border);
+    }
+
+    /* ─── ANSWER CARD ─── */
+    .answer-card {
+      background: var(--white);
+      border: var(--border);
+      box-shadow: var(--shadow-sm);
+      padding: 1.1rem 1.1rem 0.875rem;
+    }
+
+    .answer-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+
+    .answer-row {
+      display: flex;
+      gap: 0.6rem;
+      align-items: stretch;
+    }
+
+    .answer-row input[type="text"] {
+      flex: 1;
+      margin-bottom: 0;
+      font-family: var(--mono);
+      font-size: 1.2rem;
+      text-align: center;
+      letter-spacing: 4px;
+      font-weight: 500;
+    }
+
+    .btn-cant {
+      font-size: 0.8rem;
+      padding: 0.65rem 0.9rem;
+      background: var(--gray-bg);
+      border: var(--border-muted);
+      color: var(--muted);
+      box-shadow: var(--shadow-muted);
+      font-family: var(--font);
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+
+    .btn-cant:hover  { transform: translate(-2px,-2px); box-shadow: 5px 5px 0 var(--gray-border); }
+    .btn-cant:active { transform: translate(2px,2px); box-shadow: none; }
+
+    .btn-next {
+      font-size: 0.875rem;
+      padding: 0.65rem 1.2rem;
+      background: var(--black);
+      border: var(--border);
+      color: var(--white);
+      box-shadow: var(--shadow-sm);
+      font-family: var(--font);
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+
+    .btn-next:hover  { transform: translate(-2px,-2px); box-shadow: var(--shadow-md); }
+    .btn-next:active { transform: translate(2px,2px); box-shadow: none; }
+
+    .keyboard-hint {
+      font-family: var(--mono);
+      font-size: 0.67rem;
+      color: var(--gray-border);
+      margin-top: 0.5rem;
+      text-align: right;
+    }
+
+    /* ─── VERDICT BANNER ─── */
+    .verdict-banner {
+      border: var(--border);
+      box-shadow: var(--shadow-md);
+      padding: 1.4rem;
+      margin-bottom: 1.1rem;
+    }
+
+    .verdict-banner.v-normal     { background: var(--yellow); }
+    .verdict-banner.v-mild-rg    { background: #FFF0C0; }
+    .verdict-banner.v-mild-by    { background: #E8F4FF; }
+    .verdict-banner.v-rg         { background: #FFE0DC; }
+    .verdict-banner.v-by         { background: #D6EEFF; }
+    .verdict-banner.v-severe     { background: var(--gray-bg); }
+    .verdict-banner.v-bad-screen { background: var(--gray-bg); }
+    .verdict-banner.v-mixed      { background: #F5F0FF; }
+
+    .verdict-kicker {
+      font-family: var(--mono);
+      font-size: 0.67rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: rgba(0,0,0,0.5);
+      margin-bottom: 0.3rem;
+    }
+
+    .verdict-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      margin-bottom: 0.6rem;
+      line-height: 1.2;
+    }
+
+    .verdict-text {
+      font-size: 0.875rem;
+      line-height: 1.75;
+      max-width: 540px;
+    }
+
+    /* ─── SCORE TILES ─── */
+    .score-row {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.1rem;
+      flex-wrap: wrap;
+    }
+
+    .score-tile {
+      flex: 1;
+      min-width: 80px;
+      background: var(--white);
+      border: var(--border);
+      box-shadow: var(--shadow-sm);
+      padding: 0.9rem 0.6rem;
+      text-align: center;
+    }
+
+    .score-tile .num {
+      font-family: var(--mono);
+      font-size: 1.5rem;
+      font-weight: 500;
+      letter-spacing: -0.03em;
+    }
+
+    .score-tile .lbl {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-top: 0.25rem;
+    }
+
+    /* ─── PREVIOUS SCORE COMPARE (results screen) ─── */
+    .prev-compare {
+      background: var(--white);
+      border: var(--border);
+      box-shadow: var(--shadow-sm);
+      padding: 1rem 1.1rem;
+      margin-bottom: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .prev-compare__label {
+      font-family: var(--mono);
+      font-size: 0.67rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 0.15rem;
+    }
+
+    .prev-compare__mode { font-size: 0.82rem; font-weight: 600; }
+
+    .prev-compare__scores {
+      display: flex;
+      align-items: center;
+      gap: 0.875rem;
+    }
+
+    .cmp-item { text-align: center; }
+
+    .cmp-item .val {
+      font-family: var(--mono);
+      font-size: 1.05rem;
+      font-weight: 500;
+    }
+
+    .cmp-item .lbl {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+    }
+
+    .cmp-arrow { font-size: 1.1rem; color: var(--muted); }
+
+    /* ─── BREAKDOWN ─── */
+    .breakdown-wrap {
+      background: var(--white);
+      border: var(--border);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 1.1rem;
+    }
+
+    .breakdown-head {
+      padding: 0.8rem 1.1rem;
+      border-bottom: 2px solid var(--black);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      font-weight: 500;
+    }
+
+    .breakdown-list { list-style: none; }
+
+    .breakdown-list li {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.7rem 1.1rem;
+      font-size: 0.85rem;
+      border-bottom: 1.5px solid var(--gray-bg);
+    }
+
+    .breakdown-list li:last-child { border-bottom: none; }
+    .breakdown-list li.ok  { border-left: 4px solid var(--green); }
+    .breakdown-list li.bad { border-left: 4px solid var(--red); }
+
+    .bd-icon { font-size: 0.85rem; flex-shrink: 0; width: 16px; text-align: center; }
+    .bd-text { flex: 1; line-height: 1.45; }
+
+    .bd-type {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.18rem 0.4rem;
+      background: var(--gray-bg);
+      color: var(--muted);
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    /* ─── DISCLAIMER ─── */
+    .disclaimer {
+      border: var(--border);
+      border-left: 4px solid var(--yellow);
+      background: var(--white);
+      padding: 0.9rem 1.1rem;
+      margin-bottom: 1.1rem;
+      font-size: 0.8rem;
+      line-height: 1.65;
+      color: var(--muted);
+    }
+
+    /* ─── UTILS ─── */
+    .hidden { display: none !important; }
+
+    @media (max-width: 480px) {
+      canvas { width: 240px; height: 240px; }
+      .answer-row { flex-wrap: wrap; }
+      .answer-row input[type="text"] { width: 100%; flex: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══ HEADER ═══ -->
+  <header>
+    <div class="header-inner">
+      <div class="header-nav">
+        <nav class="breadcrumb">
+          <a href="/">← indi.tools</a>
+          <span>/</span>
+          <span>Colorblindness Test</span>
+        </nav>
+        <a href="https://piyushthesingh.com" class="btn-connect" target="_blank" rel="noopener noreferrer">
+          Connect with us
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+            <path d="M2.5 10.5L10.5 2.5M10.5 2.5H4.5M10.5 2.5V8.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+      <h1 class="page-title">Colorblindness Test</h1>
+      <p class="page-subtitle">Check your color vision with Ishihara-style plates. No camera required — everything stays in your browser.</p>
+      <div class="header-tags">
+        <span class="tag">👁 Vision Screening</span>
+        <span class="tag">🔒 In-browser only</span>
+        <span class="tag">⚕ Not a medical diagnosis</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ═══ START SCREEN ═══ -->
+    <div id="screen-start">
+
+      <!-- Previous test score banner -->
+      <div id="prev-banner" class="prev-banner hidden">
+        <div>
+          <div class="prev-banner__label">Previous test</div>
+          <div class="prev-banner__verdict" id="prev-banner-verdict"></div>
+        </div>
+        <div class="prev-banner__pill" id="prev-banner-pill"></div>
+      </div>
+
+      <div class="section-label">Choose difficulty</div>
+
+      <div class="diff-grid">
+
+        <div class="diff-card" id="card-simple" onclick="selectDiff('simple')">
+          <div class="diff-card__level">Level 1</div>
+          <div class="diff-card__name">Simple</div>
+          <div class="diff-card__plates">14 plates · ~4 min</div>
+          <div class="diff-card__desc">A quick first look — covers the most common red-green and blue-yellow tests.</div>
+        </div>
+
+        <div class="diff-card" id="card-medium" onclick="selectDiff('medium')">
+          <div class="diff-card__level">Level 2</div>
+          <div class="diff-card__name">Medium</div>
+          <div class="diff-card__plates">24 plates · ~7 min</div>
+          <div class="diff-card__desc">More thorough — adds harder contrast plates and more variety.</div>
+        </div>
+
+        <div class="diff-card" id="card-complete" onclick="selectDiff('complete')">
+          <div class="diff-card__level">Level 3</div>
+          <div class="diff-card__name">Complete</div>
+          <div class="diff-card__plates">38 plates · ~12 min</div>
+          <div class="diff-card__desc">The full Ishihara-style suite including extreme contrast and rare deficiency plates.</div>
+        </div>
+
+      </div>
+
+      <input type="text" id="player-name" placeholder="Your name (optional)" maxlength="24">
+
+      <button class="btn btn-primary" id="start-btn" onclick="startTest()">
+        Pick a difficulty to begin
+      </button>
+
+    </div>
+
+    <!-- ═══ QUESTION SCREEN ═══ -->
+    <div id="screen-question" class="hidden">
+
+      <div class="progress-row">
+        <span class="progress-label" id="q-label">Plate 1</span>
+        <span class="progress-count" id="q-count">of 14</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="prog-bar" style="width:0%"></div>
+      </div>
+
+      <div class="plate-card">
+        <div class="plate-hint">What number do you see inside the circle?</div>
+        <canvas id="plate-canvas"></canvas>
+      </div>
+
+      <div class="answer-card">
+        <div class="answer-label">Type the number you see (or say you can't):</div>
+        <div class="answer-row">
+          <input type="text" id="answer-input" placeholder="e.g. 29" maxlength="4" inputmode="numeric">
+          <button class="btn-cant" onclick="submitAnswer('')">Can't see one</button>
+          <button class="btn-next" onclick="submitAnswer(document.getElementById('answer-input').value)">Next →</button>
+        </div>
+        <div class="keyboard-hint">Press Enter to advance</div>
+      </div>
+
+    </div>
+
+    <!-- ═══ RESULT SCREEN ═══ -->
+    <div id="screen-result" class="hidden">
+
+      <!-- Verdict -->
+      <div class="verdict-banner" id="verdict-banner">
+        <div class="verdict-kicker">Your Result</div>
+        <div class="verdict-title" id="verdict-title"></div>
+        <div class="verdict-text" id="verdict-text"></div>
+      </div>
+
+      <!-- Score tiles -->
+      <div class="score-row">
+        <div class="score-tile">
+          <div class="num" id="score-total">—</div>
+          <div class="lbl">Total</div>
+        </div>
+        <div class="score-tile">
+          <div class="num" id="score-ctrl">—</div>
+          <div class="lbl">Control</div>
+        </div>
+        <div class="score-tile">
+          <div class="num" id="score-rg">—</div>
+          <div class="lbl">Red-Green</div>
+        </div>
+        <div class="score-tile">
+          <div class="num" id="score-by">—</div>
+          <div class="lbl">Blue-Yellow</div>
+        </div>
+      </div>
+
+      <!-- Previous score comparison -->
+      <div id="prev-compare" class="prev-compare hidden">
+        <div>
+          <div class="prev-compare__label">Compared to last test</div>
+          <div class="prev-compare__mode" id="cmp-mode"></div>
+        </div>
+        <div class="prev-compare__scores">
+          <div class="cmp-item">
+            <div class="val" id="cmp-prev">—</div>
+            <div class="lbl">Previous</div>
+          </div>
+          <div class="cmp-arrow">→</div>
+          <div class="cmp-item">
+            <div class="val" id="cmp-curr">—</div>
+            <div class="lbl">This test</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Plate-by-plate breakdown -->
+      <div class="breakdown-wrap">
+        <div class="breakdown-head">Plate-by-plate breakdown</div>
+        <ul class="breakdown-list" id="breakdown"></ul>
+      </div>
+
+      <!-- Disclaimer -->
+      <div class="disclaimer">
+        ⚠️ This is a digital screening tool, not a medical test. Screen brightness, color calibration, and lighting in your room all affect the result. If you're worried about your color vision, visit an eye doctor (ophthalmologist) for a proper clinical test.
+      </div>
+
+      <button class="btn btn-primary" onclick="restart()">Take Test Again</button>
+
+    </div>
+
+  </main>
+
+  <!-- ═══ FOOTER ═══ -->
+  <footer>
+    <div class="footer-inner">
+      <span class="footer-copy">© 2026 indi.tools</span>
+      <span class="footer-made">Built with care in India 🇮🇳</span>
+    </div>
+  </footer>
+
+<script>
+  // ─────────────────────────────────────────────────────────────────
+  //  38 PLATE DEFINITIONS
+  //  figHue / figL   = figure dot hue + lightness
+  //  bgHues / bgL    = background hue pool + lightness
+  //  type: control | rg | by
+  //
+  //  Slice layout:
+  //    Simple   (14) : indices 0–13
+  //    Medium   (24) : indices 0–23
+  //    Complete (38) : indices 0–37
+  // ─────────────────────────────────────────────────────────────────
+  const ALL_PLATES = [
+    // ── CONTROL × 2 (0–1) ──────────────────────────────────────────
+    { figure:"12", figHue:28,  figL:54, bgHues:[220,240,200,260], bgL:38, type:"control", label:"Control"        },
+    { figure:"8",  figHue:26,  figL:52, bgHues:[135,150,120,165], bgL:37, type:"control", label:"Control"        },
+    // ── RED-GREEN EASY × 6 (2–7) ───────────────────────────────────
+    { figure:"6",  figHue:115, figL:37, bgHues:[0,10,355,20],     bgL:44, type:"rg",      label:"Red-Green"      },
+    { figure:"29", figHue:8,   figL:45, bgHues:[105,118,95,128],  bgL:35, type:"rg",      label:"Red-Green"      },
+    { figure:"57", figHue:3,   figL:44, bgHues:[110,125,100,90],  bgL:33, type:"rg",      label:"Red-Green"      },
+    { figure:"45", figHue:120, figL:37, bgHues:[5,15,355,25],     bgL:45, type:"rg",      label:"Red-Green"      },
+    { figure:"16", figHue:8,   figL:43, bgHues:[108,118,98,128],  bgL:35, type:"rg",      label:"Red-Green"      },
+    { figure:"3",  figHue:5,   figL:46, bgHues:[110,122,98,132],  bgL:36, type:"rg",      label:"Red-Green"      },
+    // ── BLUE-YELLOW EASY × 4 (8–11) ────────────────────────────────
+    { figure:"73", figHue:225, figL:46, bgHues:[50,60,45,65],     bgL:50, type:"by",      label:"Blue-Yellow"    },
+    { figure:"2",  figHue:240, figL:44, bgHues:[55,65,50,70],     bgL:48, type:"by",      label:"Blue-Yellow"    },
+    { figure:"96", figHue:230, figL:45, bgHues:[52,62,47,67],     bgL:49, type:"by",      label:"Blue-Yellow"    },
+    { figure:"4",  figHue:235, figL:43, bgHues:[53,63,48,68],     bgL:49, type:"by",      label:"Blue-Yellow"    },
+    // ── CONTROL × 2 (12–13) ← end of Simple ───────────────────────
+    { figure:"74", figHue:30,  figL:56, bgHues:[215,235,205,250], bgL:39, type:"control", label:"Control"        },
+    { figure:"21", figHue:27,  figL:53, bgHues:[130,145,120,160], bgL:36, type:"control", label:"Control"        },
+    // ── RED-GREEN MEDIUM × 8 (14–21) ───────────────────────────────
+    { figure:"97", figHue:118, figL:38, bgHues:[6,16,2,22],       bgL:43, type:"rg",      label:"Red-Green"      },
+    { figure:"5",  figHue:9,   figL:45, bgHues:[109,122,97,130],  bgL:35, type:"rg",      label:"Red-Green"      },
+    { figure:"42", figHue:117, figL:36, bgHues:[4,14,356,24],     bgL:44, type:"rg",      label:"Red-Green"      },
+    { figure:"26", figHue:6,   figL:42, bgHues:[106,119,96,128],  bgL:34, type:"rg",      label:"Red-Green"      },
+    { figure:"35", figHue:113, figL:37, bgHues:[7,17,1,23],       bgL:43, type:"rg",      label:"Red-Green"      },
+    { figure:"15", figHue:9,   figL:42, bgHues:[110,122,98,132],  bgL:33, type:"rg",      label:"Red-Green"      },
+    { figure:"73", figHue:115, figL:37, bgHues:[3,13,357,23],     bgL:44, type:"rg",      label:"Red-Green"      },
+    { figure:"62", figHue:8,   figL:43, bgHues:[108,120,96,130],  bgL:34, type:"rg",      label:"Red-Green"      },
+    // ── BLUE-YELLOW MEDIUM × 2 (22–23) ← end of Medium ────────────
+    { figure:"8",  figHue:228, figL:46, bgHues:[54,64,49,69],     bgL:50, type:"by",      label:"Blue-Yellow"    },
+    { figure:"19", figHue:232, figL:44, bgHues:[54,64,48,70],     bgL:49, type:"by",      label:"Blue-Yellow"    },
+    // ── RED-GREEN HARD × 7 (24–30) ─────────────────────────────────
+    { figure:"7",  figHue:116, figL:36, bgHues:[5,15,358,22],     bgL:43, type:"rg",      label:"Red-Green (Hard)"    },
+    { figure:"49", figHue:7,   figL:42, bgHues:[107,120,97,127],  bgL:33, type:"rg",      label:"Red-Green (Hard)"    },
+    { figure:"83", figHue:112, figL:36, bgHues:[6,16,0,22],       bgL:42, type:"rg",      label:"Red-Green (Hard)"    },
+    { figure:"36", figHue:9,   figL:41, bgHues:[109,121,97,129],  bgL:32, type:"rg",      label:"Red-Green (Hard)"    },
+    { figure:"58", figHue:118, figL:35, bgHues:[4,14,357,21],     bgL:42, type:"rg",      label:"Red-Green (Hard)"    },
+    { figure:"14", figHue:6,   figL:41, bgHues:[106,119,96,126],  bgL:33, type:"rg",      label:"Red-Green (Hard)"    },
+    { figure:"91", figHue:115, figL:36, bgHues:[5,15,359,20],     bgL:41, type:"rg",      label:"Red-Green (Hard)"    },
+    // ── BLUE-YELLOW HARD × 3 (31–33) ───────────────────────────────
+    { figure:"67", figHue:237, figL:43, bgHues:[53,63,47,67],     bgL:48, type:"by",      label:"Blue-Yellow (Hard)"  },
+    { figure:"54", figHue:242, figL:42, bgHues:[56,66,50,72],     bgL:47, type:"by",      label:"Blue-Yellow (Hard)"  },
+    { figure:"38", figHue:234, figL:43, bgHues:[52,62,46,68],     bgL:48, type:"by",      label:"Blue-Yellow (Hard)"  },
+    // ── EXTREME × 4 (34–37) ← end of Complete ──────────────────────
+    { figure:"87", figHue:4,   figL:40, bgHues:[104,117,94,124],  bgL:32, type:"rg",      label:"Red-Green (Extreme)" },
+    { figure:"23", figHue:119, figL:35, bgHues:[3,13,356,20],     bgL:42, type:"rg",      label:"Red-Green (Extreme)" },
+    { figure:"31", figHue:238, figL:42, bgHues:[55,65,49,71],     bgL:47, type:"by",      label:"Blue-Yellow (Extreme)"},
+    { figure:"78", figHue:5,   figL:40, bgHues:[105,118,95,125],  bgL:31, type:"rg",      label:"Red-Green (Extreme)" },
+  ];
+
+  const MODES = {
+    simple:   { count: 14, label: "Simple"   },
+    medium:   { count: 24, label: "Medium"   },
+    complete: { count: 38, label: "Complete" },
+  };
+
+  let selectedMode  = null;
+  let activePlates  = [];
+  let current       = 0;
+  let answers       = [];
+  let playerName    = "You";
+
+  // ─── DIFFICULTY SELECTION ────────────────────────────────────────
+  function selectDiff(mode) {
+    selectedMode = mode;
+    document.querySelectorAll('.diff-card').forEach(c => c.classList.remove('selected'));
+    document.getElementById('card-' + mode).classList.add('selected');
+    const m = MODES[mode];
+    document.getElementById('start-btn').textContent =
+      `Start ${m.label} Test (${m.count} plates) →`;
+  }
+
+  function startTest() {
+    if (!selectedMode) { alert("Please choose a difficulty first."); return; }
+    playerName   = document.getElementById("player-name").value.trim() || "You";
+    activePlates = ALL_PLATES.slice(0, MODES[selectedMode].count);
+    current      = 0;
+    answers      = [];
+    show("screen-question");
+    renderPlate(0);
+  }
+
+  // ─── PLATE RENDERING ────────────────────────────────────────────
+  function generatePlate(canvas, plate) {
+    const S = 320;
+    canvas.width = S; canvas.height = S;
+    const ctx = canvas.getContext("2d");
+
+    // Render digit(s) as white-on-black to an offscreen canvas
+    const off    = document.createElement("canvas");
+    off.width    = S; off.height = S;
+    const oc     = off.getContext("2d");
+    oc.fillStyle = "#000";
+    oc.fillRect(0, 0, S, S);
+    oc.fillStyle = "#fff";
+    const fs     = plate.figure.length >= 2 ? 130 : 165;
+    oc.font      = `bold ${fs}px 'Arial Black', Arial`;
+    oc.textAlign = "center";
+    oc.textBaseline = "middle";
+    oc.fillText(plate.figure, S / 2, S / 2);
+    const px = oc.getImageData(0, 0, S, S).data;
+
+    const isFig = (x, y) => {
+      const i = (Math.round(y) * S + Math.round(x)) * 4;
+      return i >= 0 && i < px.length && px[i] > 128;
+    };
+
+    // Clip everything to circle
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(S/2, S/2, S/2, 0, Math.PI * 2);
+    ctx.fillStyle = "#5a5a5a";
+    ctx.fill();
+    ctx.clip();
+
+    const dotR = 5, step = dotR * 2.08, R = S / 2;
+
+    for (let y = 0; y < S; y += step) {
+      for (let x = 0; x < S; x += step) {
+        const jx = x + (Math.random() - 0.5) * step * 0.72;
+        const jy = y + (Math.random() - 0.5) * step * 0.72;
+        const dx = jx - R, dy = jy - R;
+        if (dx*dx + dy*dy > (R - dotR) * (R - dotR)) continue;
+
+        const fig = isFig(jx, jy);
+        const r   = dotR * (0.72 + Math.random() * 0.56);
+        let h, s, l;
+
+        if (fig) {
+          h = plate.figHue + (Math.random() - 0.5) * 24;
+          s = 62 + Math.random() * 22;
+          l = plate.figL  + (Math.random() - 0.5) * 8;
+        } else {
+          h = plate.bgHues[Math.floor(Math.random() * plate.bgHues.length)] + (Math.random() - 0.5) * 24;
+          s = 50 + Math.random() * 22;
+          l = plate.bgL   + (Math.random() - 0.5) * 8;
+        }
+
+        ctx.beginPath();
+        ctx.arc(jx, jy, r, 0, Math.PI * 2);
+        ctx.fillStyle = `hsl(${h},${s}%,${l}%)`;
+        ctx.fill();
+      }
+    }
+
+    ctx.restore();
+
+    // Subtle circular border
+    ctx.beginPath();
+    ctx.arc(S/2, S/2, S/2 - 1.5, 0, Math.PI * 2);
+    ctx.strokeStyle = "rgba(0,0,0,0.15)";
+    ctx.lineWidth   = 3;
+    ctx.stroke();
+  }
+
+  function renderPlate(idx) {
+    const total = activePlates.length;
+    document.getElementById("q-label").textContent = `Plate ${idx + 1}`;
+    document.getElementById("q-count").textContent = `of ${total}`;
+    document.getElementById("prog-bar").style.width = `${(idx / total) * 100}%`;
+    document.getElementById("answer-input").value = "";
+    setTimeout(() => document.getElementById("answer-input").focus(), 80);
+    generatePlate(document.getElementById("plate-canvas"), activePlates[idx]);
+  }
+
+  // ─── ANSWER SUBMISSION ───────────────────────────────────────────
+  function submitAnswer(val) {
+    const answer  = val.trim();
+    const correct = answer.toLowerCase() === activePlates[current].figure.toLowerCase();
+    answers.push({ answer, correct, plate: activePlates[current] });
+    current++;
+    if (current < activePlates.length) {
+      renderPlate(current);
+    } else {
+      showResults();
+    }
+  }
+
+  document.addEventListener("keydown", e => {
+    if (e.key === "Enter" && !document.getElementById("screen-question").classList.contains("hidden")) {
+      submitAnswer(document.getElementById("answer-input").value);
+    }
+  });
+
+  // ─── RESULTS ────────────────────────────────────────────────────
+  function showResults() {
+    const name = playerName;
+
+    // Split answers by plate type
+    const rgA    = answers.filter(a => a.plate.type === "rg");
+    const byA    = answers.filter(a => a.plate.type === "by");
+    const ctrlA  = answers.filter(a => a.plate.type === "control");
+    const total  = answers.length;
+
+    const correct     = answers.filter(a => a.correct).length;
+    const rgCorrect   = rgA.filter(a => a.correct).length;
+    const byCorrect   = byA.filter(a => a.correct).length;
+    const ctrlCorrect = ctrlA.filter(a => a.correct).length;
+
+    const rgPct   = rgA.length   ? rgCorrect   / rgA.length   : 1;
+    const byPct   = byA.length   ? byCorrect   / byA.length   : 1;
+    const ctrlPct = ctrlA.length ? ctrlCorrect / ctrlA.length : 1;
+
+    // Score tiles
+    document.getElementById("score-total").textContent = `${correct}/${total}`;
+    document.getElementById("score-ctrl").textContent  = `${ctrlCorrect}/${ctrlA.length}`;
+    document.getElementById("score-rg").textContent    = `${rgCorrect}/${rgA.length}`;
+    document.getElementById("score-by").textContent    = `${byCorrect}/${byA.length}`;
+
+    // ── Verdict logic (plain language, 9th-grade level) ──
+    let cls, title, text;
+
+    if (ctrlPct < 0.5) {
+      cls   = "v-bad-screen";
+      title = "Your screen may be affecting the result";
+      text  = `${name} missed most of the "control" plates — these are the easy ones that everyone is supposed to see, regardless of their color vision. This usually means the screen is too dark, too bright, or the colors look off due to your display settings. Try turning up your brightness, closing the blinds, and retaking the test. If it keeps happening, see an eye doctor just to be safe.`;
+    } else if (rgPct >= 0.85 && byPct >= 0.85) {
+      cls   = "v-normal";
+      title = "Normal color vision — you're all good! 🎉";
+      text  = `Great news, ${name}! You spotted the numbers in almost all the plates — including the tricky red-green and blue-yellow ones. This means all three types of color sensors in your eyes (called cones) are likely working well. You probably see colors the same way most people do.`;
+    } else if (rgPct < 0.5 && byPct >= 0.7) {
+      cls   = "v-rg";
+      title = "Red-Green color blindness likely";
+      text  = `${name} had clear trouble with the red-green plates but did fine on the blue-yellow ones. This is the most common type of color blindness — it affects about 1 in 12 boys and 1 in 200 girls. It's usually something you're born with and doesn't get worse. You might find it hard to tell traffic lights apart, or know when a fruit is ripe. An eye doctor can confirm it with a quick official test.`;
+    } else if (rgPct >= 0.7 && byPct < 0.5) {
+      cls   = "v-by";
+      title = "Blue-Yellow color vision difficulty";
+      text  = `${name} did well on red-green plates, but struggled with the blue-yellow ones. This type — called Tritanopia — is quite rare, affecting fewer than 1 in 10,000 people. Unlike red-green color blindness, this one isn't usually inherited; it can sometimes appear later in life or due to certain medical conditions. An eye doctor can give you a definitive answer.`;
+    } else if (rgPct < 0.5 && byPct < 0.5) {
+      cls   = "v-severe";
+      title = "Significant color vision difficulty detected";
+      text  = `${name} had trouble with both the red-green and blue-yellow plates. This could mean a significant color vision deficiency, but digital tests can also be affected by screen settings and lighting. Please don't worry — this isn't a medical diagnosis. The most important next step is to visit an eye doctor (ophthalmologist) for a proper clinical test.`;
+    } else if (rgPct < 0.75 && byPct >= 0.7) {
+      cls   = "v-mild-rg";
+      title = "Mild red-green difficulty";
+      text  = `${name} got most plates right, but missed a few of the red-green ones. This could mean a mild form of red-green color vision difference — sometimes called Anomalous Trichromacy. People with this can still see colors but some shades of red, orange, and green look more alike to them than to others. It's actually very common and most people live completely normally with it.`;
+    } else if (rgPct >= 0.7 && byPct < 0.75) {
+      cls   = "v-mild-by";
+      title = "Mild blue-yellow difficulty";
+      text  = `${name} did well overall but had some trouble with a few blue-yellow plates. This might just be your screen's color calibration, or it could hint at a mild sensitivity in that color range. Try retaking the test in a well-lit room with your screen brightness at full. If the result repeats, it's worth a quick visit to an eye doctor.`;
+    } else {
+      cls   = "v-mixed";
+      title = "Mixed result — hard to call";
+      text  = `${name}'s results don't clearly point to one type of color vision. Your score has a mix of correct and missed plates across both categories. This can happen because of screen settings, the lighting around you, or just mild variation in how eyes work. Try again in different lighting, and if you're still unsure, an eye doctor is the best person to ask.`;
+    }
+
+    document.getElementById("verdict-banner").className = `verdict-banner ${cls}`;
+    document.getElementById("verdict-title").textContent = title;
+    document.getElementById("verdict-text").textContent  = text;
+
+    // ── Previous score comparison ──
+    const prevRaw = sessionStorage.getItem("indi_cbtest_prev");
+    if (prevRaw) {
+      const prev = JSON.parse(prevRaw);
+      document.getElementById("prev-compare").classList.remove("hidden");
+      document.getElementById("cmp-mode").textContent = `${prev.mode} → ${MODES[selectedMode].label}`;
+      document.getElementById("cmp-prev").textContent = prev.score;
+      document.getElementById("cmp-curr").textContent = `${correct}/${total}`;
+    }
+
+    // Save current result (overwrites previous)
+    sessionStorage.setItem("indi_cbtest_prev", JSON.stringify({
+      score:   `${correct}/${total}`,
+      verdict: title,
+      mode:    MODES[selectedMode].label,
+    }));
+
+    // ── Plate breakdown ──
+    document.getElementById("breakdown").innerHTML = answers.map((a, i) => {
+      const p    = activePlates[i];
+      const seen = a.answer === "" ? "nothing" : `"${a.answer}"`;
+      return `<li class="${a.correct ? "ok" : "bad"}">
+        <span class="bd-icon">${a.correct ? "✓" : "✗"}</span>
+        <span class="bd-text">Plate ${i+1}: expected <strong>${p.figure}</strong>, you saw ${seen}</span>
+        <span class="bd-type">${p.label}</span>
+      </li>`;
+    }).join("");
+
+    document.getElementById("prog-bar").style.width = "100%";
+    show("screen-result");
+  }
+
+  // ─── RESTART ────────────────────────────────────────────────────
+  function restart() {
+    selectedMode = null;
+    document.querySelectorAll('.diff-card').forEach(c => c.classList.remove('selected'));
+    document.getElementById('start-btn').textContent = 'Pick a difficulty to begin';
+    refreshPrevBanner();
+    show("screen-start");
+  }
+
+  function refreshPrevBanner() {
+    const raw = sessionStorage.getItem("indi_cbtest_prev");
+    if (!raw) return;
+    const prev = JSON.parse(raw);
+    document.getElementById("prev-banner").classList.remove("hidden");
+    document.getElementById("prev-banner-verdict").textContent =
+      `${prev.mode} · ${prev.verdict}`;
+    document.getElementById("prev-banner-pill").textContent = prev.score;
+  }
+
+  function show(id) {
+    ["screen-start","screen-question","screen-result"]
+      .forEach(s => document.getElementById(s).classList.toggle("hidden", s !== id));
+  }
+
+  // Show previous score on first load (if returning mid-session)
+  refreshPrevBanner();
+</script>
+
+</body>
+</html>
