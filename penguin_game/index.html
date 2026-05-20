@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GB Rush</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#050d18;color:#c8dff0;min-height:100vh}
+
+/* ── Header ──────────────────────────────────────────────────────── */
+header{display:flex;align-items:center;justify-content:space-between;padding:20px 48px;border-bottom:1px solid #0f2a42}
+.logo{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:800;color:#e0f4ff;letter-spacing:-.3px}
+.logo-badge{font-size:10px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:#1e4060;background:#0a1828;border:1px solid #0f2a42;padding:3px 8px;border-radius:12px;margin-left:6px}
+nav{display:flex;gap:24px}
+nav a{color:#2a5878;text-decoration:none;font-size:14px;font-weight:500;transition:color .15s}
+nav a:hover{color:#7ab8d8}
+
+/* ── Game Zone ────────────────────────────────────────────────────── */
+#game-zone{display:flex;flex-direction:column;align-items:center;padding:36px 16px 24px}
+.tagline{font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#1e3a58;font-family:'Courier New',monospace;margin-bottom:14px}
+.score-row{display:flex;gap:28px;margin-bottom:8px;font:bold 16px/1 'Courier New',monospace;color:#122030;letter-spacing:3px}
+.score-row .v{color:#3a8ab8}
+/* Canvas fills available width, never exceeds 750px, keeps crisp pixels */
+canvas{
+  display:block;
+  width:100%;
+  max-width:750px;
+  height:auto;          /* maintains aspect ratio */
+  image-rendering:pixelated;
+  image-rendering:crisp-edges;
+  cursor:pointer;
+  touch-action:none;    /* prevents scroll/zoom hijacking touch events */
+  user-select:none;
+  -webkit-user-select:none;
+  border-bottom:3px solid #0f2a42;
+}
+#msg{margin-top:10px;height:22px;text-align:center;font:13px/1 'Courier New',monospace;color:#1e3a58;letter-spacing:2px}
+.controls-hint{margin-top:12px;display:flex;gap:12px;align-items:center;font:11px/1 'Courier New',monospace;color:#122030;letter-spacing:1px;flex-wrap:wrap;justify-content:center}
+
+/* ── Cards ────────────────────────────────────────────────────────── */
+#about{max-width:900px;margin:56px auto 64px;padding:0 24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px}
+.card{background:#080f1e;border:1px solid #0f2a42;border-radius:12px;padding:22px 20px;transition:border-color .2s,transform .2s}
+.card:hover{border-color:#1e4060;transform:translateY(-2px)}
+.card-icon{font-size:24px;margin-bottom:10px}
+.card h3{font-size:14px;font-weight:700;color:#8ab8d0;margin-bottom:6px}
+.card p{font-size:12px;line-height:1.75;color:#284858}
+
+/* ── Footer ───────────────────────────────────────────────────────── */
+footer{border-top:1px solid #0a1e30;padding:20px 48px;text-align:center;font-size:12px;color:#122030;letter-spacing:1px}
+
+@media(max-width:600px){
+  header{padding:14px 16px}
+  nav{display:none}
+  .tagline{font-size:10px;letter-spacing:2px;margin-bottom:10px}
+  .score-row{font-size:14px;gap:20px}
+  #msg{font-size:11px;letter-spacing:1px}
+  .controls-hint{font-size:10px;gap:8px}
+  #about{margin:24px auto 32px;padding:0 12px}
+  .card{padding:16px 14px}
+  footer{padding:16px 20px;font-size:11px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    GB Rush
+    <span class="logo-badge">Pixel Runner</span>
+  </div>
+  <nav>
+    <a href="#game-zone">Play</a>
+    <a href="#about">Threats</a>
+  </nav>
+</header>
+
+<section id="game-zone">
+  <p class="tagline">Help Pebble &amp; Pip survive the arctic</p>
+  <div class="score-row">
+    <span>HI <span class="v" id="hi">00000</span></span>
+    <span class="v" id="sc">00000</span>
+  </div>
+  <canvas id="c" width="750" height="360"></canvas>
+  <p id="msg">TAP  OR  PRESS  SPACE  TO  START</p>
+  <div class="controls-hint">
+    <span>📱 TAP screen to jump</span>
+    <span>·</span>
+    <span>⌨️ SPACE / ↑ on desktop</span>
+  </div>
+</section>
+
+<section id="about">
+  <div class="card">
+    <div class="card-icon">🐧</div>
+    <h3>The Duo</h3>
+    <p>Lead Pebble through the tundra. Baby Pip follows right behind, copying every jump a beat later.</p>
+  </div>
+  <div class="card">
+    <div class="card-icon">🦭</div>
+    <h3>Seals &amp; Walrus</h3>
+    <p>Upright seals block the path in small, large, and double-barrel packs. The wider walrus sits lower but wider.</p>
+  </div>
+  <div class="card">
+    <div class="card-icon">❄️</div>
+    <h3>Ice Cracks</h3>
+    <p>The frozen ground shatters and opens into dark arctic water. Watch the crack lines — they warn you it's coming.</p>
+  </div>
+  <div class="card">
+    <div class="card-icon">⛄</div>
+    <h3>Snowballs</h3>
+    <p>Spinning snowballs roll in from the right. Same height as a small seal — but they come faster as your score climbs.</p>
+  </div>
+</section>
+
+<footer>GB RUSH &nbsp;·&nbsp; NO PENGUINS WERE HARMED &nbsp;·&nbsp; ❄️</footer>
+
+<script>
+(function () {
+  // ─── Colour palette ─────────────────────────────────────────────────────
+  const _ = null;
+  // Penguins
+  const K ='#131c2e', W ='#eef8ff', O ='#d97000', ey='#05070e';
+  // Seals
+  const G ='#6a8fa8', D ='#2e4e68', Lc='#aacce0';
+  // Snowball
+  const Sw='#d8eef8', Si='#90b8cc';
+  // Walrus
+  const Bw='#8a7060', Bv='#5a4030', Wt='#e8dcc8';
+
+  // ─── Parent Penguin sprites (10 cols × 14 rows → 40×56 px) ──────────────
+  const PAR_BODY = [
+    [_,_,_,K,K,K,K,_,_,_],
+    [_,_,K,K,K,K,K,K,_,_],
+    [_,_,K,W,W,W,W,K,_,_],
+    [_,_,K,W,ey,ey,W,K,_,_],
+    [_,_,K,W,O,O,W,K,_,_],
+    [_,K,K,W,W,W,W,K,K,_],
+    [K,K,W,W,W,W,W,W,K,K],
+    [K,W,W,W,W,W,W,W,W,K],
+    [K,W,W,W,W,W,W,W,W,K],
+    [K,K,K,K,K,K,K,K,K,K],
+    [_,K,K,K,K,K,K,K,K,_],
+    [_,_,K,K,K,K,K,K,_,_],
+  ];
+  const PAR_R1 = [...PAR_BODY, [_,_,O,_,_,_,_,O,_,_], [_,O,O,_,_,_,O,O,_,_]]; // run A
+  const PAR_R2 = [...PAR_BODY, [_,_,O,_,_,_,_,O,_,_], [_,O,_,_,_,_,_,O,O,_]]; // run B
+  const PAR_J  = [...PAR_BODY, [O,O,_,_,_,_,_,_,O,O], [_,O,_,_,_,_,_,_,O,_]]; // jump
+
+  // ─── Baby Penguin sprites (7 cols × 10 rows → 28×40 px) ─────────────────
+  const BAB_BODY = [
+    [_,_,K,K,K,_,_],
+    [_,K,W,W,W,K,_],
+    [_,K,W,ey,ey,K,_],
+    [_,K,W,O,O,K,_],
+    [K,K,W,W,W,K,K],
+    [K,W,W,W,W,W,K],
+    [K,W,W,W,W,W,K],
+    [_,K,K,K,K,K,_],
+  ];
+  const BAB_R1 = [...BAB_BODY, [_,_,O,_,O,_,_], [_,O,O,_,_,O,_]]; // run A
+  const BAB_R2 = [...BAB_BODY, [_,_,O,_,O,_,_], [_,O,_,_,_,O,O]]; // run B
+  const BAB_J  = [...BAB_BODY, [O,O,_,_,_,O,O], [_,O,_,_,_,O,_]]; // jump
+
+  // ─── Seals ───────────────────────────────────────────────────────────────
+  // Small (6×10 → 24×40 px)
+  const SS = [
+    [_,D,D,D,_,_],[D,G,G,G,D,_],[D,G,ey,G,G,D],[D,Lc,G,G,G,D],
+    [_,D,G,G,D,_],[_,D,G,G,D,_],[_,D,G,G,D,_],[D,D,G,G,D,D],
+    [D,G,G,G,G,D],[_,D,D,D,D,_],
+  ];
+  // Tall (8×14 → 32×56 px)
+  const SB = [
+    [_,_,D,D,D,_,_,_],[_,D,G,G,G,D,_,_],[_,D,G,ey,G,G,D,_],
+    [_,D,Lc,G,G,G,D,_],[_,_,D,G,G,D,_,_],[_,_,D,G,G,D,_,_],
+    [_,_,D,G,G,D,_,_],[_,_,D,G,G,D,_,_],[_,_,D,G,G,D,_,_],
+    [_,_,D,G,G,D,_,_],[_,D,D,G,G,D,D,_],[_,D,G,G,G,G,D,_],
+    [_,D,G,G,G,G,D,_],[_,_,D,D,D,D,_,_],
+  ];
+  // Double (13×10 → 52×40 px)
+  const S2 = [
+    [_,D,D,D,_,_,_,_,D,D,D,_,_],[D,G,G,G,D,_,_,D,G,G,G,D,_],
+    [D,G,ey,G,G,D,D,G,ey,G,G,D,_],[D,Lc,G,G,G,D,D,Lc,G,G,G,D,_],
+    [_,D,G,G,D,_,_,D,G,G,D,_,_],[_,D,G,G,D,_,_,D,G,G,D,_,_],
+    [_,D,G,G,D,_,_,D,G,G,D,_,_],[D,D,G,G,D,D,D,D,G,G,D,D,_],
+    [D,G,G,G,G,D,D,G,G,G,G,D,_],[_,D,D,D,D,_,_,D,D,D,D,_,_],
+  ];
+
+  // ─── Snowball (8×8 → 32×32 px, 2 rotation frames) ───────────────────────
+  const SNB1 = [
+    [_,Sw,Sw,Sw,Sw,Sw,Sw,_],
+    [Sw,Si,Si,Sw,Sw,Sw,Sw,Sw],
+    [Sw,Si,Sw,Sw,Sw,Sw,Sw,Sw],
+    [Sw,Sw,Sw,Sw,Sw,Sw,Sw,Sw],
+    [Sw,Sw,Sw,Sw,Sw,Sw,Si,Sw],
+    [Sw,Sw,Sw,Sw,Sw,Si,Si,Sw],
+    [Sw,Sw,Sw,Sw,Sw,Sw,Sw,Sw],
+    [_,Sw,Sw,Sw,Sw,Sw,Sw,_],
+  ];
+  const SNB2 = [
+    [_,Sw,Sw,Sw,Sw,Sw,Sw,_],
+    [Sw,Sw,Sw,Sw,Si,Si,Sw,Sw],
+    [Sw,Sw,Sw,Sw,Si,Sw,Sw,Sw],
+    [Sw,Sw,Sw,Sw,Sw,Sw,Sw,Sw],
+    [Sw,Sw,Si,Sw,Sw,Sw,Sw,Sw],
+    [Sw,Si,Si,Sw,Sw,Sw,Sw,Sw],
+    [Sw,Sw,Sw,Sw,Sw,Sw,Sw,Sw],
+    [_,Sw,Sw,Sw,Sw,Sw,Sw,_],
+  ];
+
+  // ─── Walrus (12×8 → 48×32 px) — wide + low, faces left ─────────────────
+  const WLR = [
+    [_,_,_,Bw,Bw,Bw,Bw,_,_,_,_,_],
+    [_,_,Bw,Bw,Bw,Bw,Bw,Bw,_,_,_,_],
+    [_,Bw,Bw,ey,Bw,Bw,Bw,Bw,Bw,_,_,_],
+    [Wt,Bw,Wt,Bw,Bw,Bw,Bw,Bw,Bw,Bw,_,_],
+    [Bw,Bw,Bw,Bv,Bv,Bv,Bw,Bw,Bw,Bw,Bw,Bw],
+    [_,Bv,Bv,Bv,Bv,Bv,Bv,Bv,Bv,Bw,Bw,_],
+    [_,_,Bv,Bv,Bv,Bv,Bv,Bv,Bv,_,_,_],
+    [_,_,_,Bv,Bv,Bv,Bv,_,_,_,_,_],
+  ];
+
+  // ─── Canvas & constants ──────────────────────────────────────────────────
+  const cvs = document.getElementById('c');
+  const ctx  = cvs.getContext('2d');
+  const CW=cvs.width, CH=cvs.height;  // logical 750 × 360
+  const GND = CH - 28;  // logical ground y = 332
+  const SZ  = 4;        // sprite scale
+
+  // Fit the canvas element to the viewport while keeping crisp pixels.
+  // The internal coordinate system (750×360) never changes — only the CSS
+  // display size does, so all game logic stays identical on every screen.
+  function fitCanvas() {
+    const maxW = Math.min(CW, window.innerWidth - 32);   // 16px gutter each side
+    cvs.style.width  = maxW + 'px';
+    cvs.style.height = Math.round(maxW * CH / CW) + 'px';
+  }
+  fitCanvas();
+  window.addEventListener('resize', fitCanvas);
+
+  // Returns the CSS↔canvas scale factor so on-canvas text appears
+  // at a consistent physical size on every device.
+  function displayScale() {
+    return cvs.getBoundingClientRect().width / CW || 1;
+  }
+
+  const PW=PAR_R1[0].length*SZ, PH=PAR_R1.length*SZ;   // 40 × 56
+  const BW=BAB_R1[0].length*SZ, BH=BAB_R1.length*SZ;   // 28 × 40
+  const PX=115, BX=55;             // parent x, baby x
+  const B_OFFSET = PH - BH;       // 16 px — keeps both sets of feet level
+  const BABY_DELAY = 9;            // frames baby lags behind parent
+
+  // ─── State ───────────────────────────────────────────────────────────────
+  let state='idle', score=0, hi=parseInt(localStorage.getItem('ar_hi')||'0'), spd=5, frameN=0;
+  let penY, penVy, penJump, parAnim=0, parTick=0;
+  let babyY, babJump, babAnim=0, babTick=0;
+  let obs=[], obsTimer=0, nextObs=90, gndOff=0;
+  let parHistory=[];
+  // Floating alert (e.g. "ICE CRACK!")
+  let alert = { text:'', alpha:0 };
+
+  // Background
+  const stars = Array.from({length:40}, ()=>({
+    x:Math.random()*CW, y:Math.random()*(GND*.72),
+    r:Math.random()<.65?1:2, a:.2+Math.random()*.65,
+  }));
+  const flakes = Array.from({length:22}, ()=>({
+    x:Math.random()*CW, y:Math.random()*GND,
+    sz:Math.random()<.6?1:2, vy:.38+Math.random()*.82, vx:(Math.random()-.5)*.28,
+  }));
+
+  function resetGame() {
+    penY=GND-PH; penVy=0; penJump=false;
+    babyY=GND-BH; babJump=false;
+    parAnim=0; parTick=0; babAnim=0; babTick=0;
+    parHistory=[];
+    obs=[]; obsTimer=0; nextObs=90;
+    score=0; spd=5; frameN=0; gndOff=0;
+    alert={text:'',alpha:0};
+  }
+  resetGame();
+
+  // ─── Sprite renderer ─────────────────────────────────────────────────────
+  function blit(grid, x, y) {
+    for (let r=0; r<grid.length; r++)
+      for (let c=0; c<grid[r].length; c++) {
+        const col=grid[r][c];
+        if (col) { ctx.fillStyle=col; ctx.fillRect(~~(x+c*SZ),~~(y+r*SZ),SZ,SZ); }
+      }
+  }
+
+  // ─── Background ──────────────────────────────────────────────────────────
+  function drawBg() {
+    ctx.fillStyle='#050e1c'; ctx.fillRect(0,0,CW,CH);
+    stars.forEach(s=>{ctx.fillStyle=`rgba(200,225,255,${s.a})`;ctx.fillRect(~~s.x,~~s.y,s.r,s.r);});
+    // crescent moon
+    ctx.fillStyle='#c4e4f8'; ctx.beginPath(); ctx.arc(CW-80,42,24,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#050e1c'; ctx.beginPath(); ctx.arc(CW-66,35,20,0,Math.PI*2); ctx.fill();
+    // subtle aurora band
+    const gr=ctx.createLinearGradient(0,GND*.35,0,GND*.72);
+    gr.addColorStop(0,'rgba(0,100,80,0)'); gr.addColorStop(.5,'rgba(0,100,80,.04)'); gr.addColorStop(1,'rgba(0,100,80,0)');
+    ctx.fillStyle=gr; ctx.fillRect(0,GND*.35,CW,GND*.37);
+    // snowflakes
+    ctx.fillStyle='rgba(200,228,255,.48)';
+    flakes.forEach(f=>ctx.fillRect(~~f.x,~~f.y,f.sz,f.sz));
+  }
+
+  function drawGround() {
+    ctx.fillStyle='#0e2030'; ctx.fillRect(0,GND,CW,CH-GND);
+    ctx.fillStyle='#1c3e5c'; ctx.fillRect(0,GND,CW,2);
+    ctx.fillStyle='rgba(100,180,220,.18)';
+    for (let i=0; i<CW+18; i+=18) {
+      const xi=((i-~~gndOff)%CW+CW)%CW;
+      ctx.fillRect(xi,GND+5,7,1); ctx.fillRect((xi+9)%CW,GND+11,3,1);
+    }
+  }
+
+  // ─── Chasm renderer ──────────────────────────────────────────────────────
+  function drawChasm(o) {
+    // Dark arctic water covers this segment of ground
+    ctx.fillStyle='#030a14'; ctx.fillRect(o.x,GND,o.w,CH-GND);
+    // Water shimmer lines
+    ctx.fillStyle='#0a2438';
+    ctx.fillRect(o.x+4,GND+5,~~(o.w*.55),1);
+    ctx.fillRect(o.x+~~(o.w*.3),GND+12,~~(o.w*.4),1);
+    // Left jagged ice edge
+    ctx.fillStyle='#3a6a8a';
+    ctx.fillRect(o.x-SZ,GND-SZ,SZ+2,SZ+2);
+    ctx.fillStyle='#5aaac8';
+    ctx.fillRect(o.x-SZ*2,GND-SZ*2,SZ,SZ);
+    ctx.fillRect(o.x-SZ,GND-SZ*3,SZ,SZ*2);
+    // Right jagged ice edge
+    ctx.fillStyle='#3a6a8a';
+    ctx.fillRect(o.x+o.w-2,GND-SZ,SZ+2,SZ+2);
+    ctx.fillStyle='#5aaac8';
+    ctx.fillRect(o.x+o.w+SZ,GND-SZ*2,SZ,SZ);
+    ctx.fillRect(o.x+o.w,GND-SZ*3,SZ,SZ*2);
+    // Warning crack lines on ice surface approaching from the left
+    ctx.fillStyle='#1e4060';
+    for (let i=1; i<=4; i++) {
+      const cx=o.x-i*SZ*2;
+      if (cx>0) ctx.fillRect(cx,GND-1,(i===1?SZ:SZ-1),2);
+    }
+  }
+
+  // ─── Obstacle spawning ───────────────────────────────────────────────────
+  function spawnObs() {
+    const r = Math.random();
+    if (r < 0.38) {
+      // Seal pack
+      const sr = Math.random();
+      const g = sr<.38 ? SS : sr<.70 ? SB : S2;
+      obs.push({ type:'seal', g, x:CW+10, y:GND-g.length*SZ, w:g[0].length*SZ, h:g.length*SZ });
+    } else if (r < 0.56) {
+      // Ice chasm
+      const cw = 44 + ~~(Math.random()*44);   // 44–88 px wide
+      obs.push({ type:'chasm', x:CW+10, y:GND, w:cw, h:CH-GND });
+      showAlert('  ICE CRACK!  ');
+    } else if (r < 0.75) {
+      // Rolling snowball
+      obs.push({ type:'snowball', x:CW+10, y:GND-32, w:32, h:32, anim:0, tick:0 });
+      showAlert('  SNOWBALL!  ');
+    } else {
+      // Walrus
+      obs.push({ type:'walrus', g:WLR, x:CW+10, y:GND-WLR.length*SZ, w:WLR[0].length*SZ, h:WLR.length*SZ });
+      showAlert('  WALRUS!  ');
+    }
+  }
+
+  function showAlert(text) {
+    alert = { text, alpha: 1.0 };
+  }
+
+  // ─── Collision detection ─────────────────────────────────────────────────
+  function isHit() {
+    const m=SZ, px=PX+m, py=penY+m, pw=PW-m*2, ph=PH-m*2;
+    return obs.some(o => {
+      if (o.type==='chasm') {
+        // Penguin falls in if feet are at ground level and body overlaps gap
+        return px < o.x+o.w && px+pw > o.x && penY+PH >= GND-2;
+      }
+      // Solid obstacle — standard AABB
+      return px<o.x+o.w-m && px+pw>o.x+m && py<o.y+o.h-m && py+ph>o.y+m;
+    });
+  }
+
+  // ─── Jump / start / restart ──────────────────────────────────────────────
+  function jump() {
+    if (state==='idle'||state==='dead') {
+      state='playing';
+      document.getElementById('msg').textContent='';
+      resetGame();
+    }
+    if (state==='playing' && !penJump) { penVy=-14; penJump=true; }
+  }
+
+  // ─── Main loop ────────────────────────────────────────────────────────────
+  function loop(ts) {
+    requestAnimationFrame(loop);
+
+    flakes.forEach(f=>{
+      f.y+=f.vy; f.x+=f.vx;
+      if(f.y>GND){f.y=-2;f.x=Math.random()*CW;}
+      if(f.x<0)f.x=CW; if(f.x>CW)f.x=0;
+    });
+
+    drawBg();
+    drawGround();
+
+    if (state==='playing') {
+      frameN++; score+=.08; spd=5+frameN*.0022;
+      gndOff=(gndOff+spd)%CW;
+
+      // ── Parent physics ──
+      penVy+=.86; penY+=penVy;
+      const floor=GND-PH;
+      if(penY>=floor){penY=floor;penVy=0;penJump=false;}
+      if(!penJump){parTick++;if(parTick>=7){parAnim^=1;parTick=0;}}
+
+      // ── Baby mirrors parent with 9-frame delay ──
+      parHistory.push(penY);
+      if(parHistory.length>BABY_DELAY){
+        const fy=parHistory.shift();
+        babyY=fy+B_OFFSET;
+        babJump=babyY<(GND-BH-3);
+      } else {
+        babyY=GND-BH; babJump=false;
+      }
+      if(!babJump){babTick++;if(babTick>=7){babAnim^=1;babTick=0;}}
+
+      // ── Spawn & move obstacles ──
+      obsTimer++;
+      if(obsTimer>=nextObs){spawnObs();obsTimer=0;nextObs=60+~~(Math.random()*85);}
+      obs.forEach(o=>o.x-=spd);
+      obs=obs.filter(o=>o.x>-220);
+
+      // ── Animate snowballs ──
+      obs.forEach(o=>{
+        if(o.type==='snowball'){o.tick++;if(o.tick>=4){o.anim^=1;o.tick=0;}}
+      });
+
+      // ── Collision ──
+      if(isHit()){
+        state='dead';
+        if(score>hi){hi=score;localStorage.setItem('ar_hi',~~hi);}
+        document.getElementById('msg').textContent='GAME  OVER — TAP  OR  SPACE  TO  RESTART';
+      }
+
+      document.getElementById('sc').textContent=String(~~score).padStart(5,'0');
+      document.getElementById('hi').textContent=String(~~hi).padStart(5,'0');
+
+      // ── Fade alert ──
+      if(alert.alpha>0) alert.alpha=Math.max(0,alert.alpha-.018);
+    }
+
+    // ── Draw obstacles (behind penguins) ────────────────────────────────────
+    obs.forEach(o=>{
+      if     (o.type==='chasm')    drawChasm(o);
+      else if(o.type==='snowball') blit(o.anim?SNB2:SNB1, o.x, o.y);
+      else                         blit(o.g, o.x, o.y);   // seal or walrus
+    });
+
+    // ── Draw penguins ────────────────────────────────────────────────────────
+    if(state==='idle'){
+      const t=ts/1000;
+      blit(BAB_R1, BX, GND-BH+~~(Math.sin(t*1.3+1)*2));
+      blit(PAR_R1, PX, GND-PH+~~(Math.sin(t*1.1)*2));
+    } else {
+      blit(babJump?BAB_J:(babAnim?BAB_R2:BAB_R1), BX, babyY);
+      blit(penJump?PAR_J:(parAnim?PAR_R2:PAR_R1), PX, penY);
+    }
+
+    // ── Alert overlay — font scaled so text looks the same size on every device ──
+    if(alert.alpha>0){
+      // Canvas coords for a consistent ~14px physical size on all screens
+      const fs = Math.round(14 / displayScale());
+      ctx.globalAlpha=alert.alpha;
+      ctx.fillStyle='#5aaad8';
+      ctx.font=`bold ${fs}px "Courier New"`;
+      ctx.textAlign='center';
+      ctx.fillText(alert.text, CW/2, 42);
+      ctx.globalAlpha=1;
+      ctx.textAlign='left';
+    }
+
+    // ── Death flash ──────────────────────────────────────────────────────────
+    if(state==='dead'&&~~(ts/240)%2===0){
+      ctx.fillStyle='rgba(255,55,55,.11)'; ctx.fillRect(0,0,CW,CH);
+    }
+  }
+
+  requestAnimationFrame(loop);
+
+  // ─── Controls ─────────────────────────────────────────────────────────────
+  document.addEventListener('keydown',e=>{
+    if(e.code==='Space'||e.code==='ArrowUp'){e.preventDefault();jump();}
+  });
+  cvs.addEventListener('click', jump);
+  cvs.addEventListener('touchstart',e=>{e.preventDefault();jump();},{passive:false});
+})();
+</script>
+</body>
+</html>
