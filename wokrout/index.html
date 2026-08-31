@@ -273,7 +273,7 @@
 
 <div class="bar">
   <h1>Phase 1 Training Split</h1>
-  <div class="meta">6 days &middot; roughly 140 sets a week &middot; deload at week 5</div>
+  <div class="meta">6 days &middot; roughly 144 sets a week &middot; 3 working sets max &middot; deload at week 5</div>
   <div class="days" role="tablist" id="days"></div>
 </div>
 
@@ -408,19 +408,19 @@ const DAYS = [
   {
     tab: "Push 1", title: "Push 1", focus: "Chest heavy, triceps, front and side delts",
     ex: [
-      { n: "Barbell bench press", tag: "heavy", sets: 5, reps: "5-8",
+      { n: "Barbell bench press", tag: "heavy", sets: 3, reps: "6-8",
         p: ["chest"], s: ["triceps", "delts"],
         cue: "Shoulder blades pinned back and down, feet driving into the floor. Bar to the lower chest, not the throat." },
-      { n: "Incline dumbbell press", sets: 4, reps: "8-12",
+      { n: "Incline dumbbell press", sets: 3, reps: "8-12",
         p: ["chest"], s: ["delts", "triceps"],
         cue: "Bench at about 30 degrees. Steeper turns it into a shoulder press." },
       { n: "Pec deck or cable fly", sets: 3, reps: "12-15",
         p: ["chest"], s: ["delts"],
         cue: "Slight elbow bend held constant. You are hugging, not pressing." },
-      { n: "Seated dumbbell shoulder press", sets: 4, reps: "8-12",
+      { n: "Seated dumbbell shoulder press", sets: 3, reps: "8-12",
         p: ["delts"], s: ["triceps", "traps"],
         cue: "Ribs down, do not arch the lower back to get the weight up." },
-      { n: "Lateral raise", sets: 4, reps: "12-20",
+      { n: "Lateral raise", sets: 3, reps: "12-20",
         p: ["delts"], s: ["traps"],
         cue: "Lead with the elbows, stop at shoulder height. Light weight beats swinging." },
       { n: "Tricep pushdown", sets: 3, reps: "10-15",
@@ -429,7 +429,7 @@ const DAYS = [
       { n: "Overhead tricep extension", sets: 3, reps: "10-15",
         p: ["triceps"], s: [],
         cue: "Full stretch at the bottom. This is where the long head does its work." },
-      { n: "Cable or band external rotation", sets: 3, reps: "15-20 per side",
+      { n: "Cable or band external rotation", sets: 2, reps: "15-20 per side",
         p: ["rotator"], s: ["delts-rear"],
         cue: "Elbow tucked to your side at 90 degrees. Light weight, slow return. Injury insurance, not size work." },
       { n: "Incline treadmill walk", cardio: true, sets: "-", reps: "15-20 min",
@@ -443,10 +443,10 @@ const DAYS = [
       { n: "Rear delt fly", sets: 2, reps: "12-14",
         p: ["delts-rear"], s: ["traps", "midback"],
         cue: "Thumbs down, arc the arms out and back. Small muscle, small weight." },
-      { n: "Pull-ups", tag: "add weight past 12 clean reps", sets: 4, reps: "8-12",
+      { n: "Pull-ups", tag: "add weight past 12 clean reps", sets: 3, reps: "8-12",
         p: ["lats"], s: ["biceps", "midback", "forearms"],
         cue: "Full hang at the bottom, chest toward the bar at the top. Rep count should climb as you lean out." },
-      { n: "Seated cable row", tag: "primary horizontal pull", sets: 4, reps: "8-12",
+      { n: "Seated cable row", tag: "primary horizontal pull", sets: 3, reps: "8-12",
         p: ["midback", "lats"], s: ["biceps", "delts-rear", "forearms"],
         cue: "Torso still. Pull to the navel and squeeze the shoulder blades together, do not rock." },
       { n: "Straight-arm lat pulldown", sets: 3, reps: "12-15",
@@ -458,7 +458,7 @@ const DAYS = [
       { n: "Hammer curl", sets: 3, reps: "10-12",
         p: ["biceps"], s: ["forearms"],
         cue: "Neutral grip throughout. The only movement in the programme hitting brachialis directly." },
-      { n: "Reverse wrist curl", sets: 3, reps: "15-20",
+      { n: "Reverse wrist curl", sets: 2, reps: "15-20",
         p: ["forearms"], s: [],
         cue: "Light. Extensors only, and they protect against tennis elbow from racket volume." },
       { n: "Hanging leg raise", sets: 3, reps: "near failure",
@@ -472,7 +472,7 @@ const DAYS = [
   {
     tab: "Legs 1", title: "Legs 1", focus: "Quads, hamstrings, adductors, calves",
     ex: [
-      { n: "Barbell back squat", sets: 4, reps: "5-8",
+      { n: "Barbell back squat", sets: 3, reps: "6-8",
         p: ["quads", "glutes"], s: ["adductors", "erectors", "abs"],
         cue: "Brace before you unrack. Break at the hips and knees together, depth to at least parallel." },
       { n: "Leg press", sets: 3, reps: "8-12",
@@ -490,13 +490,13 @@ const DAYS = [
       { n: "Adductor machine", sets: 3, reps: "12-15",
         p: ["adductors"], s: [],
         cue: "Control the return. The stretched position is where groin strains happen in football." },
-      { n: "Standing calf raise", tag: "straight foot, heavy", sets: 4, reps: "12-15",
+      { n: "Standing calf raise", tag: "straight foot, heavy", sets: 3, reps: "12-15",
         p: ["calves"], s: [],
         cue: "Knee straight means gastrocnemius. Full stretch at the bottom, pause at the top." },
       { n: "Seated calf raise", tag: "bench and dumbbell on knees", sets: 3, reps: "15-20",
         p: ["calves"], s: [],
         cue: "Knee bent means soleus. Different muscle from the standing version, not a repeat." },
-      { n: "Heel walks", tag: "toes lifted", sets: 3, reps: "20-30 m",
+      { n: "Heel walks", tag: "toes lifted", sets: 2, reps: "20-30 m",
         p: ["tibialis"], s: [],
         cue: "Can be done during rest periods. Balances 14 weekly sets of calf work." },
       { n: "Incline treadmill walk", cardio: true, sets: "-", reps: "15-20 min",
@@ -507,10 +507,10 @@ const DAYS = [
   {
     tab: "Push 2", title: "Push 2", focus: "Chest light and lower, triceps, shoulders",
     ex: [
-      { n: "Flat dumbbell press", tag: "light", sets: 4, reps: "10-12",
+      { n: "Flat dumbbell press", tag: "light", sets: 3, reps: "10-12",
         p: ["chest"], s: ["triceps", "delts"],
         cue: "Deeper stretch than the barbell. Let the dumbbells travel below chest level." },
-      { n: "Weighted dips or decline press", sets: 4, reps: "8-12",
+      { n: "Weighted dips or decline press", sets: 3, reps: "8-12",
         p: ["chest"], s: ["triceps", "delts"],
         cue: "Lean the torso forward on dips to bias chest. Switch to decline press if shoulders complain." },
       { n: "Low-to-high cable crossover", sets: 3, reps: "12-15",
@@ -519,7 +519,7 @@ const DAYS = [
       { n: "Machine shoulder press", sets: 3, reps: "8-12",
         p: ["delts"], s: ["triceps"],
         cue: "Front delts already get heavy indirect work from every press. Three sets is enough here." },
-      { n: "Dumbbell lateral raise", sets: 4, reps: "12-20",
+      { n: "Dumbbell lateral raise", sets: 3, reps: "12-20",
         p: ["delts"], s: ["traps"],
         cue: "Lean away from a rack and go single-arm, or add partial reps at the top after failure." },
       { n: "Overhead tricep extension", sets: 3, reps: "10-15",
@@ -539,13 +539,13 @@ const DAYS = [
   {
     tab: "Pull 2", title: "Pull 2", focus: "Back thickness, biceps, traps, rear delts",
     ex: [
-      { n: "Rear delt fly", sets: 3, reps: "12-14",
+      { n: "Rear delt fly", sets: 2, reps: "12-14",
         p: ["delts-rear"], s: ["traps", "midback"],
         cue: "Second rear delt session of the week, different movement from the face pull." },
-      { n: "Wide-grip lat pulldown", sets: 4, reps: "10-12",
+      { n: "Wide-grip lat pulldown", sets: 3, reps: "10-12",
         p: ["lats"], s: ["biceps", "midback"],
         cue: "Drive the elbows down toward the hips, do not just pull with the hands." },
-      { n: "Rack pull", tag: "preferred over deadlift", sets: 4, reps: "4-6",
+      { n: "Rack pull", tag: "preferred over deadlift", sets: 3, reps: "4-6",
         p: ["traps", "erectors", "lats"], s: ["glutes", "hamstrings", "forearms"],
         cue: "Bar starts just below the knee. Chosen over a full deadlift so the lower back is fresh for RDLs on Day 6." },
       { n: "Single-arm dumbbell row", sets: 3, reps: "10-12 per side",
@@ -571,10 +571,10 @@ const DAYS = [
   {
     tab: "Legs 2", title: "Legs 2", focus: "Hamstrings, glutes, abductors, calves",
     ex: [
-      { n: "Romanian deadlift", sets: 4, reps: "8-10",
+      { n: "Romanian deadlift", sets: 3, reps: "8-10",
         p: ["hamstrings", "glutes"], s: ["erectors", "forearms", "lats"],
         cue: "Push the hips back, soft knees, bar close to the legs. Stop when the hamstrings run out of stretch." },
-      { n: "Seated leg curl", sets: 4, reps: "10-15",
+      { n: "Seated leg curl", sets: 3, reps: "10-15",
         p: ["hamstrings"], s: ["calves"],
         cue: "Slow on the way back. The lengthening phase is where hamstrings grow." },
       { n: "Hip thrust", tag: "pause at the top", sets: 3, reps: "10-12",
@@ -586,7 +586,7 @@ const DAYS = [
       { n: "Abductor machine", sets: 3, reps: "12-15",
         p: ["abductors"], s: ["glutes"],
         cue: "Glute medius work. Matters for knee tracking when you cut and change direction." },
-      { n: "Standing calf raise", tag: "straight foot, heavy", sets: 4, reps: "12-15",
+      { n: "Standing calf raise", tag: "straight foot, heavy", sets: 3, reps: "12-15",
         p: ["calves"], s: [],
         cue: "Foot angle changes almost nothing. Knee angle is what matters, so skip the toe-in and toe-out sets." },
       { n: "Seated calf raise", tag: "bench and dumbbell on knees", sets: 3, reps: "15-20",
@@ -595,7 +595,7 @@ const DAYS = [
       { n: "Hanging leg raise", sets: 3, reps: "near failure",
         p: ["abs"], s: ["obliques"],
         cue: "Controlled lowering, no swinging." },
-      { n: "Heel walks", tag: "toes lifted", sets: 3, reps: "20-30 m",
+      { n: "Heel walks", tag: "toes lifted", sets: 2, reps: "20-30 m",
         p: ["tibialis"], s: [],
         cue: "Second tibialis session of the week. Shin splint prevention." },
       { n: "Incline treadmill walk", cardio: true, sets: "-", reps: "15-20 min",
