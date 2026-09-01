@@ -72,7 +72,7 @@
     font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     font-size: 16px;
     line-height: 1.45;
-    padding-bottom: calc(72px + var(--timer-h) + env(safe-area-inset-bottom) + 6px);
+    padding-bottom: calc(58px + var(--timer-h) + env(safe-area-inset-bottom) + 6px);
   }
 
   input, button { font: inherit; }
@@ -319,7 +319,7 @@
   .timer {
     position: fixed;
     left: 0; right: 0;
-    bottom: calc(68px + env(safe-area-inset-bottom));
+    bottom: calc(54px + env(safe-area-inset-bottom));
     z-index: 30;
     background: rgba(252,244,233,.97);
     backdrop-filter: blur(10px);
@@ -376,18 +376,6 @@
     border: 2px solid currentColor; border-radius: 5px;
     padding: 3px 4px 2px;
   }
-  .nav-center .cbtn {
-    width: 40px; height: 40px;
-    border-radius: 50%;
-    background: var(--hot); color: var(--on-accent);
-    display: grid; place-items: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,.18);
-  }
-  .nav-center .cbtn svg { width: 20px; height: 20px; }
-  .nav-center.running .cbtn { background: var(--warm); }
-  .nav-center .i-pause { display: none; }
-  .nav-center.running .i-play { display: none; }
-  .nav-center.running .i-pause { display: block; }
   #navStreakVal { font-size: 12px; font-weight: 800; }
 
   .prog-choices { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
@@ -542,7 +530,7 @@
   .btn-primary { background: var(--hot); border-color: var(--hot); color: var(--on-accent); }
 
   .toast {
-    position: fixed; left: 50%; bottom: calc(80px + var(--timer-h) + env(safe-area-inset-bottom) + 14px);
+    position: fixed; left: 50%; bottom: calc(62px + var(--timer-h) + env(safe-area-inset-bottom) + 14px);
     transform: translateX(-50%);
     background: var(--text); color: var(--bg);
     font-size: 13px; font-weight: 560;
@@ -652,13 +640,6 @@
   <button class="nav-item" id="navWeight" type="button">
     <span class="kg-ico" aria-hidden="true">KG</span>
     <span>Weight</span>
-  </button>
-  <button class="nav-item nav-center" id="navCenter" type="button" aria-label="Start workout">
-    <span class="cbtn">
-      <svg class="i-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
-      <svg class="i-pause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>
-    </span>
-    <span id="navCenterLabel">Start</span>
   </button>
   <button class="nav-item" id="navStreak" type="button">
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 2c1 3-1 4-2 6-1 1.6-1 3 .3 4 .8-.6 1.2-1.6 1.4-2.6 1.6 1.4 2.8 3.4 2.8 5.6a5.5 5.5 0 1 1-11 0c0-2.7 1.6-4.6 3-6 .1 1 .5 2 1.5 2.6.8-2 .2-3.8-.3-5.2C11.4 6.5 12 3.7 13 2z"/></svg>
@@ -1333,7 +1314,7 @@ const fmtDate = (iso) => {
 function freshStore() {
   return { v: 3, theme: "light", program: "ps", deload: false,
            variants: {}, today: { date: todayISO(), sessions: {} },
-           history: [], metrics: [] };
+           history: [], metrics: [], lastDay: { ps: 0, gb: 0 }, lastOpen: null };
 }
 
 /* migrate a v2 store (had per-set weight/reps) to v3 (set = boolean) */
@@ -1370,6 +1351,7 @@ function loadStore() {
       o.today = o.today || { date: todayISO(), sessions: {} };
       o.today.sessions = o.today.sessions || {};
       o.history = o.history || []; o.metrics = o.metrics || [];
+      o.lastDay = { ps: 0, gb: 0, ...(o.lastDay || {}) };
       if (o.program !== "ps" && o.program !== "gb") o.program = "ps";
       return o;
     }
@@ -1418,6 +1400,16 @@ function rolloverIfNeeded() {
 const view = { day: 0 };
 let openCards = new Set();
 
+/* Mon->Day 1 ... Sat->Day 6, Sun->Day 1 */
+function weekdayIndex() {
+  const g = new Date().getDay();     // 0 = Sunday
+  return g === 0 ? 0 : g - 1;
+}
+function clampDay(prog, d) {
+  const len = (PROGRAMS[prog] && PROGRAMS[prog].days.length) || 1;
+  return Math.max(0, Math.min((d | 0) || 0, len - 1));
+}
+
 const activeProg  = () => PROGRAMS[store.program];
 const progDayKey  = () => store.program + ":" + view.day;
 const exKey       = (di, ex) => store.program + ":" + di + ":" + slug(ex.n);
@@ -1444,13 +1436,7 @@ function touch(sess) {
 }
 function elapsedAt(sess, at) {
   if (!sess || !sess.startedAt) return 0;
-  const end = sess.pausedAt || at || Date.now();
-  return Math.max(0, end - sess.startedAt - (sess.pausedMs || 0));
-}
-function sessionState() {
-  const s = curSession();
-  if (!s || !s.startedAt) return "idle";
-  return s.pausedAt ? "paused" : "running";
+  return Math.max(0, (at || Date.now()) - sess.startedAt);
 }
 function ensureEntry(sess, i, ex) {
   let e = sess.entries[i];
@@ -1545,8 +1531,13 @@ function renderTabs() {
     b.type = "button";
     b.setAttribute("role", "tab");
     b.setAttribute("aria-selected", i === view.day);
-    b.textContent = (i + 1) + "  " + d.tab;
-    b.addEventListener("click", () => { view.day = i; renderDay(); });
+    b.textContent = d.tab;
+    b.addEventListener("click", () => {
+      view.day = i;
+      store.lastDay[store.program] = i;
+      saveNow();
+      renderDay();
+    });
     tabs.appendChild(b);
   });
 }
@@ -1785,7 +1776,7 @@ function updateProgress() {
     : pct + "% · " + done + "/" + total + " sets";
   if (sess && sess.startedAt) {
     const mins = Math.floor(elapsedAt(sess) / 60000);
-    label += " · " + (sess.pausedAt ? "paused" : mins < 1 ? "just started" : mins + " min");
+    label += " · " + (mins < 1 ? "just started" : mins + " min");
   }
   $("barLabel").textContent = label;
 
@@ -1948,7 +1939,7 @@ async function acquireWake() {
 function releaseWake() { if (wakeLock) { try { wakeLock.release(); } catch (e) {} wakeLock = null; } }
 function syncWake() {
   const sess = curSession();
-  wakeWanted = !!(sess && sess.startedAt && !sess.pausedAt) || tState === "running";
+  wakeWanted = !!(sess && sess.startedAt) || tState === "running";
   if (wakeWanted) acquireWake(); else releaseWake();
 }
 document.addEventListener("visibilitychange", () => {
@@ -2035,7 +2026,7 @@ $("themeToggle").addEventListener("click", () => {
 function switchProgram(p) {
   if ((p !== "ps" && p !== "gb") || p === store.program) return;
   store.program = p;
-  view.day = 0;
+  view.day = clampDay(p, store.lastDay[p]);
   saveNow();
   renderTabs();
   renderNotes();
@@ -2060,13 +2051,6 @@ function resolveIcon(img, fb) {
 }
 
 function updateNav() {
-  const st = sessionState();
-  const center = $("navCenter");
-  center.classList.toggle("running", st === "running");
-  $("navCenterLabel").textContent = st === "running" ? "Pause" : st === "paused" ? "Resume" : "Start";
-  center.setAttribute("aria-label",
-    st === "running" ? "Pause workout" : st === "paused" ? "Resume workout" : "Start workout");
-
   $("navStreakVal").textContent = computeStreak().current;
 
   const meta = PROG_META[store.program] || PROG_META.ps;
@@ -2104,24 +2088,6 @@ $("navWorkout").addEventListener("click", () => {
 });
 
 $("navWeight").addEventListener("click", openWeight);
-
-$("navCenter").addEventListener("click", () => {
-  const s = curSession(true);
-  const st = sessionState();
-  if (st === "idle") {
-    touch(s);
-  } else if (st === "running") {
-    s.pausedAt = Date.now();
-  } else { /* paused */
-    s.pausedMs = (s.pausedMs || 0) + (Date.now() - s.pausedAt);
-    s.pausedAt = null;
-  }
-  saveNow();
-  updateNav();
-  updateProgress();
-  syncWake();
-});
-
 $("navStreak").addEventListener("click", openStreak);
 
 $("progBtn").addEventListener("click", () => {
@@ -2556,7 +2522,7 @@ $("importFile").addEventListener("change", (e) => {
   r.onload = () => {
     try {
       const o = JSON.parse(r.result);
-      if (!o || o.v !== 2) { toast("Not a valid backup"); return; }
+      if (!o || (o.v !== 2 && o.v !== 3)) { toast("Not a valid backup"); return; }
       if (!confirm("Replace all current data with this backup?")) return;
       localStorage.setItem(SKEY, JSON.stringify(o));
       location.reload();
@@ -2595,6 +2561,21 @@ if ("serviceWorker" in navigator && location.protocol.indexOf("http") === 0) {
 }
 
 rolloverIfNeeded();
+
+/* pick the day to land on: the weekday's day on the first open of the day,
+   otherwise wherever you left off in this programme */
+(function chooseDay() {
+  const firstToday = store.lastOpen !== todayISO();
+  store.lastOpen = todayISO();
+  if (firstToday) {
+    const wd = weekdayIndex();
+    store.lastDay.ps = wd;
+    store.lastDay.gb = wd;
+  }
+  view.day = clampDay(store.program, store.lastDay[store.program]);
+  saveNow();
+})();
+
 renderTabs();
 renderNotes();
 renderHistory();
