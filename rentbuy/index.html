@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Rent vs Buy · indi.tools</title>
+  <meta name="description" content="Find the year buying a home overtakes renting, counting the return you give up on the down payment, stamp duty, and the tax deductions that only exist in the old regime.">
+  <meta name="theme-color" content="#00371D">
+  <link rel="canonical" href="https://indi.tools/rentbuy/">
+
+  <meta property="og:title" content="Rent vs Buy · indi.tools">
+  <meta property="og:description" content="The break-even year for buying a home, including the opportunity cost most calculators ignore.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://indi.tools/rentbuy/">
+  <meta property="og:site_name" content="indi.tools">
+
+  <link rel="icon" href="/favicon.ico" sizes="32x32">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <script>(function(){try{var t=localStorage.getItem('indi_theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/base.css">
+
+  <style>
+    main { flex:1; padding-bottom:3rem; }
+    .layout { display:grid; grid-template-columns:360px minmax(0,1fr); gap:1rem; align-items:start; }
+    @media (max-width:980px){ .layout{ display:flex; flex-direction:column; } }
+    .layout > * { min-width:0; max-width:100%; }
+
+    .card { background:var(--panel); border:1px solid var(--line); border-radius:var(--r); padding:1.1rem; box-shadow:var(--shadow-sm); }
+    .card + .card { margin-top:.75rem; }
+    .card h2 { font-size:var(--t-md); font-weight:700; margin-bottom:.15rem; }
+    .card h3 { font-size:var(--t-sm); font-weight:700; margin:1.1rem 0 .5rem; color:var(--dim); }
+    .card .sub { font-size:var(--t-xs); color:var(--faint); margin-bottom:.9rem; }
+
+    .fld { margin-bottom:.7rem; }
+    .fld label { display:block; font-size:var(--t-xs); font-weight:500; color:var(--dim); margin-bottom:.25rem; }
+    .fld input, .fld select {
+      width:100%; font:inherit; font-family:var(--mono); font-size:var(--t-sm); padding:.45rem .6rem;
+      border:1px solid var(--line-2); border-radius:var(--r-sm); background:var(--panel); color:var(--text); text-align:right;
+      /* a native select is a couple of pixels taller than an input, which
+         knocked the pair out of line */
+      height:36px; line-height:1.3; appearance:none; -webkit-appearance:none;
+    }
+    .fld select { background-image:linear-gradient(45deg,transparent 50%,var(--faint) 50%),linear-gradient(135deg,var(--faint) 50%,transparent 50%);
+      background-position:calc(100% - 15px) 15px, calc(100% - 10px) 15px; background-size:5px 5px,5px 5px;
+      background-repeat:no-repeat; padding-right:1.9rem; }
+    .fld select { font-family:var(--sans); text-align:left; }
+    .fld .hint { font-size:.6875rem; color:var(--faint); margin-top:.2rem; display:block; }
+    /* Labels, inputs and hints each occupy their own row, so a label that
+       wraps cannot shove its input below the neighbouring one. */
+    .two { display:grid; grid-template-columns:1fr 1fr; gap:0 .6rem; align-items:end; }
+    .two > .fld { display:contents; }
+    .two > .fld > label { grid-row:1; align-self:end; }
+    .two > .fld > input, .two > .fld > select { grid-row:2; }
+    .two > .fld > .hint { grid-row:3; margin-bottom:.7rem; }
+    .two > .fld:nth-child(1) > * { grid-column:1; }
+    .two > .fld:nth-child(2) > * { grid-column:2; }
+
+    /* verdict */
+    .verdict { border:1px solid var(--line); border-radius:var(--r); padding:1.25rem; background:var(--panel); box-shadow:var(--shadow-sm); }
+    .verdict .lbl { font-family:var(--mono); font-size:.625rem; letter-spacing:.06em; color:var(--faint); }
+    .verdict .head { font-size:clamp(1.4rem,2.6vw,1.9rem); font-weight:700; letter-spacing:-.02em; line-height:1.15; margin:.3rem 0 .5rem; }
+    .verdict .head b { color:var(--t3-ink); }
+    .verdict .why { font-size:var(--t-sm); color:var(--dim); max-width:62ch; }
+    .verdict.rent .head b { color:var(--t2-ink); }
+
+    .kpi { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:.6rem; margin-top:1rem; }
+    .kpi div { background:var(--panel-2); border-radius:var(--r-sm); padding:.65rem .8rem; }
+    .kpi .k { font-family:var(--mono); font-size:.625rem; letter-spacing:.05em; color:var(--faint); display:block; }
+    .kpi .v { font-size:1.05rem; font-weight:700; font-variant-numeric:tabular-nums; margin-top:.15rem; display:block; }
+
+    /* chart */
+    .chartwrap { margin-top:.75rem; }
+    .chart { width:100%; height:auto; display:block; }
+    .legend { display:flex; gap:1.1rem; flex-wrap:wrap; margin-top:.5rem; font-size:var(--t-xs); color:var(--dim); }
+    .legend span i { display:inline-block; width:12px; height:3px; border-radius:2px; margin-right:.4rem; vertical-align:middle; }
+
+    details.more { margin-top:.75rem; border:1px solid var(--line); border-radius:var(--r); background:var(--panel); }
+    details.more > summary { cursor:pointer; list-style:none; padding:.8rem 1rem; font-size:var(--t-sm); font-weight:600;
+      display:flex; justify-content:space-between; align-items:center; gap:1rem; }
+    details.more > summary::-webkit-details-marker{display:none}
+    details.more > summary::after { content:'+'; font-family:var(--mono); color:var(--faint); }
+    details.more[open] > summary::after { content:'−'; }
+    details.more > summary:hover { background:var(--brand-tint); border-radius:var(--r); }
+    .tbl { padding:0 1rem 1rem; overflow-x:auto; min-width:0; max-width:100%; }
+    .tbl table { width:100%; border-collapse:collapse; font-size:var(--t-sm); min-width:560px; }
+    .tbl th { font-family:var(--mono); font-size:var(--t-xs); font-weight:600; color:var(--faint); letter-spacing:.04em;
+      text-align:right; padding:.5rem .6rem; background:var(--panel-2); }
+    .tbl th:first-child, .tbl td:first-child { text-align:left; }
+    .tbl td { padding:.45rem .6rem; border-top:1px solid var(--line); text-align:right; font-variant-numeric:tabular-nums; }
+    .tbl tr.flip td { background:var(--brand-tint); font-weight:600; }
+
+    .sens { font-size:var(--t-sm); color:var(--dim); line-height:1.6; }
+    .sens b { color:var(--text); }
+    .disclaim { font-size:var(--t-xs); color:var(--faint); line-height:1.55; margin-top:1rem;
+      border-left:3px solid var(--t4-ink); padding-left:.8rem; }
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+  </style>
+</head>
+<body>
+
+  <div class="bar"><div class="wrap bar-in">
+    <nav class="breadcrumb"><a href="/">← indi.tools</a><span>/</span><span>Rent vs Buy</span></nav>
+    <div class="bar-r">
+      <a href="https://piyushthesingh.com" target="_blank" rel="noopener noreferrer">Connect</a>
+      <button class="tbtn" data-theme-toggle><span data-theme-label>DARK</span></button>
+    </div>
+  </div></div>
+
+  <div class="wrap">
+    <section class="mast">
+      <h1 class="page-title">Rent <em>vs</em> Buy</h1>
+      <p class="page-subtitle">Most calculators compare an EMI to a rent cheque and stop there. This one also counts what your down payment would have earned invested, the stamp duty you never get back, and the fact that home loan deductions are worth nothing under the new tax regime.</p>
+      <div class="header-tags">
+        <span class="tag">Opportunity cost</span><span class="tag">Both tax regimes</span><span class="tag">In-browser only</span>
+      </div>
+    </section>
+  </div>
+
+  <main class="wrap">
+    <p class="sr-only" id="live" aria-live="polite"></p>
+    <div class="layout">
+
+      <div>
+        <div class="card">
+          <h2>The property</h2>
+          <p class="sub">Annual rates unless stated.</p>
+          <div class="fld"><label for="price">Property price (₹)</label><input type="number" id="price" value="15000000" step="100000"></div>
+          <div class="two">
+            <div class="fld"><label for="downPct">Down payment (%)</label><input type="number" id="downPct" value="20" step="5"><span class="hint" id="down-abs"></span></div>
+            <div class="fld"><label for="buyCostPct">Stamp duty etc. (%)</label><input type="number" id="buyCostPct" value="7" step="0.5"><span class="hint">Duty, registration, legal</span></div>
+          </div>
+          <div class="two">
+            <div class="fld"><label for="loanRate">Loan rate (%)</label><input type="number" id="loanRate" value="8.5" step="0.05"></div>
+            <div class="fld"><label for="tenureYears">Tenure (years)</label><input type="number" id="tenureYears" value="20" step="1"></div>
+          </div>
+          <div class="two">
+            <div class="fld"><label for="upkeepPct">Annual upkeep (%)</label><input type="number" id="upkeepPct" value="1" step="0.1"><span class="hint" id="upkeep-abs">Society charges, repairs, property tax and insurance, every year</span></div>
+            <div class="fld"><label for="sellCostPct">Cost to sell later (%)</label><input type="number" id="sellCostPct" value="2" step="0.5"><span class="hint">Brokerage and paperwork on the day you sell. Usually 1% to 2%, and it comes off the sale price</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Renting instead</h2>
+          <div class="two">
+            <div class="fld"><label for="rentMonthly">Rent today (₹/month)</label><input type="number" id="rentMonthly" value="35000" step="1000"><span class="hint" id="yield-hint"></span></div>
+            <div class="fld"><label for="rentInflation">Rent rises (%/yr)</label><input type="number" id="rentInflation" value="10" step="0.5"></div>
+          </div>
+          <div class="fld"><label for="hraExemptAnnual">HRA exemption while renting (₹/yr)</label>
+            <input type="number" id="hraExemptAnnual" value="0" step="10000">
+            <span class="hint">The deduction you give up by buying. Old regime only. Work it out in the
+              <a href="/salary/">salary calculator</a>, or leave at zero to ignore it.</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Your assumptions</h2>
+          <p class="sub">These two decide almost everything.</p>
+          <div class="two">
+            <div class="fld"><label for="appreciation">Property grows (%/yr)</label><input type="number" id="appreciation" value="6" step="0.5"></div>
+            <div class="fld"><label for="investReturn">Investments return (%/yr)</label><input type="number" id="investReturn" value="9" step="0.5"></div>
+          </div>
+          <div class="two">
+            <div class="fld"><label for="horizon">Compare over (years)</label><input type="number" id="horizon" value="25" step="1"></div>
+            <div class="fld"><label for="regime">Tax regime</label>
+              <select id="regime"><option value="old">Old regime</option><option value="new">New regime</option></select></div>
+          </div>
+          <div class="fld"><label for="c80">80C headroom for loan principal</label>
+            <select id="c80">
+              <option value="0">Already used up by EPF, insurance etc.</option>
+              <option value="150000">Fully available (₹1.5 lakh)</option>
+              <option value="75000">Partly available (₹75,000)</option>
+            </select>
+            <span class="hint">EPF alone often fills 80C, in which case the principal earns you nothing extra.</span>
+          </div>
+          <div class="fld"><label for="marginalRate">Your marginal tax rate (%)</label>
+            <select id="marginalRate">
+              <option value="30">30% (above ₹15 lakh)</option>
+              <option value="20">20%</option>
+              <option value="15">15%</option>
+              <option value="10">10%</option>
+              <option value="5">5%</option>
+              <option value="0">0% (no tax payable)</option>
+            </select>
+            <span class="hint" id="regime-hint"></span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="verdict" id="verdict">
+          <span class="lbl">THE ANSWER</span>
+          <div class="head" id="head"></div>
+          <p class="why" id="why"></p>
+          <div class="kpi">
+            <div><span class="k">MONTHLY EMI</span><span class="v" id="k-emi">₹0</span></div>
+            <div><span class="k">UPFRONT TO BUY</span><span class="v" id="k-upfront">₹0</span></div>
+            <div><span class="k">TAX SAVED: BUY vs RENT</span><span class="v" id="k-tax">₹0</span></div>
+            <div><span class="k">INTEREST PAID</span><span class="v" id="k-int">₹0</span></div>
+          </div>
+        </div>
+
+        <div class="card chartwrap">
+          <h2>Net worth, either way</h2>
+          <p class="sub">What you would be worth at the end of each year if you sold up and walked away.</p>
+          <svg class="chart" id="chart" viewBox="0 0 720 300" role="img" aria-label="Net worth over time, buying versus renting"></svg>
+          <div class="legend">
+            <span><i style="background:var(--t3-ink)"></i>Buying</span>
+            <span><i style="background:var(--t2-ink)"></i>Renting and investing</span>
+            <span><i style="background:var(--t4-ink)"></i>Break-even</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>How wrong could this be?</h2>
+          <p class="sens" id="sens"></p>
+        </div>
+
+        <details class="more"><summary>Year by year</summary>
+          <div class="tbl"><table id="tbl"></table></div>
+        </details>
+
+        <p class="disclaim">
+          A projection, not a forecast. It assumes one self-occupied home, a fixed loan rate, steady growth
+          in both property and investments, and no rental vacancy or major repairs. Deductions under 24(b)
+          and 80C are applied only in the old regime, where they exist for a self-occupied property.
+          The 80C headroom setting matters: if EPF already fills your limit, the loan principal earns you nothing
+          extra, and assuming otherwise flatters buying by lakhs over the period. Buying a home is also a decision
+          about stability and control, and none of that is in these numbers.
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <footer><div class="wrap f-in">
+    <span>© 2026 <b>INDI.TOOLS</b></span><span>MADE IN INDIA</span>
+  </div></footer>
+
+  <script src="./engine.js"></script>
+  <script src="../assets/theme.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
