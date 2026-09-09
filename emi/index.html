@@ -90,8 +90,34 @@
 
     /* ── amortisation ── */
     .amort { margin-top:1rem; }
-    .amort-head { display:flex; align-items:center; justify-content:space-between; gap:.75rem; flex-wrap:wrap; margin-bottom:.7rem; }
-    .amort-head h2 { font-size:var(--t-md); font-weight:700; }
+    #amort-details { background:var(--panel); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow-sm); }
+    #amort-details > summary {
+      list-style:none; cursor:pointer; padding:1rem 1.15rem;
+      display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;
+      border-radius:var(--r);
+    }
+    #amort-details > summary::-webkit-details-marker { display:none; }
+    #amort-details > summary:hover { background:var(--brand-tint); }
+    #amort-details > summary:focus-visible { outline:2px solid var(--brand); outline-offset:-2px; }
+    .sum-left { display:flex; align-items:center; gap:.7rem; min-width:0; }
+    .sum-title { font-size:var(--t-md); font-weight:700; }
+    .sum-meta { font-family:var(--mono); font-size:var(--t-xs); color:var(--faint); }
+    /* the +/- box */
+    .plus { position:relative; width:20px; height:20px; flex:0 0 auto; border:1.5px solid var(--line-2); border-radius:6px; }
+    .plus::before, .plus::after {
+      content:''; position:absolute; background:var(--t3-ink); border-radius:1px;
+      transition:transform .18s ease, opacity .18s ease;
+    }
+    .plus::before { left:4px; right:4px; top:50%; height:2px; margin-top:-1px; }
+    .plus::after  { top:4px; bottom:4px; left:50%; width:2px; margin-left:-1px; }
+    #amort-details[open] .plus::after { transform:rotate(90deg); opacity:0; }
+    #amort-details[open] > summary { border-bottom:1px solid var(--line); border-radius:var(--r) var(--r) 0 0; }
+    #amort-details > *:not(summary) { margin-inline:1.15rem; }
+    #amort-details .amort-head { margin-top:1rem; }
+    #amort-details .note { margin-bottom:1.15rem; }
+    #amort-details .tablewrap { margin-bottom:1rem; }
+    @media (prefers-reduced-motion:reduce){ .plus::before,.plus::after{transition:none} }
+    .amort-head { display:flex; align-items:center; justify-content:flex-end; gap:.75rem; flex-wrap:wrap; margin-bottom:.7rem; }
     .tablewrap { overflow-x:auto; border:1px solid var(--line); border-radius:var(--r); background:var(--panel); }
     table { width:100%; border-collapse:collapse; font-size:var(--t-sm); min-width:640px; }
     th, td { padding:.6rem .75rem; text-align:right; white-space:nowrap; }
@@ -217,8 +243,16 @@
     </div>
 
     <section class="amort">
+      <details id="amort-details">
+        <summary>
+          <span class="sum-left">
+            <span class="plus" aria-hidden="true"></span>
+            <span class="sum-title">Amortisation schedule</span>
+          </span>
+          <span class="sum-meta" id="amort-meta"></span>
+        </summary>
+
       <div class="amort-head">
-        <h2>Amortisation schedule</h2>
         <div class="seg" id="amort-mode" role="group" aria-label="Schedule detail">
           <button data-v="year" aria-pressed="true">Yearly</button>
           <button data-v="month" aria-pressed="false">Every month</button>
@@ -234,6 +268,7 @@
         </table>
       </div>
       <p class="note">Yearly rows are grouped by loan year, not calendar year. Click any year to expand its months. The final instalment absorbs rounding so the balance closes at exactly zero.</p>
+      </details>
     </section>
   </main>
 
