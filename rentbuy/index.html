@@ -131,7 +131,7 @@
         <div class="card">
           <h2>The property</h2>
           <p class="sub">Annual rates unless stated.</p>
-          <div class="fld"><label for="price">Property price (₹)</label><input type="number" id="price" value="15000000" step="100000"></div>
+          <div class="fld"><label for="price">Property price (₹)</label><input type="text" inputmode="numeric" id="price" value="1,50,00,000" data-comma><span class="hint" id="price-words"></span></div>
           <div class="two">
             <div class="fld"><label for="downPct">Down payment (%)</label><input type="number" id="downPct" value="20" step="5"><span class="hint" id="down-abs"></span></div>
             <div class="fld"><label for="buyCostPct">Stamp duty etc. (%)</label><input type="number" id="buyCostPct" value="7" step="0.5"><span class="hint">Duty, registration, legal</span></div>
@@ -149,11 +149,11 @@
         <div class="card">
           <h2>Renting instead</h2>
           <div class="two">
-            <div class="fld"><label for="rentMonthly">Rent today (₹/month)</label><input type="number" id="rentMonthly" value="35000" step="1000"><span class="hint" id="yield-hint"></span></div>
-            <div class="fld"><label for="rentInflation">Rent rises (%/yr)</label><input type="number" id="rentInflation" value="10" step="0.5"></div>
+            <div class="fld"><label for="rentMonthly">Rent today (₹/month)</label><input type="text" inputmode="numeric" id="rentMonthly" value="50,000" data-comma><span class="hint" id="yield-hint"></span></div>
+            <div class="fld"><label for="rentInflation">Rent rises (%/yr)</label><input type="number" id="rentInflation" value="7" step="0.5"></div>
           </div>
           <div class="fld"><label for="hraExemptAnnual">HRA exemption while renting (₹/yr)</label>
-            <input type="number" id="hraExemptAnnual" value="0" step="10000">
+            <input type="text" inputmode="numeric" id="hraExemptAnnual" value="0" data-comma>
             <span class="hint">The deduction you give up by buying. Old regime only. Work it out in the
               <a href="/salary/">salary calculator</a>, or leave at zero to ignore it.</span>
           </div>
