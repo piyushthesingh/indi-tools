@@ -4,11 +4,10 @@
   var KEY = 'indi_theme';
   var root = document.documentElement;
 
-  function systemDark() {
-    return window.matchMedia && matchMedia('(prefers-color-scheme:dark)').matches;
-  }
+  // Light is the default for anyone who has not chosen: no data-theme
+  // attribute means light, and the OS preference is not consulted.
   function current() {
-    return root.getAttribute('data-theme') || (systemDark() ? 'dark' : 'light');
+    return root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
   }
   function label(btn) {
     var next = current() === 'dark' ? 'LIGHT' : 'DARK';
