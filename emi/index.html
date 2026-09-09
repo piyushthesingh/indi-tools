@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>EMI Calculator · indi.tools</title>
+  <meta name="description" content="Work out loan EMIs with a full amortisation schedule. Drag the EMI slider and the tenure adjusts to match. Runs entirely in your browser.">
+  <meta name="theme-color" content="#00371D">
+  <link rel="canonical" href="https://indi.tools/emi/">
+
+  <meta property="og:title" content="EMI Calculator · indi.tools">
+  <meta property="og:description" content="Loan EMIs with a full amortisation schedule, and an EMI slider that works backwards to tenure.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://indi.tools/emi/">
+  <meta property="og:site_name" content="indi.tools">
+
+  <link rel="icon" href="/favicon.ico" sizes="32x32">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <script>(function(){try{var t=localStorage.getItem('indi_theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/base.css">
+
+  <style>
+    main { flex:1; padding-bottom:3rem; }
+    .layout { display:grid; grid-template-columns:minmax(0,1fr) 360px; gap:1rem; align-items:start; }
+    @media (max-width:940px){ .layout{ display:flex; flex-direction:column; } }
+    /* Flex items refuse to shrink past their content width unless told to,
+       which pushed the panel 1px wider than a 360px viewport. */
+    .layout > * { min-width: 0; }
+
+    .panel { background:var(--panel); border:1px solid var(--line); border-radius:var(--r); padding:1.25rem; box-shadow:var(--shadow-sm); }
+
+    /* ── inputs ── */
+    .field + .field { margin-top:1.35rem; }
+    .field-top { display:flex; align-items:center; justify-content:space-between; gap:.75rem; margin-bottom:.5rem; flex-wrap:wrap; }
+    .field-top label { font-size:var(--t-sm); font-weight:500; color:var(--dim); }
+    .valbox { display:inline-flex; align-items:center; gap:.3rem; background:var(--brand-tint);
+      border:1px solid transparent; border-radius:var(--r-sm); padding:.3rem .55rem; }
+    .valbox:focus-within { border-color:var(--brand); }
+    .valbox span { font-family:var(--mono); font-size:var(--t-sm); color:var(--t3-ink); font-weight:600; }
+    .valbox input {
+      width:9ch; border:none; background:transparent; text-align:right; font:inherit;
+      font-family:var(--mono); font-size:var(--t-sm); font-weight:600; color:var(--t3-ink); padding:0;
+    }
+    .valbox input:focus { outline:none; }
+    .valbox input::-webkit-outer-spin-button,.valbox input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+    .valbox input[type=number]{-moz-appearance:textfield}
+    .valbox.wide input { width:12ch; }
+
+    input[type=range]{ width:100%; accent-color:var(--brand); }
+    .scale { display:flex; justify-content:space-between; font-family:var(--mono); font-size:var(--t-xs); color:var(--faint); margin-top:.3rem; }
+
+    .tenure-row { display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; }
+    .tenure-row .valbox { flex:0 0 auto; }
+    .seg { display:inline-flex; gap:.2rem; background:var(--panel-2); padding:.2rem; border-radius:var(--r-sm); }
+    .seg button { font:inherit; font-size:var(--t-xs); font-weight:600; cursor:pointer; padding:.3rem .6rem;
+      border:none; border-radius:6px; background:transparent; color:var(--dim); }
+    .seg button[aria-pressed="true"]{ background:var(--panel); color:var(--text); box-shadow:var(--shadow-sm); }
+
+    .note { font-size:var(--t-xs); color:var(--faint); margin-top:.45rem; line-height:1.45; }
+    .alert { font-size:var(--t-xs); color:var(--t5-ink); margin-top:.5rem; line-height:1.45; font-weight:500; }
+    .linkedby { font-size:var(--t-xs); color:var(--t3-ink); font-weight:600; }
+
+    /* ── results ── */
+    .side { display:flex; flex-direction:column; gap:.75rem; position:sticky; top:1rem; min-width:0; }
+    .emi-big { text-align:center; }
+    .emi-big .lbl { font-size:var(--t-xs); color:var(--faint); font-family:var(--mono); letter-spacing:.06em; }
+    .emi-big .amt { font-size:2.3rem; font-weight:700; letter-spacing:-.03em; line-height:1.1; margin-top:.2rem; font-variant-numeric:tabular-nums; }
+    .emi-big .per { font-size:var(--t-sm); color:var(--dim); }
+
+    .donut { display:flex; align-items:center; gap:1rem; margin-top:1rem; flex-wrap:wrap; justify-content:center; }
+    .donut svg { flex:0 0 auto; }
+    .legend { display:flex; flex-direction:column; gap:.55rem; min-width:0; flex:1 1 150px; }
+    .legend div { display:flex; align-items:baseline; gap:.5rem; font-size:var(--t-sm); }
+    .swatch { width:10px; height:10px; border-radius:3px; flex:0 0 auto; }
+    .legend .k { color:var(--dim); }
+    .legend .v { font-family:var(--mono); font-weight:600; margin-left:auto; }
+
+    .totals { border-top:1px solid var(--line); margin-top:1rem; padding-top:.9rem; display:flex; flex-direction:column; gap:.5rem; }
+    .totals div { display:flex; justify-content:space-between; gap:.5rem; font-size:var(--t-sm); flex-wrap:wrap; }
+    .totals .k { color:var(--dim); }
+    .totals .v { font-family:var(--mono); font-weight:600; font-variant-numeric:tabular-nums; }
+    .totals .grand .k, .totals .grand .v { color:var(--text); font-weight:700; }
+
+    /* ── amortisation ── */
+    .amort { margin-top:1rem; }
+    .amort-head { display:flex; align-items:center; justify-content:space-between; gap:.75rem; flex-wrap:wrap; margin-bottom:.7rem; }
+    .amort-head h2 { font-size:var(--t-md); font-weight:700; }
+    .tablewrap { overflow-x:auto; border:1px solid var(--line); border-radius:var(--r); background:var(--panel); }
+    table { width:100%; border-collapse:collapse; font-size:var(--t-sm); min-width:640px; }
+    th, td { padding:.6rem .75rem; text-align:right; white-space:nowrap; }
+    th:first-child, td:first-child { text-align:left; }
+    thead th { font-family:var(--mono); font-size:var(--t-xs); font-weight:600; color:var(--faint);
+      letter-spacing:.04em; background:var(--panel-2); position:sticky; top:0; }
+    tbody td { font-variant-numeric:tabular-nums; border-top:1px solid var(--line); }
+    tr.year { cursor:pointer; }
+    tr.year:hover { background:var(--brand-tint); }
+    tr.year td:first-child { font-weight:700; }
+    tr.year .chev { display:inline-block; width:1em; color:var(--faint); transition:transform .15s; }
+    tr.year.open .chev { transform:rotate(90deg); }
+    tr.month td { color:var(--dim); background:var(--panel-2); }
+    tr.month td:first-child { padding-left:2rem; font-family:var(--mono); font-size:var(--t-xs); }
+    .pctcell { position:relative; }
+    .pctbar { position:absolute; left:.75rem; right:.75rem; bottom:.35rem; height:3px; background:var(--line); border-radius:2px; overflow:hidden; }
+    .pctbar i { display:block; height:100%; background:var(--t3-ink); }
+
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+    @media (max-width:560px){ .emi-big .amt{font-size:1.9rem} }
+  </style>
+</head>
+<body>
+
+  <div class="bar"><div class="wrap bar-in">
+    <nav class="breadcrumb"><a href="/">← indi.tools</a><span>/</span><span>EMI Calculator</span></nav>
+    <div class="bar-r">
+      <a href="https://piyushthesingh.com" target="_blank" rel="noopener noreferrer">Connect</a>
+      <button class="tbtn" data-theme-toggle><span data-theme-label>DARK</span></button>
+    </div>
+  </div></div>
+
+  <div class="wrap">
+    <section class="mast">
+      <h1 class="page-title">EMI <em>Calculator</em></h1>
+      <p class="page-subtitle">Work out the monthly instalment on a loan, with a full amortisation schedule. Drag the EMI slider and the tenure adjusts to match, so you can plan from what you can actually afford each month.</p>
+      <div class="header-tags">
+        <span class="tag">EMI ↔ tenure</span><span class="tag">Amortisation schedule</span><span class="tag">In-browser only</span>
+      </div>
+    </section>
+  </div>
+
+  <main class="wrap">
+    <p class="sr-only" id="live" aria-live="polite"></p>
+    <div class="layout">
+
+      <div class="panel">
+        <div class="field">
+          <div class="field-top">
+            <label for="amt-n">Loan amount</label>
+            <span class="valbox wide"><span>₹</span><input type="number" id="amt-n" min="1000" step="1000" value="1000000"></span>
+          </div>
+          <input type="range" id="amt-r" min="10000" max="20000000" step="10000" value="1000000" aria-label="Loan amount">
+          <div class="scale"><span>₹10 K</span><span id="amt-help"></span><span>₹2 Cr</span></div>
+        </div>
+
+        <div class="field">
+          <div class="field-top">
+            <label for="rate-n">Rate of interest (p.a.)</label>
+            <span class="valbox"><input type="number" id="rate-n" min="0.1" max="40" step="0.05" value="6.5"><span>%</span></span>
+          </div>
+          <input type="range" id="rate-r" min="0.5" max="30" step="0.05" value="6.5" aria-label="Interest rate">
+          <div class="scale"><span>0.5%</span><span>30%</span></div>
+        </div>
+
+        <div class="field">
+          <div class="field-top">
+            <label for="ten-n">Loan tenure</label>
+            <span class="tenure-row">
+              <span class="valbox"><input type="number" id="ten-n" min="1" step="1" value="5"><span id="ten-unit">Yr</span></span>
+              <span class="seg" role="group" aria-label="Tenure unit">
+                <button data-u="y" aria-pressed="true">Years</button>
+                <button data-u="m" aria-pressed="false">Months</button>
+              </span>
+            </span>
+          </div>
+          <input type="range" id="ten-r" min="1" max="360" step="1" value="60" aria-label="Loan tenure in months">
+          <div class="scale"><span>1 mo</span><span id="ten-help"></span><span>30 yr</span></div>
+        </div>
+
+        <div class="field">
+          <div class="field-top">
+            <label for="emi-n">Monthly EMI <span class="linkedby" id="emi-flag" hidden>· driving tenure</span></label>
+            <span class="valbox wide"><span>₹</span><input type="number" id="emi-n" min="1" step="100" value="19566"></span>
+          </div>
+          <input type="range" id="emi-r" min="1" max="100" step="1" value="50" aria-label="Monthly EMI">
+          <div class="scale"><span id="emi-min"></span><span id="emi-max"></span></div>
+          <p class="note">Drag this and the tenure moves instead. Everything else stays where you put it.</p>
+          <p class="alert" id="emi-alert" hidden></p>
+        </div>
+      </div>
+
+      <aside class="side">
+        <div class="panel">
+          <div class="emi-big">
+            <div class="lbl">MONTHLY EMI</div>
+            <div class="amt" id="out-emi">₹0</div>
+            <div class="per" id="out-tenure">over 0 months</div>
+          </div>
+
+          <div class="donut">
+            <svg width="112" height="112" viewBox="0 0 42 42" aria-hidden="true">
+              <circle cx="21" cy="21" r="15.9155" fill="none" stroke="var(--line)" stroke-width="6"></circle>
+              <circle id="arc-p" cx="21" cy="21" r="15.9155" fill="none" stroke="var(--t3-ink)" stroke-width="6"
+                      stroke-dasharray="0 100" stroke-dashoffset="25" stroke-linecap="butt"></circle>
+              <circle id="arc-i" cx="21" cy="21" r="15.9155" fill="none" stroke="var(--t4-ink)" stroke-width="6"
+                      stroke-dasharray="0 100" stroke-dashoffset="25" stroke-linecap="butt"></circle>
+            </svg>
+            <div class="legend">
+              <div><span class="swatch" style="background:var(--t3-ink)"></span><span class="k">Principal</span><span class="v" id="lg-p">₹0</span></div>
+              <div><span class="swatch" style="background:var(--t4-ink)"></span><span class="k">Interest</span><span class="v" id="lg-i">₹0</span></div>
+            </div>
+          </div>
+
+          <div class="totals">
+            <div><span class="k">Principal amount</span><span class="v" id="out-p">₹0</span></div>
+            <div><span class="k">Total interest</span><span class="v" id="out-i">₹0</span></div>
+            <div class="grand"><span class="k">Total payable</span><span class="v" id="out-t">₹0</span></div>
+            <div><span class="k">Interest as % of principal</span><span class="v" id="out-ratio">0%</span></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <section class="amort">
+      <div class="amort-head">
+        <h2>Amortisation schedule</h2>
+        <div class="seg" id="amort-mode" role="group" aria-label="Schedule detail">
+          <button data-v="year" aria-pressed="true">Yearly</button>
+          <button data-v="month" aria-pressed="false">Every month</button>
+        </div>
+      </div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr>
+            <th scope="col">Period</th><th scope="col">Principal</th><th scope="col">Interest</th>
+            <th scope="col">Total paid</th><th scope="col">Balance</th><th scope="col">Loan paid</th>
+          </tr></thead>
+          <tbody id="amort-body"></tbody>
+        </table>
+      </div>
+      <p class="note">Yearly rows are grouped by loan year, not calendar year. Click any year to expand its months. The final instalment absorbs rounding so the balance closes at exactly zero.</p>
+    </section>
+  </main>
+
+  <footer><div class="wrap f-in">
+    <span>© 2026 <b>INDI.TOOLS</b></span><span>MADE IN INDIA</span>
+  </div></footer>
+
+  <script src="../assets/theme.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
