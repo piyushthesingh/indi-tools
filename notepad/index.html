@@ -3,14 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Notepad &amp; Word Counter — indi.tools</title>
+  <title>Notepad &amp; Word Counter · indi.tools</title>
   <meta name="description" content="A distraction-free notepad with live word, character and sentence counts. Paste messy text and formatting is stripped automatically. Runs entirely in your browser.">
 
   <meta name="theme-color" content="#00371D">
   <link rel="canonical" href="https://indi.tools/notepad/">
-  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" href="/favicon.ico" sizes="32x32">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
-  <meta property="og:title" content="Notepad &amp; Word Counter — indi.tools">
+  <meta property="og:title" content="Notepad &amp; Word Counter · indi.tools">
   <meta property="og:description" content="Live word, character and sentence counts. Nothing leaves your device.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://indi.tools/notepad/">
@@ -114,7 +116,7 @@
   <div class="wrap">
     <section class="mast">
       <h1 class="page-title">Notepad &amp; <em>Word Counter</em></h1>
-      <p class="page-subtitle">Paste messy text from anywhere — Word, email, the web. Formatting is stripped, extra blank lines are collapsed, counts update live.</p>
+      <p class="page-subtitle">Paste messy text from Word, email or the web. Formatting is stripped, extra blank lines are collapsed, and counts update as you type.</p>
       <div class="header-tags">
         <span class="tag">Paste &amp; go</span>
         <span class="tag">Live counts</span>
@@ -154,12 +156,12 @@
         ></textarea>
 
         <div class="roughboard-foot">
-          <span class="roughboard-hint">Pasting strips formatting automatically. Saved in this browser only — never uploaded. Clean up: <kbd>Ctrl/⌘ + Shift + K</kbd></span>
+          <span class="roughboard-hint">Pasting strips formatting automatically. Drafts are saved in this browser only, never uploaded. Clean up: <kbd>Ctrl/⌘ + Shift + K</kbd></span>
           <span class="live-badge"><span class="live-dot"></span> Live</span>
         </div>
       </div>
 
-      <!-- RIGHT ~30%: Stats — 2 columns × 3 rows -->
+      <!-- RIGHT: stats panel -->
       <div class="stats-panel">
         <div class="stats-grid" role="region" aria-label="Text statistics" aria-live="polite">
 
@@ -202,7 +204,7 @@
   </main>
 
   <footer><div class="wrap f-in">
-    <span>© 2026 <b>INDI.TOOLS</b></span><span>BUILT WITH CARE IN INDIA</span>
+    <span>© 2026 <b>INDI.TOOLS</b></span><span>MADE IN INDIA</span>
   </div></footer>
 
   <!-- Toast -->
@@ -286,7 +288,7 @@
   }
 
   // ─────────────────────────────────────────────────────────────
-  //  PASTE — strip rich text, clean up blank lines
+  //  PASTE: strip rich text, clean up blank lines
   // ─────────────────────────────────────────────────────────────
 
   const ta = document.getElementById('roughboard');
@@ -321,7 +323,7 @@
 
   ta.addEventListener('paste', function(e) {
     e.preventDefault();
-    // Plain text only — strips all rich formatting (fonts, sizes, colours)
+    // Plain text only: strips all rich formatting (fonts, sizes, colors)
     const raw = (e.clipboardData || window.clipboardData).getData('text/plain');
     insertAtCursor(normalise(raw));
     updateStats();
@@ -372,7 +374,7 @@
     replaceAll(next);
     updateStats();
     saveDraft();
-    showToast('Cleaned up — Ctrl+Z to undo');
+    showToast('Cleaned up. Ctrl+Z to undo');
   }
 
   function copyText() {
@@ -392,7 +394,7 @@
     updateStats();
     saveDraft();
     ta.focus();
-    showToast('Cleared — Ctrl+Z to undo');
+    showToast('Cleared. Ctrl+Z to undo');
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -410,7 +412,7 @@
   }
 
   // ─────────────────────────────────────────────────────────────
-  //  KEYBOARD SHORTCUT — Cmd/Ctrl+Shift+K to clean
+  //  KEYBOARD SHORTCUT: Cmd/Ctrl+Shift+K to clean
   // ─────────────────────────────────────────────────────────────
 
   updateStats();
