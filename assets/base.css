@@ -7,6 +7,10 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* A class that sets `display` otherwise beats the hidden attribute, which
+   silently reveals elements meant to be toggled off. */
+[hidden] { display: none !important; }
+
 /* ─── TOKENS — LIGHT ─── */
 :root {
   --bg:#EEF3F0; --panel:#FFFFFF; --panel-2:#E5EBE7;
