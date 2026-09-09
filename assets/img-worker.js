@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────────────────────
-   indi.tools — image worker
+   indi.tools: image worker
    Decoding, resizing and encoding run off the main thread so the
    page stays responsive while a batch is processing.
    ───────────────────────────────────────────────────────────── */
@@ -106,7 +106,7 @@ async function process(job) {
     ? Math.max(1024, Math.round(file.size * (percent / 100)))
     : targetBytes;
 
-  // PNG ignores the quality argument entirely — it is lossless — so the
+  // PNG ignores the quality argument entirely: it is lossless: so the
   // only lever is dimensions. Shrink until it fits, then report honestly.
   if (type === 'image/png') {
     let s = scale, blob = await encode(drawScaled(bitmap, s, null), type, 1);
