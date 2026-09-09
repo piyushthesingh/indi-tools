@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────────────────────
-   indi.tools — EMI calculator
+   indi.tools: EMI calculator
    State is {principal, annualRate, months}. EMI is derived from those,
    so the EMI control and the tenure control are two views of the same
    variable: move either and the other follows, exactly.
