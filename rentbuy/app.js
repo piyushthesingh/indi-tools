@@ -16,9 +16,11 @@
     return money(n);
   }
 
+  const num = el => +String(el.value).replace(/[^\d.-]/g, '') || 0;
+
   function read() {
     const o = {};
-    IDS.forEach(id => o[id] = +$('#' + id).value || 0);
+    IDS.forEach(id => o[id] = num($('#' + id)));
     o.regime = $('#regime').value;
     o.marginalRate = +$('#marginalRate').value;
     o.cap24b = 200000;
@@ -71,6 +73,7 @@
     const last = r.final;
 
     $('#down-abs').textContent = money(r.down);
+    $('#price-words').textContent = big(inp.price);
     $('#upkeep-abs').textContent = 'About ' + money(inp.price * inp.upkeepPct / 100)
       + ' in year one: society charges, repairs, property tax and insurance';
     const yieldPct = inp.price ? (inp.rentMonthly * 12 / inp.price) * 100 : 0;
@@ -87,6 +90,21 @@
 
     const box = $('#verdict');
     const gap = last ? last.advantage : 0;
+
+    // An empty or zero price is a normal state while typing, and every
+    // figure is zero, so say nothing rather than declaring a winner.
+    if (!inp.price || !inp.rentMonthly) {
+      box.classList.remove('rent');
+      $('#head').textContent = 'Enter a property price and a rent to compare.';
+      $('#why').textContent = !inp.price
+        ? 'Nothing to work out yet.'
+        : 'Add what you would pay in rent for something similar.';
+      drawChart(r.rows, null);
+      $('#sens').textContent = '';
+      renderTable(r);
+      return;
+    }
+
     if (r.breakEven) {
       box.classList.remove('rent');
       const rentYears = r.breakEven - 1;
@@ -151,6 +169,23 @@
       '<td>' + big(x.buyNet) + '</td><td>' + big(x.rentNet) + '</td></tr>').join('');
     $('#tbl').innerHTML = head + '<tbody>' + body + '</tbody>';
   }
+
+
+  /* Eight digits in a row are unreadable, so the money fields carry Indian
+     grouping as you type. The caret is measured from the end of the string,
+     which keeps it in place as separators appear and disappear. */
+  function formatCommas(el) {
+    const digits = el.value.replace(/[^\d]/g, '');
+    const fromEnd = el.value.length - (el.selectionStart || 0);
+    el.value = digits ? Number(digits).toLocaleString('en-IN') : '';
+    const pos = Math.max(0, el.value.length - fromEnd);
+    try { el.setSelectionRange(pos, pos); } catch (e) {}
+  }
+
+  document.querySelectorAll('[data-comma]').forEach(el => {
+    el.addEventListener('input', () => formatCommas(el));
+    el.addEventListener('blur', () => formatCommas(el));
+  });
 
   IDS.forEach(id => $('#' + id).addEventListener('input', recalc));
   ['regime','marginalRate','c80'].forEach(id => $('#' + id).addEventListener('change', recalc));
