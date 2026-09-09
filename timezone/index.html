@@ -3,14 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Timezone Converter — indi.tools</title>
+  <title>Timezone Converter · indi.tools</title>
   <meta name="description" content="Compare any two timezones instantly. Auto-detects your location. Live analog clocks, editable times. Runs entirely in your browser.">
 
   <meta name="theme-color" content="#00371D">
   <link rel="canonical" href="https://indi.tools/timezone/">
-  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" href="/favicon.ico" sizes="32x32">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
-  <meta property="og:title" content="Timezone Converter — indi.tools">
+  <meta property="og:title" content="Timezone Converter · indi.tools">
   <meta property="og:description" content="Compare any two timezones with live clocks. Runs entirely in your browser.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://indi.tools/timezone/">
@@ -622,7 +624,7 @@
     /* ─── UTILS ─── */
     .hidden { display: none !important; }
 
-    /* Seconds span — desktop hidden, mobile shown */
+    /* Seconds span: hidden on desktop, shown on mobile */
     .dig-sec {
       display: none;
       font-size: 1.3rem;
@@ -632,7 +634,7 @@
       letter-spacing: -0.02em;
     }
 
-    /* Clock toggle button — desktop hidden, mobile shown */
+    /* Clock toggle button: hidden on desktop, shown on mobile */
     .clock-toggle-btn { display: none; }
 
     @media (max-width: 640px) {
@@ -725,7 +727,7 @@
       <!-- Custom time mode banner -->
       <div id="custom-banner" class="custom-banner hidden">
         <div class="custom-banner__text">
-          <strong>Custom time mode</strong> — clocks are frozen. Edit either time input to convert.
+          <strong>Custom time mode.</strong> Clocks are frozen. Edit either time input to convert.
         </div>
         <button class="btn-reset" onclick="resetToLive()">↺ Back to live</button>
       </div>
@@ -851,7 +853,7 @@
 
   <!-- ═══ FOOTER ═══ -->
   <footer><div class="wrap f-in">
-    <span>© 2026 <b>INDI.TOOLS</b></span><span>BUILT WITH CARE IN INDIA</span>
+    <span>© 2026 <b>INDI.TOOLS</b></span><span>MADE IN INDIA</span>
   </div></footer>
 
   <!-- ═══ TIMEZONE DROPDOWN ═══ -->
@@ -1041,7 +1043,7 @@
   // Many systems still report the legacy IANA aliases rather than the
   // current zone names. Asia/Calcutta in particular is what a lot of
   // Indian machines return, and it does not match Asia/Kolkata in
-  // TZ_DATA — auto-detect fell through to the generic fallback and
+  // TZ_DATA, so auto-detect fell through to the generic fallback and
   // showed "Calcutta" with a globe and no country.
   const TZ_ALIASES = {
     'Asia/Calcutta':          'Asia/Kolkata',
