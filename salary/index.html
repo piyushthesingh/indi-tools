@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Take-home Salary Calculator · indi.tools</title>
+  <meta name="description" content="Work out your in-hand salary under the old and new tax regimes for FY 2025-26, including HRA, RSUs, capital gains and every statutory cap. Runs entirely in your browser.">
+  <meta name="theme-color" content="#00371D">
+  <link rel="canonical" href="https://indi.tools/salary/">
+
+  <meta property="og:title" content="Take-home Salary Calculator · indi.tools">
+  <meta property="og:description" content="Old regime vs new regime, side by side, with RSUs and capital gains. Your salary never leaves your browser.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://indi.tools/salary/">
+  <meta property="og:site_name" content="indi.tools">
+
+  <link rel="icon" href="/favicon.ico" sizes="32x32">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <script>(function(){try{var t=localStorage.getItem('indi_theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/base.css">
+
+  <style>
+    main { flex:1; padding-bottom:3rem; }
+    .layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:1rem; align-items:start; }
+    @media (max-width:980px){ .layout{ display:flex; flex-direction:column; } }
+    /* min-width:0 governs the main axis. In a column flex container the
+       columns are laid out on the cross axis, where an item whose content
+       is wider than the container still overflows unless capped. */
+    .layout > * { min-width:0; max-width:100%; }
+
+    .card { background:var(--panel); border:1px solid var(--line); border-radius:var(--r); padding:1.15rem; box-shadow:var(--shadow-sm); }
+    .card + .card { margin-top:.75rem; }
+    .card h2 { font-size:var(--t-md); font-weight:700; margin-bottom:.2rem; }
+    .card h3 { font-size:var(--t-sm); font-weight:700; margin:1rem 0 .5rem; }
+    .card .sub { font-size:var(--t-xs); color:var(--faint); margin-bottom:.9rem; }
+
+    .fybar { display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;
+      background:var(--brand-tint); border:1px solid var(--line); border-radius:var(--r); padding:.7rem 1rem; margin-bottom:1rem; }
+    .fybar strong { font-size:var(--t-sm); }
+    .fybar span { font-size:var(--t-xs); color:var(--dim); }
+    .fybar a { color:var(--t3-ink); }
+
+    .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:.6rem; }
+    @media (max-width:520px){ .grid2{ grid-template-columns:1fr; } }
+    .in label { display:block; font-size:var(--t-xs); font-weight:500; color:var(--dim); margin-bottom:.25rem; }
+    .in input, .in select {
+      width:100%; font:inherit; font-family:var(--mono); font-size:var(--t-sm); padding:.45rem .6rem;
+      border:1px solid var(--line-2); border-radius:var(--r-sm); background:var(--panel); color:var(--text);
+      text-align:right;
+    }
+    .in select, .in input[type=text] { text-align:left; font-family:var(--sans); }
+    .in .cap { font-size:.6875rem; color:var(--faint); margin-top:.2rem; display:block; }
+    .in .cap.hit { color:var(--t4-ink); font-weight:600; }
+    .chk { display:flex; align-items:center; gap:.5rem; font-size:var(--t-sm); color:var(--dim); margin-top:.5rem; }
+    .chk input { width:auto; }
+
+    textarea#paste { width:100%; min-height:110px; font-family:var(--mono); font-size:var(--t-xs);
+      padding:.6rem; border:1px solid var(--line-2); border-radius:var(--r-sm);
+      background:var(--panel); color:var(--text); resize:vertical; }
+    .pasteinfo { font-size:var(--t-xs); color:var(--faint); margin-top:.4rem; }
+    .pasteinfo.ok { color:var(--t3-ink); font-weight:600; }
+    #paste-map { margin-top:.7rem; overflow-x:auto; min-width:0; max-width:100%; }
+    .maptbl { width:100%; border-collapse:collapse; font-size:var(--t-xs); }
+    .maptbl th { text-align:left; font-family:var(--mono); font-size:.625rem; letter-spacing:.05em;
+      color:var(--faint); padding:.3rem .4rem; border-bottom:1px solid var(--line); }
+    .maptbl td { padding:.3rem .4rem; border-bottom:1px solid var(--line); vertical-align:middle; }
+    .maptbl td:nth-child(2) { text-align:right; font-family:var(--mono); white-space:nowrap; }
+    .maptbl select { width:100%; font:inherit; font-size:var(--t-xs); padding:.25rem .35rem;
+      border:1px solid var(--line-2); border-radius:6px; background:var(--panel); color:var(--text); }
+    .maptbl tr.unmatched td:first-child { color:var(--t4-ink); font-weight:600; }
+    .maptbl tr.unmatched select { border-color:var(--t4-ink); }
+
+    /* results */
+    .res { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
+    @media (max-width:700px){ .res{ grid-template-columns:1fr; } }
+    .regime { border:1px solid var(--line); border-radius:var(--r); padding:1rem; background:var(--panel); }
+    .regime.win { border-color:var(--t3-ink); box-shadow:0 0 0 2px var(--brand-tint); }
+    .regime h3 { display:flex; align-items:center; justify-content:space-between; gap:.5rem; margin:0 0 .75rem; font-size:var(--t-sm); }
+    .badge-win { font-family:var(--mono); font-size:.625rem; letter-spacing:.06em; background:var(--live-bg); color:var(--live);
+      padding:.18rem .5rem; border-radius:99px; font-weight:600; }
+    .big { font-size:1.7rem; font-weight:700; letter-spacing:-.03em; font-variant-numeric:tabular-nums; }
+    .biglbl { font-family:var(--mono); font-size:.625rem; letter-spacing:.06em; color:var(--faint); }
+    .line { display:flex; justify-content:space-between; gap:.75rem; font-size:var(--t-sm); padding:.28rem 0; }
+    .line .k { color:var(--dim); } .line .v { font-family:var(--mono); font-variant-numeric:tabular-nums; }
+    .line.tot { border-top:1px solid var(--line); margin-top:.4rem; padding-top:.5rem; font-weight:700; }
+    .line.neg .v { color:var(--t5-ink); }
+
+    details.pkg { background:var(--panel); border:1px solid var(--line); border-radius:var(--r);
+      box-shadow:var(--shadow-sm); margin-bottom:.75rem; }
+    details.pkg > summary { cursor:pointer; list-style:none; padding:.9rem 1.15rem;
+      display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; border-radius:var(--r); }
+    details.pkg > summary::-webkit-details-marker { display:none; }
+    details.pkg > summary:hover { background:var(--brand-tint); }
+    details.pkg > summary:focus-visible { outline:2px solid var(--brand); outline-offset:-2px; }
+    details.pkg[open] > summary { border-bottom:1px solid var(--line); border-radius:var(--r) var(--r) 0 0; }
+    .pkg-left { display:flex; align-items:center; gap:.65rem; min-width:0; }
+    .plus { position:relative; width:20px; height:20px; flex:0 0 auto;
+      border:1.5px solid var(--line-2); border-radius:6px; }
+    .plus::before, .plus::after { content:''; position:absolute; background:var(--t3-ink);
+      border-radius:1px; transition:transform .18s ease, opacity .18s ease; }
+    .plus::before { left:4px; right:4px; top:50%; height:2px; margin-top:-1px; }
+    .plus::after  { top:4px; bottom:4px; left:50%; width:2px; margin-left:-1px; }
+    details.pkg[open] .plus::after { transform:rotate(90deg); opacity:0; }
+    @media (prefers-reduced-motion:reduce){ .plus::before,.plus::after{transition:none} }
+    .pkg-title { font-size:var(--t-md); font-weight:700; }
+    .pkg-warn { font-family:var(--mono); font-size:.625rem; letter-spacing:.06em; text-transform:uppercase;
+      background:var(--t4-bg); color:var(--t4-ink); padding:.15rem .45rem; border-radius:99px; font-weight:600; }
+    .pkg-nums { display:flex; align-items:baseline; gap:.4rem; flex-wrap:wrap; }
+    .pkg-nums b { font-family:var(--mono); font-size:var(--t-sm); font-weight:700; color:var(--t3-ink); }
+    .pkg-nums span { font-family:var(--mono); font-size:.625rem; letter-spacing:.06em; color:var(--faint); margin-right:.5rem; }
+    .pkg-body { padding:0 1.15rem 1rem; }
+    .pkg-body .sub { margin:.8rem 0 .6rem; }
+    .ctcsplit-row { display:flex; justify-content:space-between; gap:1rem; font-size:var(--t-sm); }
+    .ctcsplit-row .k { color:var(--dim); } .ctcsplit-row .v { font-family:var(--mono); font-weight:600; }
+    .comptbl { width:100%; border-collapse:collapse; margin-top:.8rem; font-size:var(--t-sm); }
+    .comptbl td { padding:.28rem .2rem; border-top:1px solid var(--line); }
+    .comptbl td:last-child { text-align:right; font-family:var(--mono); font-variant-numeric:tabular-nums; }
+    .comptbl tr.sum td { font-weight:700; border-top:2px solid var(--line-2); }
+    .comptbl tr.emp td { color:var(--dim); }
+    .comptbl tr.zero td { color:var(--faint); }
+    .ctcnote { font-size:var(--t-xs); color:var(--faint); margin-top:.6rem; line-height:1.5; }
+    .ctcnote b { color:var(--t4-ink); }
+    .verdict { margin-top:.75rem; background:var(--brand-tint); border-radius:var(--r-sm); padding:.7rem .9rem; font-size:var(--t-sm); }
+    .verdict b { color:var(--t3-ink); }
+
+    details.work { margin-top:.75rem; border:1px solid var(--line); border-radius:var(--r); background:var(--panel); }
+    details.work > summary { cursor:pointer; padding:.75rem 1rem; font-size:var(--t-sm); font-weight:600; list-style:none;
+      display:flex; justify-content:space-between; align-items:center; gap:1rem; }
+    details.work > summary::-webkit-details-marker{display:none}
+    details.work > summary::after { content:'+'; font-family:var(--mono); color:var(--faint); }
+    details.work[open] > summary::after { content:'−'; }
+    details.work > summary:hover { background:var(--brand-tint); border-radius:var(--r); }
+    /* Without min-width:0 the scroll container is sized by its 460px table
+       and pushes the whole page wide instead of scrolling inside itself. */
+    details.work { min-width:0; max-width:100%; }
+    .worktbl { padding:0 1rem 1rem; overflow-x:auto; min-width:0; max-width:100%; }
+    .worktbl table { width:100%; border-collapse:collapse; font-size:var(--t-sm); min-width:460px; }
+    .worktbl td { padding:.35rem .5rem; border-top:1px solid var(--line); font-variant-numeric:tabular-nums; }
+    .worktbl td:last-child { text-align:right; font-family:var(--mono); }
+    .worktbl tr.h td { font-weight:700; border-top:none; padding-top:.8rem; color:var(--t3-ink); }
+
+    .disclaim { font-size:var(--t-xs); color:var(--faint); line-height:1.55; margin-top:1rem;
+      border-left:3px solid var(--t4-ink); padding-left:.8rem; }
+
+    .rsu-row { display:grid; grid-template-columns:repeat(5,1fr) auto; gap:.4rem; align-items:end; margin-bottom:.45rem; }
+    @media (max-width:760px){ .rsu-row{ grid-template-columns:1fr 1fr; } }
+    .rsu-row button { padding:.45rem .6rem; }
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+  </style>
+</head>
+<body>
+
+  <div class="bar"><div class="wrap bar-in">
+    <nav class="breadcrumb"><a href="/">← indi.tools</a><span>/</span><span>Take-home Salary</span></nav>
+    <div class="bar-r">
+      <a href="https://piyushthesingh.com" target="_blank" rel="noopener noreferrer">Connect</a>
+      <button class="tbtn" data-theme-toggle><span data-theme-label>DARK</span></button>
+    </div>
+  </div></div>
+
+  <div class="wrap">
+    <section class="mast">
+      <h1 class="page-title">Take-home <em>Salary Calculator</em></h1>
+      <p class="page-subtitle">Enter your salary breakup and see what actually reaches your bank, under both tax regimes side by side. Every statutory cap is applied, and you can open the working to check any figure.</p>
+      <div class="header-tags">
+        <span class="tag">Old vs new regime</span><span class="tag">RSUs &amp; capital gains</span><span class="tag">In-browser only</span>
+      </div>
+    </section>
+  </div>
+
+  <main class="wrap">
+    <p class="sr-only" id="live" aria-live="polite"></p>
+
+    <div class="fybar">
+      <button class="btn-action" id="reset" style="order:3">Reset everything</button>
+      <strong id="fy-label">FY 2025-26 (AY 2026-27)</strong>
+      <span>Slabs, surcharge, rebate and cess verified against
+        <a href="https://www.incometax.gov.in/iec/foportal/help/individual/return-applicable-1" target="_blank" rel="noopener noreferrer">incometax.gov.in</a>
+        on <span id="fy-verified">10 September 2026</span>.</span>
+    </div>
+
+    <div class="layout">
+      <!-- ── LEFT: inputs ── -->
+      <div>
+        <div class="card">
+          <h2>Paste your breakup</h2>
+          <p class="sub">Copy the two columns from your offer letter or payslip spreadsheet and paste below. Component names are matched automatically; anything unrecognised is ignored.</p>
+          <textarea id="paste" placeholder="Basic&#9;1200000&#10;HRA&#9;600000&#10;Special allowance&#9;400000&#10;Bonus&#9;200000"></textarea>
+          <p class="pasteinfo" id="paste-info">Or just fill the fields below.</p>
+          <div id="paste-map" hidden></div>
+        </div>
+
+        <div class="card">
+          <h2>Salary components</h2>
+          <p class="sub">Annual amounts, in rupees.</p>
+          <div class="grid2">
+            <div class="in"><label for="basic">Basic</label><input type="number" id="basic" value="1200000"></div>
+            <div class="in"><label for="da">Dearness allowance</label><input type="number" id="da" value="0"></div>
+            <div class="in"><label for="hra">HRA received</label><input type="number" id="hra" value="600000"></div>
+            <div class="in"><label for="special">Special allowance</label><input type="number" id="special" value="400000"></div>
+            <div class="in"><label for="otherAllow">Other allowances</label><input type="number" id="otherAllow" value="0"></div>
+            <div class="in"><label for="employeePF">Employee PF (yours)</label><input type="number" id="employeePF" value="144000"></div>
+            <div class="in"><label for="employerPF">Employer PF</label><input type="number" id="employerPF" value="144000"></div>
+            <div class="in"><label for="employerNPS">Employer NPS</label><input type="number" id="employerNPS" value="0"><span class="cap" id="cap-nps"></span></div>
+          </div>
+
+          <h3>One-time, annual</h3>
+          <div class="grid2">
+            <div class="in"><label for="bonus">Bonus / variable pay</label><input type="number" id="bonus" value="200000"></div>
+            <div class="in"><label for="lta">LTA</label><input type="number" id="lta" value="0">
+              <span class="chk"><input type="checkbox" id="ltaClaimed"><label for="ltaClaimed" style="margin:0">I have travel bills to claim it</label></span>
+              <span class="cap">Exempt only against actual travel, twice in four years</span></div>
+            <div class="in"><label for="rsuPerquisite">RSU value at vesting</label><input type="number" id="rsuPerquisite" value="0"><span class="cap">Taxed as salary at vest</span></div>
+            <div class="in"><label for="otherIncome">Other income (interest etc.)</label><input type="number" id="otherIncome" value="0"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>About you</h2>
+          <div class="grid2">
+            <div class="in"><label for="ageBand">Age</label>
+              <select id="ageBand"><option value="below60">Under 60</option><option value="senior">60 to 79</option><option value="superSenior">80 and over</option></select></div>
+            <div class="in"><label for="state">State (professional tax)</label>
+              <select id="state"></select></div>
+            <div class="in"><label for="annualRent">Annual rent paid</label><input type="number" id="annualRent" value="360000"></div>
+            <div class="in"><label for="metro">City</label>
+              <select id="metro"><option value="1">Metro (Delhi/Mumbai/Kolkata/Chennai)</option><option value="0">Non-metro</option></select></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Old regime deductions</h2>
+          <p class="sub">These apply only to the old regime. Caps are enforced as you type.</p>
+          <div class="grid2">
+            <div class="in"><label for="s80C">80C (excluding your PF)</label><input type="number" id="s80C" value="0"><span class="cap" id="cap-80c"></span>
+              <span class="chk"><input type="checkbox" id="pfCountsIn80C" checked><label for="pfCountsIn80C" style="margin:0">Add my PF to 80C</label></span></div>
+            <div class="in"><label for="s80CCD1B">80CCD(1B) · NPS</label><input type="number" id="s80CCD1B" value="50000"><span class="cap" id="cap-80ccd"></span></div>
+            <div class="in"><label for="s80D_self">80D · self &amp; family</label><input type="number" id="s80D_self" value="25000"><span class="cap" id="cap-80d"></span></div>
+            <div class="in"><label for="s80D_parents">80D · parents</label><input type="number" id="s80D_parents" value="0"><span class="cap" id="cap-80dp"></span>
+              <span class="chk"><input type="checkbox" id="parentsSenior"><label for="parentsSenior" style="margin:0">Parents are 60+</label></span></div>
+            <div class="in"><label for="homeLoanInterest">24(b) · home loan interest</label><input type="number" id="homeLoanInterest" value="0"><span class="cap" id="cap-24b"></span></div>
+            <div class="in"><label for="savingsInterest">80TTA/TTB · interest</label><input type="number" id="savingsInterest" value="0"><span class="cap" id="cap-80tt"></span></div>
+            <div class="in"><label for="s80E">80E · education loan interest</label><input type="number" id="s80E" value="0"><span class="cap">No cap</span></div>
+            <div class="in"><label for="s80G">80G · donations</label><input type="number" id="s80G" value="0"><span class="cap">Varies by institution</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>RSU sales (capital gains)</h2>
+          <p class="sub">Only shares you actually sold this year. Gain is sale price minus the value already taxed at vesting, so you are not taxed twice.</p>
+          <div id="rsu-rows"></div>
+          <button class="btn-action" id="add-rsu">+ Add a sale</button>
+          <p class="pasteinfo" id="rsu-note"></p>
+        </div>
+      </div>
+
+      <!-- ── RIGHT: results ── -->
+      <div>
+        <details class="pkg" id="pkg-details">
+          <summary>
+            <span class="pkg-left">
+              <span class="plus" aria-hidden="true"></span>
+              <span class="pkg-title">Your package</span>
+              <span class="pkg-warn" id="pkg-warn" hidden>check</span>
+            </span>
+            <span class="pkg-nums">
+              <b id="ctc-total">₹0</b><span>CTC</span>
+              <b id="ctc-gross">₹0</b><span>gross</span>
+            </span>
+          </summary>
+          <div class="pkg-body">
+            <p class="sub">Every figure that feeds the gross. Anything missing or double-counted shows up here.</p>
+            <div class="ctcsplit-row">
+              <span class="k">Employer contributions</span><span class="v" id="ctc-employer">₹0</span>
+            </div>
+            <table class="comptbl"><tbody id="comp-rows"></tbody></table>
+            <p class="ctcnote" id="ctc-note"></p>
+          </div>
+        </details>
+
+        <div class="card">
+          <h2>What reaches your bank</h2>
+          <p class="sub" id="gross-line"></p>
+          <div class="res">
+            <div class="regime" id="reg-old">
+              <h3>Old regime <span id="win-old"></span></h3>
+              <div class="biglbl">MONTHLY IN-HAND</div><div class="big" id="old-month">₹0</div>
+              <div class="line"><span class="k">Annual in-hand</span><span class="v" id="old-year">₹0</span></div>
+              <div class="line"><span class="k">One-time, after tax</span><span class="v" id="old-onetime">₹0</span></div>
+              <div class="line neg"><span class="k">Total tax</span><span class="v" id="old-tax">₹0</span></div>
+              <div class="line"><span class="k">Effective rate</span><span class="v" id="old-eff">0%</span></div>
+            </div>
+            <div class="regime" id="reg-new">
+              <h3>New regime <span id="win-new"></span></h3>
+              <div class="biglbl">MONTHLY IN-HAND</div><div class="big" id="new-month">₹0</div>
+              <div class="line"><span class="k">Annual in-hand</span><span class="v" id="new-year">₹0</span></div>
+              <div class="line"><span class="k">One-time, after tax</span><span class="v" id="new-onetime">₹0</span></div>
+              <div class="line neg"><span class="k">Total tax</span><span class="v" id="new-tax">₹0</span></div>
+              <div class="line"><span class="k">Effective rate</span><span class="v" id="new-eff">0%</span></div>
+            </div>
+          </div>
+          <p class="verdict" id="verdict"></p>
+        </div>
+
+        <details class="work"><summary>Show the working: old regime</summary>
+          <div class="worktbl"><table id="work-old"></table></div></details>
+        <details class="work"><summary>Show the working: new regime</summary>
+          <div class="worktbl"><table id="work-new"></table></div></details>
+
+        <p class="disclaim">
+          An estimate, not tax advice. It assumes a resident individual with salary income, ignores relief u/s 89
+          for arrears, gratuity and leave encashment exemptions, and does not model TDS timing or advance-tax
+          instalments. Employer-side figures such as gratuity accrual are excluded from take-home because they
+          are not paid monthly. Check anything that matters against the
+          <a href="https://eportal.incometax.gov.in/iec/foservices/#/TaxCalc/calculator" target="_blank" rel="noopener noreferrer">official calculator</a>
+          or a chartered accountant.
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <footer><div class="wrap f-in">
+    <span>© 2026 <b>INDI.TOOLS</b></span><span>MADE IN INDIA</span>
+  </div></footer>
+
+  <script src="./tax-rules.js"></script>
+  <script src="./engine.js"></script>
+  <script src="../assets/theme.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
