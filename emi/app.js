@@ -10,7 +10,7 @@
 
   const MIN_MONTHS = 1, MAX_MONTHS = 360;
   const state = { P: 1000000, rate: 6.5, months: 60 };
-  let unit = 'y', amortMode = 'year';
+  let unit = 'y', amortMode = 'year', lastRows = [];
   const openYears = new Set();
 
   const el = {
@@ -22,7 +22,8 @@
     outEmi: $('#out-emi'), outTenure: $('#out-tenure'),
     outP: $('#out-p'), outI: $('#out-i'), outT: $('#out-t'), outRatio: $('#out-ratio'),
     lgP: $('#lg-p'), lgI: $('#lg-i'), arcP: $('#arc-p'), arcI: $('#arc-i'),
-    body: $('#amort-body'), live: $('#live')
+    body: $('#amort-body'), live: $('#live'),
+    details: $('#amort-details'), amortMeta: $('#amort-meta')
   };
 
   /* ── money ─────────────────────────────────────────────────── */
@@ -138,7 +139,15 @@
     el.arcI.setAttribute('stroke-dashoffset', (25 - pPct).toFixed(2));
 
     el.live.textContent = 'EMI ' + money(emi) + ' over ' + tenureWords(months);
-    renderAmort(rows);
+
+    // One line of summary is enough while the schedule is closed. Building
+    // up to 360 rows on every slider tick is both visually noisy and slow,
+    // so the table is only rendered when the section is actually open.
+    el.amortMeta.textContent = months + (months === 1 ? ' instalment · ' : ' instalments · ')
+      + money(totalInterest) + ' interest';
+    lastRows = rows;
+    if (el.details.open) renderAmort(rows);
+
     syncing = false;
   }
 
@@ -288,6 +297,14 @@
     document.querySelectorAll('#amort-mode button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
     render();
   }));
+
+  // build the table the first time it is opened
+  el.details.addEventListener('toggle', () => {
+    // Opening always rebuilds from the current numbers, so there is nothing
+    // to gain from keeping up to 360 rows in the DOM while it is shut.
+    if (el.details.open) renderAmort(lastRows);
+    else el.body.replaceChildren();
+  });
 
   el.emiR.max = String(SLIDER_MAX);
   el.emiR.min = '0';
