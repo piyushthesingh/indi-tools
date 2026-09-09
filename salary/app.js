@@ -237,15 +237,13 @@
     if (inp.employeePF && inp.basic && inp.employeePF > (inp.basic + inp.da) * 0.5) notes.push('Employee PF looks large relative to basic. Check it is the annual figure.');
     $('#ctc-note').innerHTML = notes.length ? notes.join('<br>') : 'Everything adds up.';
 
-    /* A warning inside a collapsed panel is a warning nobody sees, so flag
-       it on the summary row and open the panel the first time one appears. */
+    /* The panel never opens itself. The breakup is already visible on the
+       left, so a warning is signalled with a chip on the summary row and
+       the reader decides whether to look. */
     const warn = $('#pkg-warn');
     warn.hidden = !notes.length;
-    const details = $('#pkg-details');
-    if (notes.length && !warnedOnce) { details.open = true; warnedOnce = true; }
-    if (!notes.length) warnedOnce = false;
+    warn.textContent = notes.length > 1 ? notes.length + ' checks' : 'check';
   }
-  let warnedOnce = false;
 
   /* ── render ────────────────────────────────────────────────── */
   function recalc() {
