@@ -31,15 +31,6 @@
   <link rel="stylesheet" href="assets/base.css">
 
   <style>
-    .kv { display:flex; gap:.6rem; flex-wrap:wrap; margin-top:1.75rem; }
-    .kv div { background:var(--panel); border:1px solid var(--line); border-radius:var(--r-sm);
-      padding:.7rem 1rem; font-family:var(--mono); font-size:.625rem; letter-spacing:.06em; color:var(--faint); }
-    .kv b { display:block; font-family:var(--sans); font-size:1.35rem; font-weight:700;
-      letter-spacing:-.02em; margin-bottom:.1rem; color:var(--text); }
-    .kv div:nth-child(1) b { color:var(--t3-ink); }
-    .kv div:nth-child(2) b { color:var(--t4-ink); }
-    .kv div:nth-child(3) b { color:var(--t2-ink); }
-    .kv div:nth-child(4) b { color:var(--t1-ink); }
 
     .gridhead { display:flex; justify-content:space-between; font-family:var(--mono);
       font-size:.6875rem; color:var(--faint); letter-spacing:.06em; padding-bottom:.75rem; }
@@ -60,7 +51,8 @@
     .num { font-family:var(--mono); font-size:.6875rem; color:var(--faint); letter-spacing:.06em; }
     .card h2 { font-size:var(--t-md); font-weight:700; letter-spacing:-.015em; margin-bottom:.4rem; }
     .card p { font-size:var(--t-sm); color:var(--dim); flex:1; }
-    .tagrow { margin-top:1.1rem; display:flex; align-items:center; justify-content:space-between; gap:.5rem; }
+    .tagrow { margin-top:1.1rem; display:flex; align-items:center; justify-content:flex-end; gap:.5rem; }
+    .card--feature .tagrow { justify-content:space-between; }
     .pill { font-family:var(--mono); font-size:.625rem; letter-spacing:.06em; padding:.22rem .55rem;
       border-radius:99px; background:transparent; color:var(--faint); border:1px solid var(--line-2); font-weight:500; }
     .pill.live { background:var(--live-bg); color:var(--live); border-color:transparent; }
@@ -69,6 +61,19 @@
     .card.soon { background:var(--panel-2); border-style:dashed; box-shadow:none; }
     .card.soon h2 { color:var(--dim); }
 
+    /* CubReps is the flagship. It uses the sage of the status strip rather
+       than the near-black band, which read as a hole in the grid. */
+    .card--feature { background:var(--strip); border-color:var(--strip-line); color:var(--strip-tx); }
+    .card--feature h2 { color:var(--strip-tx); }
+    .card--feature p { color:var(--strip-tx); opacity:.82; }
+    .card--feature .num { color:var(--strip-tx); opacity:.8; }
+    .card--feature .go { color:var(--strip-tx); opacity:.88; }
+    a.card--feature:hover { transform:translateY(-3px); border-color:var(--brand); box-shadow:var(--shadow-md); }
+    a.card--feature:hover .go { opacity:1; }
+    .card--feature .ico { background:var(--panel); padding:0; overflow:hidden; }
+    .card--feature .ico img { width:100%; height:100%; object-fit:cover; display:block; }
+    .pill.ai { background:var(--t1-bg); color:var(--t1-ink); border-color:transparent; font-weight:600; }
+    .card--feature .pill.ai { background:var(--panel); color:var(--strip-tx); border-color:transparent; }
     .c1{--hue:var(--t1);--hue-bg:var(--t1-bg)} .c2{--hue:var(--t2);--hue-bg:var(--t2-bg)}
     .c3{--hue:var(--t3);--hue-bg:var(--t3-bg)} .c4{--hue:var(--t4);--hue-bg:var(--t4-bg)}
     .c5{--hue:var(--t5);--hue-bg:var(--t5-bg)} .c6{--hue:var(--t6);--hue-bg:var(--t6-bg)}
@@ -97,64 +102,74 @@
   <main class="wrap">
     <section class="mast">
       <h1>Small, sharp tools that run <em>entirely</em> on your machine.</h1>
-      <p>Utilities for people who would rather not hand over their data to use a calculator. Each one runs in your browser tab and leaves nothing behind when you close it.</p>
-      <div class="kv">
-        <div><b>6</b>LIVE NOW</div><div><b>1</b>IN PROGRESS</div>
-        <div><b>0</b>BYTES UPLOADED</div><div><b>0</b>ACCOUNTS REQUIRED</div>
-      </div>
+      <p>Utilities for people who would rather not hand over their data to use a calculator. Each one runs in your browser tab and leaves nothing behind when you close it. <b>Zero bytes uploaded, zero accounts required.</b></p>
     </section>
 
-    <div class="gridhead"><span>AVAILABLE TOOLS</span><span>07 TOTAL</span></div>
+    <div class="gridhead"><span>AVAILABLE TOOLS</span><span>09 TOOLS</span></div>
     <ul class="tools-grid" id="tools">
 
-      <li><a class="card c1" href="/colorblindness/">
-        <div class="card-top"><div class="ico"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M1.8 12S5.2 5.8 12 5.8 22.2 12 22.2 12 18.8 18.2 12 18.2 1.8 12 1.8 12Z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.9"/></svg></div><span class="num">01</span></div>
-        <h2>Colorblindness Test</h2>
-        <p>Ishihara-style plates with scoring. No camera, nothing uploaded.</p>
-        <div class="tagrow"><span class="pill live">● LIVE</span><span class="go">OPEN →</span></div>
+      <li><a class="card c3" href="/salary/">
+        <div class="card-top"><div class="ico"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3.5 6.5h17v11h-17z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.6" stroke="currentColor" stroke-width="1.9"/><path d="M6.6 9.6v4.8M17.4 9.6v4.8" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg></div><span class="num">01</span></div>
+        <h2>Take-home Salary Calculator</h2>
+        <p>Old regime vs new, side by side, with HRA, RSUs and capital gains.</p>
+        <div class="tagrow"><span class="go">OPEN →</span></div>
       </a></li>
 
-      <li><a class="card c2" href="/timezone/">
-        <div class="card-top"><div class="ico"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.9"/><path d="M12 7v5.2l3.4 2.1" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg></div><span class="num">02</span></div>
-        <h2>Timezone Converter</h2>
-        <p>Live clocks for any two cities. Built for scheduling across borders.</p>
-        <div class="tagrow"><span class="pill live">● LIVE</span><span class="go">OPEN →</span></div>
+      <li><a class="card c4" href="/rentbuy/">
+        <div class="card-top"><div class="ico"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3.5 10.5 12 4l8.5 6.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 9.8v9.7h13V9.8" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="M9.5 19.5v-5h5v5" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></svg></div><span class="num">02</span></div>
+        <h2>Rent vs Buy</h2>
+        <p>The break-even year for buying a home, counting the return you give up on the down payment.</p>
+        <div class="tagrow"><span class="go">OPEN →</span></div>
       </a></li>
 
-      <li><a class="card c3" href="/notepad/">
+      <li><a class="card c6" href="/notepad/">
         <div class="card-top"><div class="ico"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5.5 3.5h9L19 8v12.5h-13.5V3.5Z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="M14 3.5V8h5M8.5 12h7M8.5 15.5h4.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg></div><span class="num">03</span></div>
         <h2>Notepad &amp; Word Counter</h2>
         <p>Paste anything. Formatting stripped, counts live, drafts kept locally.</p>
-        <div class="tagrow"><span class="pill live">● LIVE</span><span class="go">OPEN →</span></div>
+        <div class="tagrow"><span class="go">OPEN →</span></div>
       </a></li>
 
-      <li><a class="card c4" href="/image/">
+      <li><a class="card c2" href="/image/">
         <div class="card-top"><div class="ico"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="2" stroke="currentColor" stroke-width="1.9"/><circle cx="9" cy="10" r="1.6" stroke="currentColor" stroke-width="1.9"/><path d="M4.5 16.5 9.5 12l4 3.5L17 13l3 2.8" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></svg></div><span class="num">04</span></div>
         <h2>Image Converter &amp; Compressor</h2>
         <p>Compress to an exact file size, convert formats, strip location data.</p>
-        <div class="tagrow"><span class="pill live">● LIVE</span><span class="go">OPEN →</span></div>
+        <div class="tagrow"><span class="go">OPEN →</span></div>
+      </a></li>
+
+      <li><a class="card card--feature" href="/workout/">
+        <div class="card-top"><div class="ico"><img src="assets/cubreps.png" alt="" width="40" height="40"></div><span class="num">05</span></div>
+        <h2>CubReps</h2>
+        <p>An AI-powered training companion. Log sets, track your weight trend and hold a streak, all offline on your device.</p>
+        <div class="tagrow"><span class="pill ai">AI</span><span class="go">OPEN →</span></div>
+      </a></li>
+
+      <li><a class="card c1" href="/colorblindness/">
+        <div class="card-top"><div class="ico"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M1.8 12S5.2 5.8 12 5.8 22.2 12 22.2 12 18.8 18.2 12 18.2 1.8 12 1.8 12Z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.9"/></svg></div><span class="num">06</span></div>
+        <h2>Colorblindness Test</h2>
+        <p>Ishihara-style plates with scoring. No camera, nothing uploaded.</p>
+        <div class="tagrow"><span class="go">OPEN →</span></div>
       </a></li>
 
       <li><a class="card c5" href="/emi/">
-        <div class="card-top"><div class="ico ico--glyph" aria-hidden="true">₹</div><span class="num">05</span></div>
+        <div class="card-top"><div class="ico ico--glyph" aria-hidden="true">₹</div><span class="num">07</span></div>
         <h2>EMI Calculator</h2>
         <p>Loan repayments with a full amortisation schedule, and an EMI slider that works backwards to tenure.</p>
-        <div class="tagrow"><span class="pill live">● LIVE</span><span class="go">OPEN →</span></div>
+        <div class="tagrow"><span class="go">OPEN →</span></div>
       </a></li>
 
-      <li><a class="card c6" href="/salary/">
-        <div class="card-top"><div class="ico"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3.5 6.5h17v11h-17z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.6" stroke="currentColor" stroke-width="1.9"/><path d="M6.6 9.6v4.8M17.4 9.6v4.8" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg></div><span class="num">06</span></div>
-        <h2>Take-home Salary Calculator</h2>
-        <p>Old regime vs new, side by side, with HRA, RSUs and capital gains.</p>
-        <div class="tagrow"><span class="pill live">● LIVE</span><span class="go">OPEN →</span></div>
+      <li><a class="card c2" href="/timezone/">
+        <div class="card-top"><div class="ico"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.9"/><path d="M12 7v5.2l3.4 2.1" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg></div><span class="num">08</span></div>
+        <h2>Timezone Converter</h2>
+        <p>Live clocks for any two cities. Built for scheduling across borders.</p>
+        <div class="tagrow"><span class="go">OPEN →</span></div>
       </a></li>
 
-      <li><div class="card c1 soon">
-        <div class="card-top"><div class="ico"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" stroke="currentColor" stroke-width="1.9"/><rect x="13.5" y="3.5" width="7" height="7" stroke="currentColor" stroke-width="1.9"/><rect x="3.5" y="13.5" width="7" height="7" stroke="currentColor" stroke-width="1.9"/><path d="M13.5 13.5h3v3h-3zM18 18h2.5v2.5H18z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></svg></div><span class="num">07</span></div>
+      <li><a class="card c3" href="/qr/">
+        <div class="card-top"><div class="ico"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" stroke="currentColor" stroke-width="1.9"/><rect x="13.5" y="3.5" width="7" height="7" stroke="currentColor" stroke-width="1.9"/><rect x="3.5" y="13.5" width="7" height="7" stroke="currentColor" stroke-width="1.9"/><path d="M13.5 13.5h3v3h-3zM18 18h2.5v2.5H18z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></svg></div><span class="num">09</span></div>
         <h2>QR Code Generator</h2>
-        <p>Codes from any text or URL. PNG or SVG, no tracking pixels.</p>
-        <div class="tagrow"><span class="pill">○ SOON</span></div>
-      </div></li>
+        <p>Static codes with no tracking redirect. UPI, WiFi and contacts, as SVG or PNG.</p>
+        <div class="tagrow"><span class="go">OPEN →</span></div>
+      </a></li>
 
     </ul>
   </main>
