@@ -6,167 +6,35 @@
   <title>Colorblindness Test — indi.tools</title>
   <meta name="description" content="Check your color vision with Ishihara-style plates. No camera required. Everything runs in your browser.">
 
+  <meta name="theme-color" content="#00371D">
+  <link rel="canonical" href="https://indi.tools/colorblindness/">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+  <meta property="og:title" content="Colorblindness Test — indi.tools">
+  <meta property="og:description" content="Ishihara-style colour vision screening that runs entirely in your browser. Not a medical diagnosis.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://indi.tools/colorblindness/">
+  <meta property="og:site_name" content="indi.tools">
+
+  <script>(function(){try{var t=localStorage.getItem('indi_theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../assets/base.css">
 
   <style>
-    /* ─── RESET ─── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    /* ─── TOKENS (matching indi.tools exactly) ─── */
-    :root {
-      --yellow:       #00D4C2;
-      --black:        #0C0C0C;
-      --white:        #FFFFFF;
-      --green:        #009E60;
-      --red:          #C0392B;
-      --gray-bg:      #F2F2F0;
-      --gray-border:  #C8C8C8;
-      --muted:        #888888;
-
-      --shadow-sm:    3px 3px 0 var(--black);
-      --shadow-md:    5px 5px 0 var(--black);
-      --shadow-muted: 4px 4px 0 var(--gray-border);
-
-      --border:       2.5px solid var(--black);
-      --border-muted: 2px solid var(--gray-border);
-
-      --font:  'Space Grotesk', sans-serif;
-      --mono:  'DM Mono', monospace;
-      --px:    clamp(1rem, 2.5vw, 1.75rem);
-    }
-
-    html { font-size: 16px; scroll-behavior: smooth; }
-
-    body {
-      font-family: var(--font);
-      background: var(--gray-bg);
-      color: var(--black);
-      min-height: 100vh;
-      line-height: 1.55;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* ─── HEADER ─── */
-    header {
-      background-color: var(--yellow);
-      background-image: radial-gradient(circle, rgba(0,0,0,0.14) 1.5px, transparent 1.5px);
-      background-size: 22px 22px;
-      border-bottom: var(--border);
-      padding: 0.875rem var(--px) 1rem;
-    }
-
-    .header-nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      margin-bottom: 0.6rem;
-    }
-
-    .breadcrumb {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-family: var(--mono);
-      font-size: 0.75rem;
-      color: rgba(0,0,0,0.5);
-    }
-    .breadcrumb a { color: var(--black); text-decoration: none; font-weight: 500; }
-    .breadcrumb a:hover { text-decoration: underline; }
-
-    .btn-connect {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-family: var(--font);
-      font-size: 0.875rem;
-      font-weight: 600;
-      text-decoration: none;
-      color: var(--black);
-      background: var(--white);
-      border: var(--border);
-      padding: 0.55rem 1.1rem;
-      box-shadow: var(--shadow-sm);
-      letter-spacing: 0.01em;
-      white-space: nowrap;
-      transition: transform 0.1s ease, box-shadow 0.1s ease;
-    }
-    .btn-connect:hover  { transform: translate(-2px,-2px); box-shadow: var(--shadow-md); }
-    .btn-connect:active { transform: translate(2px,2px); box-shadow: none; }
-
-    /* ─── FOOTER ─── */
-    footer {
-      background: var(--yellow);
-      border-top: var(--border);
-      padding: 0.875rem var(--px);
-    }
-
-    .footer-inner {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-    }
-
-    .footer-copy {
-      font-family: var(--mono);
-      font-size: 0.78rem;
-      color: var(--black);
-    }
-
-    .footer-made {
-      font-family: var(--mono);
-      font-size: 0.78rem;
-      color: rgba(0,0,0,0.48);
-    }
-
-    .page-title {
-      font-size: clamp(1.35rem, 3vw, 1.75rem);
-      font-weight: 700;
-      letter-spacing: -0.03em;
-      line-height: 1.1;
-      margin-bottom: 0.3rem;
-    }
-
-    .page-subtitle {
-      font-size: 0.78rem;
-      font-weight: 500;
-      line-height: 1.5;
-      white-space: nowrap;
-      margin-bottom: 0.6rem;
-    }
-
-    .header-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; }
-
-    .tag {
-      display: inline-flex;
-      align-items: center;
-      font-family: var(--mono);
-      font-size: 0.67rem;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      padding: 0.28rem 0.6rem;
-      background: var(--black);
-      color: var(--yellow);
-      white-space: nowrap;
-    }
-
     /* ─── MAIN ─── */
     main {
       flex: 1;
-      padding: 1.5rem 15% 3rem;
+      padding: 1.75rem var(--px) 3rem;
     }
 
     /* ─── SECTION LABEL ─── */
     .section-label {
       font-family: var(--mono);
-      font-size: 0.72rem;
-      text-transform: uppercase;
+      font-size: var(--t-sm);
       letter-spacing: 0.1em;
       color: var(--muted);
       border-bottom: var(--border);
@@ -190,9 +58,8 @@
 
     .prev-banner__label {
       font-family: var(--mono);
-      font-size: 0.65rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
+      font-size: var(--t-xs);
+      letter-spacing: 0.01em;
       color: var(--muted);
       margin-bottom: 0.2rem;
     }
@@ -235,21 +102,23 @@
     .diff-card:hover  { transform: translate(-2px,-2px); box-shadow: var(--shadow-md); }
     .diff-card:active { transform: translate(2px,2px); box-shadow: none; }
 
+    /* --yellow resolved to the near-black brand green, so the card's normal
+       text colours landed on a dark surface. The tint keeps them readable in
+       both themes. */
     .diff-card.selected {
-      background: var(--yellow);
-      border-color: var(--black);
+      background: var(--brand-tint);
+      border-color: var(--brand);
     }
 
     .diff-card__level {
       font-family: var(--mono);
-      font-size: 0.62rem;
-      text-transform: uppercase;
+      font-size: var(--t-xs);
       letter-spacing: 0.1em;
       color: var(--muted);
       margin-bottom: 0.35rem;
     }
 
-    .diff-card.selected .diff-card__level { color: rgba(0,0,0,0.55); }
+    
 
     .diff-card__name {
       font-size: 1.1rem;
@@ -260,13 +129,13 @@
 
     .diff-card__plates {
       font-family: var(--mono);
-      font-size: 0.75rem;
+      font-size: var(--t-sm);
       color: var(--muted);
       margin-bottom: 0.5rem;
     }
 
     .diff-card__desc {
-      font-size: 0.78rem;
+      font-size: var(--t-sm);
       color: var(--muted);
       line-height: 1.45;
     }
@@ -280,12 +149,11 @@
       border: var(--border);
       background: var(--white);
       color: var(--black);
-      outline: none;
-      margin-bottom: 1rem;
+            margin-bottom: 1rem;
     }
 
     input[type="text"]:focus { box-shadow: 0 0 0 3px rgba(0,212,194,0.35); }
-    input[type="text"]::placeholder { color: var(--gray-border); font-family: var(--mono); font-size: 0.82rem; }
+    input[type="text"]::placeholder { color: var(--muted); opacity: 1; font-size: 0.875rem; }
 
     /* ─── BUTTONS ─── */
     .btn {
@@ -305,8 +173,8 @@
     }
 
     .btn-primary {
-      background: var(--black);
-      color: var(--white);
+      background: var(--brand);
+      color: var(--panel);
       box-shadow: var(--shadow-sm);
       width: 100%;
     }
@@ -340,7 +208,7 @@
 
     .progress-count {
       font-family: var(--mono);
-      font-size: 0.72rem;
+      font-size: var(--t-sm);
       color: var(--muted);
     }
 
@@ -359,20 +227,25 @@
     }
 
     /* ─── PLATE CARD ─── */
+    /* The plate is the stimulus of a colour-vision test, and the luminance
+       immediately around it changes how those colours are read. So this card
+       stays a fixed neutral in BOTH themes — deliberately not themed. */
     .plate-card {
-      background: var(--white);
-      border: var(--border);
-      box-shadow: var(--shadow-md);
+      background: #FFFFFF;
+      color: #121212;
+      border: 1px solid #D8D8D8;
+      border-radius: var(--r);
+      box-shadow: var(--shadow-sm);
       padding: 1.5rem 1.5rem 1.25rem;
       text-align: center;
       margin-bottom: 1rem;
     }
+    .plate-card .plate-hint { color: #4A4A4A; }
 
     .plate-hint {
       font-family: var(--mono);
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
+      font-size: var(--t-sm);
+      letter-spacing: 0.01em;
       color: var(--muted);
       margin-bottom: 1.1rem;
     }
@@ -383,7 +256,7 @@
       border-radius: 50%;
       width: 280px;
       height: 280px;
-      border: var(--border);
+      border: 1px solid #D8D8D8;
     }
 
     /* ─── ANSWER CARD ─── */
@@ -452,8 +325,8 @@
 
     .keyboard-hint {
       font-family: var(--mono);
-      font-size: 0.67rem;
-      color: var(--gray-border);
+      font-size: var(--t-xs);
+      color: var(--muted);
       margin-top: 0.5rem;
       text-align: right;
     }
@@ -477,10 +350,9 @@
 
     .verdict-kicker {
       font-family: var(--mono);
-      font-size: 0.67rem;
-      text-transform: uppercase;
+      font-size: var(--t-xs);
       letter-spacing: 0.1em;
-      color: rgba(0,0,0,0.5);
+      color: var(--faint);
       margin-bottom: 0.3rem;
     }
 
@@ -526,8 +398,7 @@
     .score-tile .lbl {
       font-family: var(--mono);
       font-size: 0.6rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.01em;
       color: var(--muted);
       margin-top: 0.25rem;
     }
@@ -548,9 +419,8 @@
 
     .prev-compare__label {
       font-family: var(--mono);
-      font-size: 0.67rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
+      font-size: var(--t-xs);
+      letter-spacing: 0.01em;
       color: var(--muted);
       margin-bottom: 0.15rem;
     }
@@ -573,9 +443,8 @@
 
     .cmp-item .lbl {
       font-family: var(--mono);
-      font-size: 0.62rem;
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
+      font-size: var(--t-xs);
+      letter-spacing: 0.01em;
       color: var(--muted);
     }
 
@@ -593,9 +462,8 @@
       padding: 0.8rem 1.1rem;
       border-bottom: 2px solid var(--black);
       font-family: var(--mono);
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.09em;
+      font-size: var(--t-sm);
+      letter-spacing: 0.01em;
       font-weight: 500;
     }
 
@@ -620,7 +488,6 @@
     .bd-type {
       font-family: var(--mono);
       font-size: 0.6rem;
-      text-transform: uppercase;
       letter-spacing: 0.06em;
       padding: 0.18rem 0.4rem;
       background: var(--gray-bg);
@@ -659,181 +526,175 @@
 <body>
 
   <!-- ═══ HEADER ═══ -->
-  <header>
-    <div class="header-inner">
-      <div class="header-nav">
-        <nav class="breadcrumb">
-          <a href="/">← indi.tools</a>
-          <span>/</span>
-          <span>Colorblindness Test</span>
-        </nav>
-        <a href="https://piyushthesingh.com" class="btn-connect" target="_blank" rel="noopener noreferrer">
-          Connect with us
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
-            <path d="M2.5 10.5L10.5 2.5M10.5 2.5H4.5M10.5 2.5V8.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </a>
-      </div>
-      <h1 class="page-title">Colorblindness Test</h1>
-      <p class="page-subtitle">Check your color vision with Ishihara-style plates. No camera required — everything stays in your browser.</p>
+  <div class="bar"><div class="wrap bar-in">
+    <nav class="breadcrumb">
+      <a href="/">← indi.tools</a><span>/</span><span>Colorblindness Test</span>
+    </nav>
+    <div class="bar-r">
+      <a href="https://piyushthesingh.com" target="_blank" rel="noopener noreferrer">Connect</a>
+      <button class="tbtn" data-theme-toggle><span data-theme-label>DARK</span></button>
+    </div>
+  </div></div>
+
+  <div class="wrap">
+    <section class="mast">
+      <h1 class="page-title">Colorblindness <em>Test</em></h1>
+      <p class="page-subtitle">Check your colour vision with Ishihara-style plates. No camera required — everything stays in your browser.</p>
       <div class="header-tags">
-        <span class="tag">👁 Vision Screening</span>
-        <span class="tag">🔒 In-browser only</span>
-        <span class="tag">⚕ Not a medical diagnosis</span>
+        <span class="tag">Vision screening</span><span class="tag">In-browser only</span><span class="tag">Not a medical diagnosis</span>
       </div>
-    </div>
-  </header>
+    </section>
+  </div>
 
-  <main>
+  <main class="wrap">
+    <div class="wrap">
 
-    <!-- ═══ START SCREEN ═══ -->
-    <div id="screen-start">
+      <!-- ═══ START SCREEN ═══ -->
+      <div id="screen-start">
 
-      <!-- Previous test score banner -->
-      <div id="prev-banner" class="prev-banner hidden">
-        <div>
-          <div class="prev-banner__label">Previous test</div>
-          <div class="prev-banner__verdict" id="prev-banner-verdict"></div>
-        </div>
-        <div class="prev-banner__pill" id="prev-banner-pill"></div>
-      </div>
-
-      <div class="section-label">Choose difficulty</div>
-
-      <div class="diff-grid">
-
-        <div class="diff-card" id="card-simple" onclick="selectDiff('simple')">
-          <div class="diff-card__level">Level 1</div>
-          <div class="diff-card__name">Simple</div>
-          <div class="diff-card__plates">14 plates · ~4 min</div>
-          <div class="diff-card__desc">A quick first look — covers the most common red-green and blue-yellow tests.</div>
-        </div>
-
-        <div class="diff-card" id="card-medium" onclick="selectDiff('medium')">
-          <div class="diff-card__level">Level 2</div>
-          <div class="diff-card__name">Medium</div>
-          <div class="diff-card__plates">24 plates · ~7 min</div>
-          <div class="diff-card__desc">More thorough — adds harder contrast plates and more variety.</div>
-        </div>
-
-        <div class="diff-card" id="card-complete" onclick="selectDiff('complete')">
-          <div class="diff-card__level">Level 3</div>
-          <div class="diff-card__name">Complete</div>
-          <div class="diff-card__plates">38 plates · ~12 min</div>
-          <div class="diff-card__desc">The full Ishihara-style suite including extreme contrast and rare deficiency plates.</div>
-        </div>
-
-      </div>
-
-      <input type="text" id="player-name" placeholder="Your name (optional)" maxlength="24">
-
-      <button class="btn btn-primary" id="start-btn" onclick="startTest()">
-        Pick a difficulty to begin
-      </button>
-
-    </div>
-
-    <!-- ═══ QUESTION SCREEN ═══ -->
-    <div id="screen-question" class="hidden">
-
-      <div class="progress-row">
-        <span class="progress-label" id="q-label">Plate 1</span>
-        <span class="progress-count" id="q-count">of 14</span>
-      </div>
-      <div class="progress-track">
-        <div class="progress-fill" id="prog-bar" style="width:0%"></div>
-      </div>
-
-      <div class="plate-card">
-        <div class="plate-hint">What number do you see inside the circle?</div>
-        <canvas id="plate-canvas"></canvas>
-      </div>
-
-      <div class="answer-card">
-        <div class="answer-label">Type the number you see (or say you can't):</div>
-        <div class="answer-row">
-          <input type="text" id="answer-input" placeholder="e.g. 29" maxlength="4" inputmode="numeric">
-          <button class="btn-cant" onclick="submitAnswer('')">Can't see one</button>
-          <button class="btn-next" onclick="submitAnswer(document.getElementById('answer-input').value)">Next →</button>
-        </div>
-        <div class="keyboard-hint">Press Enter to advance</div>
-      </div>
-
-    </div>
-
-    <!-- ═══ RESULT SCREEN ═══ -->
-    <div id="screen-result" class="hidden">
-
-      <!-- Verdict -->
-      <div class="verdict-banner" id="verdict-banner">
-        <div class="verdict-kicker">Your Result</div>
-        <div class="verdict-title" id="verdict-title"></div>
-        <div class="verdict-text" id="verdict-text"></div>
-      </div>
-
-      <!-- Score tiles -->
-      <div class="score-row">
-        <div class="score-tile">
-          <div class="num" id="score-total">—</div>
-          <div class="lbl">Total</div>
-        </div>
-        <div class="score-tile">
-          <div class="num" id="score-ctrl">—</div>
-          <div class="lbl">Control</div>
-        </div>
-        <div class="score-tile">
-          <div class="num" id="score-rg">—</div>
-          <div class="lbl">Red-Green</div>
-        </div>
-        <div class="score-tile">
-          <div class="num" id="score-by">—</div>
-          <div class="lbl">Blue-Yellow</div>
-        </div>
-      </div>
-
-      <!-- Previous score comparison -->
-      <div id="prev-compare" class="prev-compare hidden">
-        <div>
-          <div class="prev-compare__label">Compared to last test</div>
-          <div class="prev-compare__mode" id="cmp-mode"></div>
-        </div>
-        <div class="prev-compare__scores">
-          <div class="cmp-item">
-            <div class="val" id="cmp-prev">—</div>
-            <div class="lbl">Previous</div>
+        <!-- Previous test score banner -->
+        <div id="prev-banner" class="prev-banner hidden">
+          <div>
+            <div class="prev-banner__label">Previous test</div>
+            <div class="prev-banner__verdict" id="prev-banner-verdict"></div>
           </div>
-          <div class="cmp-arrow">→</div>
-          <div class="cmp-item">
-            <div class="val" id="cmp-curr">—</div>
-            <div class="lbl">This test</div>
+          <div class="prev-banner__pill" id="prev-banner-pill"></div>
+        </div>
+
+        <div class="section-label">Choose difficulty</div>
+
+        <div class="diff-grid">
+
+          <div class="diff-card" id="card-simple" onclick="selectDiff('simple')">
+            <div class="diff-card__level">Level 1</div>
+            <div class="diff-card__name">Simple</div>
+            <div class="diff-card__plates">14 plates · ~4 min</div>
+            <div class="diff-card__desc">A quick first look — covers the most common red-green and blue-yellow tests.</div>
+          </div>
+
+          <div class="diff-card" id="card-medium" onclick="selectDiff('medium')">
+            <div class="diff-card__level">Level 2</div>
+            <div class="diff-card__name">Medium</div>
+            <div class="diff-card__plates">24 plates · ~7 min</div>
+            <div class="diff-card__desc">More thorough — adds harder contrast plates and more variety.</div>
+          </div>
+
+          <div class="diff-card" id="card-complete" onclick="selectDiff('complete')">
+            <div class="diff-card__level">Level 3</div>
+            <div class="diff-card__name">Complete</div>
+            <div class="diff-card__plates">38 plates · ~12 min</div>
+            <div class="diff-card__desc">The full Ishihara-style suite including extreme contrast and rare deficiency plates.</div>
+          </div>
+
+        </div>
+
+        <input type="text" id="player-name" placeholder="Your name (optional)" maxlength="24">
+
+        <button class="btn btn-primary" id="start-btn" onclick="startTest()">
+          Pick a difficulty to begin
+        </button>
+
+      </div>
+
+      <!-- ═══ QUESTION SCREEN ═══ -->
+      <div id="screen-question" class="hidden">
+
+        <div class="progress-row">
+          <span class="progress-label" id="q-label">Plate 1</span>
+          <span class="progress-count" id="q-count">of 14</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="prog-bar" style="width:0%"></div>
+        </div>
+
+        <div class="plate-card">
+          <div class="plate-hint">What number do you see inside the circle?</div>
+          <canvas id="plate-canvas"></canvas>
+        </div>
+
+        <div class="answer-card">
+          <div class="answer-label">Type the number you see (or say you can't):</div>
+          <div class="answer-row">
+            <input type="text" id="answer-input" placeholder="e.g. 29" maxlength="4" inputmode="numeric">
+            <button class="btn-cant" onclick="submitAnswer('')">Can't see one</button>
+            <button class="btn-next" onclick="submitAnswer(document.getElementById('answer-input').value)">Next →</button>
+          </div>
+          <div class="keyboard-hint">Press Enter to advance</div>
+        </div>
+
+      </div>
+
+      <!-- ═══ RESULT SCREEN ═══ -->
+      <div id="screen-result" class="hidden">
+
+        <!-- Verdict -->
+        <div class="verdict-banner" id="verdict-banner">
+          <div class="verdict-kicker">Your Result</div>
+          <div class="verdict-title" id="verdict-title"></div>
+          <div class="verdict-text" id="verdict-text"></div>
+        </div>
+
+        <!-- Score tiles -->
+        <div class="score-row">
+          <div class="score-tile">
+            <div class="num" id="score-total">—</div>
+            <div class="lbl">Total</div>
+          </div>
+          <div class="score-tile">
+            <div class="num" id="score-ctrl">—</div>
+            <div class="lbl">Control</div>
+          </div>
+          <div class="score-tile">
+            <div class="num" id="score-rg">—</div>
+            <div class="lbl">Red-Green</div>
+          </div>
+          <div class="score-tile">
+            <div class="num" id="score-by">—</div>
+            <div class="lbl">Blue-Yellow</div>
           </div>
         </div>
-      </div>
 
-      <!-- Plate-by-plate breakdown -->
-      <div class="breakdown-wrap">
-        <div class="breakdown-head">Plate-by-plate breakdown</div>
-        <ul class="breakdown-list" id="breakdown"></ul>
-      </div>
+        <!-- Previous score comparison -->
+        <div id="prev-compare" class="prev-compare hidden">
+          <div>
+            <div class="prev-compare__label">Compared to last test</div>
+            <div class="prev-compare__mode" id="cmp-mode"></div>
+          </div>
+          <div class="prev-compare__scores">
+            <div class="cmp-item">
+              <div class="val" id="cmp-prev">—</div>
+              <div class="lbl">Previous</div>
+            </div>
+            <div class="cmp-arrow">→</div>
+            <div class="cmp-item">
+              <div class="val" id="cmp-curr">—</div>
+              <div class="lbl">This test</div>
+            </div>
+          </div>
+        </div>
 
-      <!-- Disclaimer -->
-      <div class="disclaimer">
-        ⚠️ This is a digital screening tool, not a medical test. Screen brightness, color calibration, and lighting in your room all affect the result. If you're worried about your color vision, visit an eye doctor (ophthalmologist) for a proper clinical test.
-      </div>
+        <!-- Plate-by-plate breakdown -->
+        <div class="breakdown-wrap">
+          <div class="breakdown-head">Plate-by-plate breakdown</div>
+          <ul class="breakdown-list" id="breakdown"></ul>
+        </div>
 
-      <button class="btn btn-primary" onclick="restart()">Take Test Again</button>
+        <!-- Disclaimer -->
+        <div class="disclaimer">
+          ⚠️ This is a digital screening tool, not a medical test. Screen brightness, color calibration, and lighting in your room all affect the result. If you're worried about your color vision, visit an eye doctor (ophthalmologist) for a proper clinical test.
+        </div>
+
+        <button class="btn btn-primary" onclick="restart()">Take Test Again</button>
+
+      </div>
 
     </div>
-
   </main>
 
   <!-- ═══ FOOTER ═══ -->
-  <footer>
-    <div class="footer-inner">
-      <span class="footer-copy">© 2026 indi.tools</span>
-      <span class="footer-made">Built with care in India 🇮🇳</span>
-    </div>
-  </footer>
+  <footer><div class="wrap f-in">
+    <span>© 2026 <b>INDI.TOOLS</b></span><span>BUILT WITH CARE IN INDIA</span>
+  </div></footer>
 
 <script>
   // ─────────────────────────────────────────────────────────────────
@@ -1157,5 +1018,6 @@
   refreshPrevBanner();
 </script>
 
+  <script src="../assets/theme.js"></script>
 </body>
 </html>
