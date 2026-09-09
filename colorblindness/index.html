@@ -3,15 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Colorblindness Test — indi.tools</title>
+  <title>Colorblindness Test · indi.tools</title>
   <meta name="description" content="Check your color vision with Ishihara-style plates. No camera required. Everything runs in your browser.">
 
   <meta name="theme-color" content="#00371D">
   <link rel="canonical" href="https://indi.tools/colorblindness/">
-  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" href="/favicon.ico" sizes="32x32">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
-  <meta property="og:title" content="Colorblindness Test — indi.tools">
-  <meta property="og:description" content="Ishihara-style colour vision screening that runs entirely in your browser. Not a medical diagnosis.">
+  <meta property="og:title" content="Colorblindness Test · indi.tools">
+  <meta property="og:description" content="Ishihara-style color vision screening that runs entirely in your browser. Not a medical diagnosis.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://indi.tools/colorblindness/">
   <meta property="og:site_name" content="indi.tools">
@@ -103,7 +105,7 @@
     .diff-card:active { transform: translate(2px,2px); box-shadow: none; }
 
     /* --yellow resolved to the near-black brand green, so the card's normal
-       text colours landed on a dark surface. The tint keeps them readable in
+       text colors landed on a dark surface. The tint keeps them readable in
        both themes. */
     .diff-card.selected {
       background: var(--brand-tint);
@@ -227,9 +229,9 @@
     }
 
     /* ─── PLATE CARD ─── */
-    /* The plate is the stimulus of a colour-vision test, and the luminance
-       immediately around it changes how those colours are read. So this card
-       stays a fixed neutral in BOTH themes — deliberately not themed. */
+    /* The plate is the stimulus of a color-vision test, and the luminance
+       immediately around it changes how those colors are read. So this card
+       stays a fixed neutral in BOTH themes, deliberately not themed. */
     .plate-card {
       background: #FFFFFF;
       color: #121212;
@@ -539,7 +541,7 @@
   <div class="wrap">
     <section class="mast">
       <h1 class="page-title">Colorblindness <em>Test</em></h1>
-      <p class="page-subtitle">Check your colour vision with Ishihara-style plates. No camera required — everything stays in your browser.</p>
+      <p class="page-subtitle">Check your color vision with Ishihara-style plates. No camera required, and everything stays in your browser.</p>
       <div class="header-tags">
         <span class="tag">Vision screening</span><span class="tag">In-browser only</span><span class="tag">Not a medical diagnosis</span>
       </div>
@@ -569,14 +571,14 @@
             <div class="diff-card__level">Level 1</div>
             <div class="diff-card__name">Simple</div>
             <div class="diff-card__plates">14 plates · ~4 min</div>
-            <div class="diff-card__desc">A quick first look — covers the most common red-green and blue-yellow tests.</div>
+            <div class="diff-card__desc">A quick first look, covering the most common red-green and blue-yellow tests.</div>
           </div>
 
           <div class="diff-card" id="card-medium" onclick="selectDiff('medium')">
             <div class="diff-card__level">Level 2</div>
             <div class="diff-card__name">Medium</div>
             <div class="diff-card__plates">24 plates · ~7 min</div>
-            <div class="diff-card__desc">More thorough — adds harder contrast plates and more variety.</div>
+            <div class="diff-card__desc">More thorough, with harder contrast plates and more variety.</div>
           </div>
 
           <div class="diff-card" id="card-complete" onclick="selectDiff('complete')">
@@ -693,7 +695,7 @@
 
   <!-- ═══ FOOTER ═══ -->
   <footer><div class="wrap f-in">
-    <span>© 2026 <b>INDI.TOOLS</b></span><span>BUILT WITH CARE IN INDIA</span>
+    <span>© 2026 <b>INDI.TOOLS</b></span><span>MADE IN INDIA</span>
   </div></footer>
 
 <script>
@@ -923,34 +925,34 @@
     if (ctrlPct < 0.5) {
       cls   = "v-bad-screen";
       title = "Your screen may be affecting the result";
-      text  = `${name} missed most of the "control" plates — these are the easy ones that everyone is supposed to see, regardless of their color vision. This usually means the screen is too dark, too bright, or the colors look off due to your display settings. Try turning up your brightness, closing the blinds, and retaking the test. If it keeps happening, see an eye doctor just to be safe.`;
+      text  = `${name} missed most of the control plates. These are the easy ones that everyone should see, whatever their color vision. This usually means the screen is too dark, too bright, or the colors look off due to your display settings. Try turning up your brightness, closing the blinds, and retaking the test. If it keeps happening, see an eye doctor just to be safe.`;
     } else if (rgPct >= 0.85 && byPct >= 0.85) {
       cls   = "v-normal";
-      title = "Normal color vision — you're all good! 🎉";
-      text  = `Great news, ${name}! You spotted the numbers in almost all the plates — including the tricky red-green and blue-yellow ones. This means all three types of color sensors in your eyes (called cones) are likely working well. You probably see colors the same way most people do.`;
+      title = "Normal color vision";
+      text  = `${name} spotted the numbers in almost all the plates, including the harder red-green and blue-yellow ones. This means all three types of color sensors in your eyes (called cones) are likely working well. You probably see colors the same way most people do.`;
     } else if (rgPct < 0.5 && byPct >= 0.7) {
       cls   = "v-rg";
       title = "Red-Green color blindness likely";
-      text  = `${name} had clear trouble with the red-green plates but did fine on the blue-yellow ones. This is the most common type of color blindness — it affects about 1 in 12 boys and 1 in 200 girls. It's usually something you're born with and doesn't get worse. You might find it hard to tell traffic lights apart, or know when a fruit is ripe. An eye doctor can confirm it with a quick official test.`;
+      text  = `${name} had clear trouble with the red-green plates but did fine on the blue-yellow ones. This is the most common type of color blindness, affecting roughly 1 in 12 men and 1 in 200 women. It's usually something you're born with and doesn't get worse. You might find it hard to tell traffic lights apart, or know when a fruit is ripe. An eye doctor can confirm it with a quick official test.`;
     } else if (rgPct >= 0.7 && byPct < 0.5) {
       cls   = "v-by";
       title = "Blue-Yellow color vision difficulty";
-      text  = `${name} did well on red-green plates, but struggled with the blue-yellow ones. This type — called Tritanopia — is quite rare, affecting fewer than 1 in 10,000 people. Unlike red-green color blindness, this one isn't usually inherited; it can sometimes appear later in life or due to certain medical conditions. An eye doctor can give you a definitive answer.`;
+      text  = `${name} did well on red-green plates, but struggled with the blue-yellow ones. This type, called Tritanopia, is quite rare, affecting fewer than 1 in 10,000 people. Unlike red-green color blindness, this one isn't usually inherited; it can sometimes appear later in life or due to certain medical conditions. An eye doctor can give you a definitive answer.`;
     } else if (rgPct < 0.5 && byPct < 0.5) {
       cls   = "v-severe";
       title = "Significant color vision difficulty detected";
-      text  = `${name} had trouble with both the red-green and blue-yellow plates. This could mean a significant color vision deficiency, but digital tests can also be affected by screen settings and lighting. Please don't worry — this isn't a medical diagnosis. The most important next step is to visit an eye doctor (ophthalmologist) for a proper clinical test.`;
+      text  = `${name} had trouble with both the red-green and blue-yellow plates. This could mean a significant color vision deficiency, but digital tests can also be affected by screen settings and lighting. This is not a medical diagnosis. The most important next step is to visit an eye doctor (ophthalmologist) for a proper clinical test.`;
     } else if (rgPct < 0.75 && byPct >= 0.7) {
       cls   = "v-mild-rg";
       title = "Mild red-green difficulty";
-      text  = `${name} got most plates right, but missed a few of the red-green ones. This could mean a mild form of red-green color vision difference — sometimes called Anomalous Trichromacy. People with this can still see colors but some shades of red, orange, and green look more alike to them than to others. It's actually very common and most people live completely normally with it.`;
+      text  = `${name} got most plates right, but missed a few of the red-green ones. This could mean a mild form of red-green color vision difference, sometimes called Anomalous Trichromacy. People with this can still see colors but some shades of red, orange, and green look more alike to them than to others. It's actually very common and most people live completely normally with it.`;
     } else if (rgPct >= 0.7 && byPct < 0.75) {
       cls   = "v-mild-by";
       title = "Mild blue-yellow difficulty";
       text  = `${name} did well overall but had some trouble with a few blue-yellow plates. This might just be your screen's color calibration, or it could hint at a mild sensitivity in that color range. Try retaking the test in a well-lit room with your screen brightness at full. If the result repeats, it's worth a quick visit to an eye doctor.`;
     } else {
       cls   = "v-mixed";
-      title = "Mixed result — hard to call";
+      title = "Mixed result";
       text  = `${name}'s results don't clearly point to one type of color vision. Your score has a mix of correct and missed plates across both categories. This can happen because of screen settings, the lighting around you, or just mild variation in how eyes work. Try again in different lighting, and if you're still unsure, an eye doctor is the best person to ask.`;
     }
 
