@@ -6,132 +6,29 @@
   <title>Timezone Converter — indi.tools</title>
   <meta name="description" content="Compare any two timezones instantly. Auto-detects your location. Live analog clocks, editable times. Runs entirely in your browser.">
 
+  <meta name="theme-color" content="#00371D">
+  <link rel="canonical" href="https://indi.tools/timezone/">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+  <meta property="og:title" content="Timezone Converter — indi.tools">
+  <meta property="og:description" content="Compare any two timezones with live clocks. Runs entirely in your browser.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://indi.tools/timezone/">
+  <meta property="og:site_name" content="indi.tools">
+
+  <script>(function(){try{var t=localStorage.getItem('indi_theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}})();</script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../assets/base.css">
 
   <style>
-    /* ─── RESET ─── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    /* ─── TOKENS (indi.tools) ─── */
-    :root {
-      --yellow:      #00D4C2;
-      --black:       #0C0C0C;
-      --white:       #FFFFFF;
-      --green:       #009E60;
-      --red:         #C0392B;
-      --gray-bg:     #F2F2F0;
-      --gray-border: #C8C8C8;
-      --muted:       #888888;
-
-      --shadow-sm:   3px 3px 0 var(--black);
-      --shadow-md:   5px 5px 0 var(--black);
-      --shadow-muted:4px 4px 0 var(--gray-border);
-
-      --border:      2.5px solid var(--black);
-      --border-muted:2px solid var(--gray-border);
-
-      --font:  'Space Grotesk', sans-serif;
-      --mono:  'DM Mono', monospace;
-      --px:    clamp(1rem, 2.5vw, 1.75rem);
-    }
-
-    html { font-size: 16px; scroll-behavior: smooth; }
-    body {
-      font-family: var(--font);
-      background: var(--gray-bg);
-      color: var(--black);
-      min-height: 100vh;
-      line-height: 1.55;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* ─── HEADER ─── */
-    header {
-      background-color: var(--yellow);
-      background-image: radial-gradient(circle, rgba(0,0,0,0.14) 1.5px, transparent 1.5px);
-      background-size: 22px 22px;
-      border-bottom: var(--border);
-      padding: 0.875rem var(--px) 1rem;
-    }
-
-    .header-nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      margin-bottom: 0.6rem;
-      flex-wrap: wrap;
-    }
-
-    .breadcrumb {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-family: var(--mono);
-      font-size: 0.75rem;
-      color: rgba(0,0,0,0.5);
-    }
-    .breadcrumb a { color: var(--black); text-decoration: none; font-weight: 500; }
-    .breadcrumb a:hover { text-decoration: underline; }
-
-    .btn-connect {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-family: var(--font);
-      font-size: 0.875rem;
-      font-weight: 600;
-      text-decoration: none;
-      color: var(--black);
-      background: var(--white);
-      border: var(--border);
-      padding: 0.55rem 1.1rem;
-      box-shadow: var(--shadow-sm);
-      letter-spacing: 0.01em;
-      white-space: nowrap;
-      transition: transform 0.1s ease, box-shadow 0.1s ease;
-    }
-    .btn-connect:hover  { transform: translate(-2px,-2px); box-shadow: var(--shadow-md); }
-    .btn-connect:active { transform: translate(2px,2px); box-shadow: none; }
-
-    .page-title {
-      font-size: clamp(1.35rem, 3vw, 1.75rem);
-      font-weight: 700;
-      letter-spacing: -0.03em;
-      line-height: 1.1;
-      margin-bottom: 0.3rem;
-    }
-
-    .page-subtitle {
-      font-size: 0.78rem;
-      font-weight: 500;
-      line-height: 1.5;
-      white-space: nowrap;
-      margin-bottom: 0.6rem;
-    }
-
-    .header-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; }
-    .tag {
-      display: inline-flex;
-      align-items: center;
-      font-family: var(--mono);
-      font-size: 0.67rem;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      padding: 0.28rem 0.6rem;
-      background: var(--black);
-      color: var(--yellow);
-      white-space: nowrap;
-    }
-
     /* ─── MAIN ─── */
     main {
       flex: 1;
-      padding: 1.5rem 15% 3rem;
+      padding: 1.75rem var(--px) 3rem;
     }
 
     /* ─── CUSTOM MODE BANNER ─── */
@@ -140,32 +37,33 @@
       align-items: center;
       justify-content: space-between;
       gap: 1rem;
-      background: var(--black);
-      color: var(--white);
+      background: var(--band);
+      color: var(--band-tx);
       padding: 0.75rem 1.1rem;
       border: var(--border);
       box-shadow: var(--shadow-sm);
       margin-bottom: 1.5rem;
       flex-wrap: wrap;
+      border-radius: var(--r);
     }
     .custom-banner__text {
       font-family: var(--mono);
-      font-size: 0.78rem;
-      color: rgba(255,255,255,0.75);
+      font-size: var(--t-sm);
+      color: var(--band-dim);
     }
-    .custom-banner__text strong { color: var(--yellow); }
+    .custom-banner__text strong { color: var(--t4-ink); }
 
     .btn-reset {
       font-family: var(--font);
       font-size: 0.8rem;
       font-weight: 600;
       padding: 0.4rem 0.9rem;
-      background: var(--yellow);
+      background: var(--brand-tint);
       color: var(--black);
-      border: 2px solid var(--yellow);
+      border: 1px solid var(--brand);
       cursor: pointer;
       transition: transform 0.1s ease, box-shadow 0.1s ease;
-      box-shadow: 2px 2px 0 var(--yellow);
+      box-shadow: var(--shadow-sm);
       white-space: nowrap;
     }
     .btn-reset:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 rgba(0,212,194,0.6); }
@@ -191,6 +89,7 @@
       box-shadow: var(--shadow-md);
       display: flex;
       flex-direction: column;
+      border-radius: var(--r);
     }
 
     .clock-card__head {
@@ -204,8 +103,7 @@
 
     .clock-card__label {
       font-family: var(--mono);
-      font-size: 0.67rem;
-      text-transform: uppercase;
+      font-size: var(--t-xs);
       letter-spacing: 0.1em;
       color: var(--muted);
     }
@@ -215,10 +113,9 @@
       align-items: center;
       gap: 0.35rem;
       font-family: var(--mono);
-      font-size: 0.62rem;
+      font-size: var(--t-xs);
       font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.01em;
       color: var(--green);
     }
 
@@ -231,11 +128,10 @@
 
     .custom-badge {
       font-family: var(--mono);
-      font-size: 0.62rem;
+      font-size: var(--t-xs);
       font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--yellow);
+      letter-spacing: 0.01em;
+      color: var(--t2-ink);
       background: var(--black);
       padding: 0.15rem 0.4rem;
     }
@@ -280,7 +176,7 @@
 
     .city-btn__country {
       font-family: var(--mono);
-      font-size: 0.68rem;
+      font-size: var(--t-xs);
       color: var(--muted);
     }
 
@@ -323,7 +219,7 @@
 
     .digital-time__date {
       font-family: var(--mono);
-      font-size: 0.72rem;
+      font-size: var(--t-sm);
       color: var(--muted);
       text-align: center;
       margin-bottom: 0.15rem;
@@ -331,8 +227,8 @@
 
     .digital-time__tz {
       font-family: var(--mono);
-      font-size: 0.68rem;
-      color: var(--gray-border);
+      font-size: var(--t-xs);
+      color: var(--muted);
       text-align: center;
       margin-bottom: 1rem;
     }
@@ -345,9 +241,8 @@
 
     .time-input-label {
       font-family: var(--mono);
-      font-size: 0.62rem;
-      text-transform: uppercase;
-      letter-spacing: 0.09em;
+      font-size: var(--t-xs);
+      letter-spacing: 0.01em;
       color: var(--muted);
       margin-bottom: 0.5rem;
     }
@@ -368,8 +263,7 @@
       border: var(--border);
       background: var(--white);
       color: var(--black);
-      outline: none;
-      -moz-appearance: textfield;
+            -moz-appearance: textfield;
       appearance: textfield;
     }
     .time-inputs input[type="number"]::-webkit-outer-spin-button,
@@ -397,7 +291,7 @@
       letter-spacing: 0.05em;
       margin-left: 0.2rem;
     }
-    .ampm-btn.active { background: var(--black); color: var(--white); }
+    .ampm-btn.active { background: var(--brand); color: var(--panel); }
     .ampm-btn:hover:not(.active) { background: var(--gray-border); }
 
     /* ─── DIFF COLUMN ─── */
@@ -440,21 +334,20 @@
 
     .diff-box__dir {
       font-family: var(--mono);
-      font-size: 0.65rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
+      font-size: var(--t-xs);
+      letter-spacing: 0.01em;
       color: var(--muted);
     }
 
     .diff-box__desc {
-      font-size: 0.72rem;
+      font-size: var(--t-sm);
       color: var(--muted);
       line-height: 1.45;
       margin-top: 0.4rem;
     }
 
     .diff-same {
-      background: var(--yellow);
+      background: var(--brand-tint);
       border: var(--border);
       padding: 0.6rem 0.75rem;
       text-align: center;
@@ -462,20 +355,18 @@
       font-size: 0.7rem;
       font-weight: 500;
       letter-spacing: 0.05em;
-      text-transform: uppercase;
     }
 
     .diff-arrows {
       font-size: 1.1rem;
-      color: var(--gray-border);
+      color: var(--muted);
       font-family: var(--mono);
     }
 
     /* ─── SECTION LABEL ─── */
     .section-label {
       font-family: var(--mono);
-      font-size: 0.72rem;
-      text-transform: uppercase;
+      font-size: var(--t-sm);
       letter-spacing: 0.1em;
       color: var(--muted);
       border-bottom: var(--border);
@@ -507,6 +398,7 @@
       cursor: pointer;
       transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s;
       color: var(--black);
+      border-radius: var(--r);
     }
     .quick-chip:hover  { transform: translate(-2px,-2px); box-shadow: 5px 5px 0 var(--gray-border); background: var(--gray-bg); }
     .quick-chip:active { transform: translate(1px,1px); box-shadow: none; }
@@ -515,7 +407,8 @@
     /* ─── WORLD CLOCK LIST ─── */
     .world-section { margin-bottom: 2rem; }
 
-    .world-list { display: flex; flex-direction: column; gap: 0; }
+    .world-list { display: flex; flex-direction: column; gap: 0;   border-radius: var(--r);
+    }
 
     .world-row {
       display: flex;
@@ -541,7 +434,7 @@
     }
     .world-row__country {
       font-family: var(--mono);
-      font-size: 0.62rem;
+      font-size: var(--t-xs);
       color: var(--muted);
     }
 
@@ -554,7 +447,7 @@
     }
     .world-row__meta {
       font-family: var(--mono);
-      font-size: 0.62rem;
+      font-size: var(--t-xs);
       color: var(--muted);
     }
 
@@ -584,7 +477,7 @@
     .world-row__bar-fill {
       position: absolute;
       top: 0; height: 100%;
-      background: var(--yellow);
+      background: var(--brand-tint);
       opacity: 0.6;
     }
 
@@ -601,7 +494,7 @@
       border: none;
       cursor: pointer;
       font-size: 0.9rem;
-      color: var(--gray-border);
+      color: var(--muted);
       padding: 0.2rem;
       flex-shrink: 0;
       transition: color 0.1s;
@@ -627,7 +520,7 @@
       color: var(--muted);
       transition: background 0.1s, color 0.1s;
     }
-    .btn-add-city:hover { background: var(--white); color: var(--black); }
+    .btn-add-city:hover { background: var(--brand-tint); color: var(--text); }
 
     /* ─── TIMEZONE DROPDOWN ─── */
     .tz-overlay {
@@ -662,9 +555,8 @@
 
     .tz-panel__title {
       font-family: var(--mono);
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.09em;
+      font-size: var(--t-sm);
+      letter-spacing: 0.01em;
       font-weight: 500;
     }
 
@@ -693,10 +585,9 @@
       border: var(--border);
       background: var(--gray-bg);
       color: var(--black);
-      outline: none;
-    }
+          }
     .tz-search input:focus { box-shadow: 0 0 0 3px rgba(0,212,194,0.3); }
-    .tz-search input::placeholder { color: var(--gray-border); font-family: var(--mono); font-size: 0.82rem; }
+    .tz-search input::placeholder { color: var(--muted); opacity: 1; font-size: 0.875rem; }
 
     .tz-list {
       overflow-y: auto;
@@ -724,27 +615,9 @@
       padding: 2rem 1rem;
       text-align: center;
       font-family: var(--mono);
-      font-size: 0.78rem;
+      font-size: var(--t-sm);
       color: var(--muted);
     }
-
-    /* ─── FOOTER ─── */
-    footer {
-      background: var(--yellow);
-      border-top: var(--border);
-      padding: 0.875rem var(--px);
-    }
-
-    .footer-inner {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-    }
-
-    .footer-copy { font-family: var(--mono); font-size: 0.78rem; color: var(--black); }
-    .footer-made { font-family: var(--mono); font-size: 0.78rem; color: rgba(0,0,0,0.48); }
 
     /* ─── UTILS ─── */
     .hidden { display: none !important; }
@@ -786,9 +659,8 @@
         border-bottom: var(--border-muted);
         cursor: pointer;
         font-family: var(--mono);
-        font-size: 0.68rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
+        font-size: var(--t-xs);
+        letter-spacing: 0.01em;
         color: var(--muted);
       }
       .clock-toggle-btn:hover { color: var(--black); }
@@ -800,171 +672,187 @@
       .world-row__bar { display: none; }
       .digital-time__main { font-size: 1.75rem; }
     }
+
+    /* Country-code chips shown when the platform has no flag emoji font */
+    .no-flag-emoji .world-row__flag,
+    .no-flag-emoji .tz-item__flag,
+    .no-flag-emoji .quick-chip__flag,
+    .no-flag-emoji .city-btn__flag {
+      color: var(--text);
+    }
+    .no-flag-emoji .world-row__flag,
+    .no-flag-emoji .tz-item__flag,
+    .no-flag-emoji .quick-chip__flag,
+    .no-flag-emoji .city-btn__flag {
+      font-family: var(--mono);
+      font-size: 0.68em;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      border: 1.5px solid var(--line);
+      padding: 0.05em 0.28em;
+      line-height: 1.35;
+    }
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
   </style>
 </head>
 <body>
 
   <!-- ═══ HEADER ═══ -->
-  <header>
-    <div class="header-inner">
-      <div class="header-nav">
-        <nav class="breadcrumb">
-          <a href="/">← indi.tools</a>
-          <span>/</span>
-          <span>Timezone Converter</span>
-        </nav>
-        <a href="https://piyushthesingh.com" class="btn-connect" target="_blank" rel="noopener noreferrer">
-          Connect with us
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
-            <path d="M2.5 10.5L10.5 2.5M10.5 2.5H4.5M10.5 2.5V8.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </a>
-      </div>
-      <h1 class="page-title">Timezone Converter</h1>
-      <p class="page-subtitle">Compare any two timezones with live clocks. Auto-detects your location. Edit times to see instant conversions.</p>
+  <div class="bar"><div class="wrap bar-in">
+    <nav class="breadcrumb">
+      <a href="/">← indi.tools</a><span>/</span><span>Timezone Converter</span>
+    </nav>
+    <div class="bar-r">
+      <a href="https://piyushthesingh.com" target="_blank" rel="noopener noreferrer">Connect</a>
+      <button class="tbtn" data-theme-toggle><span data-theme-label>DARK</span></button>
+    </div>
+  </div></div>
+
+  <div class="wrap">
+    <section class="mast">
+      <h1 class="page-title">Timezone <em>Converter</em></h1>
+      <p class="page-subtitle">Compare any two timezones with live clocks. Auto-detects your location. Edit either time to see instant conversions.</p>
       <div class="header-tags">
-        <span class="tag">🌍 Auto-detect</span>
-        <span class="tag">⚡ Real-time</span>
-        <span class="tag">🔒 In-browser only</span>
+        <span class="tag">Auto-detect</span><span class="tag">Real-time</span><span class="tag">In-browser only</span>
       </div>
-    </div>
-  </header>
+    </section>
+  </div>
 
-  <main>
+  <main class="wrap">
+    <p class="sr-only" id="tz-live" aria-live="polite"></p>
+    <div class="wrap">
 
-    <!-- Custom time mode banner -->
-    <div id="custom-banner" class="custom-banner hidden">
-      <div class="custom-banner__text">
-        <strong>Custom time mode</strong> — clocks are frozen. Edit either time input to convert.
-      </div>
-      <button class="btn-reset" onclick="resetToLive()">↺ Back to live</button>
-    </div>
-
-    <!-- ═══ COMPARISON CLOCKS ═══ -->
-    <div class="compare-grid">
-
-      <!-- LEFT CLOCK -->
-      <div class="clock-card" id="card-left">
-        <div class="clock-card__head">
-          <span class="clock-card__label">Your location</span>
-          <span class="live-badge" id="badge-left"><span class="live-dot"></span> Live</span>
+      <!-- Custom time mode banner -->
+      <div id="custom-banner" class="custom-banner hidden">
+        <div class="custom-banner__text">
+          <strong>Custom time mode</strong> — clocks are frozen. Edit either time input to convert.
         </div>
-        <div class="clock-card__body">
-          <button class="city-btn" onclick="openDropdown('left')" id="city-btn-left">
-            <span class="city-btn__flag" id="flag-left">🌍</span>
-            <span class="city-btn__text">
-              <span class="city-btn__name" id="city-name-left">
-                Detecting…
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-              <span class="city-btn__country" id="city-country-left"></span>
-            </span>
-          </button>
-          <button class="clock-toggle-btn" id="clock-toggle-left" onclick="toggleClock('left')">
-            <span>Analog clock</span>
-            <span class="clock-toggle-icon" id="clock-toggle-icon-left">▼</span>
-          </button>
-          <div class="clock-face-wrap" id="clock-wrap-left">
-            <canvas id="canvas-left" width="168" height="168"></canvas>
+        <button class="btn-reset" onclick="resetToLive()">↺ Back to live</button>
+      </div>
+
+      <!-- ═══ COMPARISON CLOCKS ═══ -->
+      <div class="compare-grid">
+
+        <!-- LEFT CLOCK -->
+        <div class="clock-card" id="card-left">
+          <div class="clock-card__head">
+            <span class="clock-card__label">Your location</span>
+            <span class="live-badge" id="badge-left"><span class="live-dot"></span> Live</span>
           </div>
-          <div class="digital-time">
-            <div class="digital-time__main">
-              <span id="dig-time-left">--:--</span><span class="dig-sec" id="dig-sec-left">:--</span><span class="digital-time__ampm" id="dig-ampm-left"></span>
+          <div class="clock-card__body">
+            <button class="city-btn" onclick="openDropdown('left')" id="city-btn-left">
+              <span class="city-btn__flag" id="flag-left">🌍</span>
+              <span class="city-btn__text">
+                <span class="city-btn__name" id="city-name-left">
+                  Detecting…
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <span class="city-btn__country" id="city-country-left"></span>
+              </span>
+            </button>
+            <button class="clock-toggle-btn" id="clock-toggle-left" onclick="toggleClock('left')">
+              <span>Analog clock</span>
+              <span class="clock-toggle-icon" id="clock-toggle-icon-left">▼</span>
+            </button>
+            <div class="clock-face-wrap" id="clock-wrap-left">
+              <canvas id="canvas-left" width="168" height="168"></canvas>
+            </div>
+            <div class="digital-time">
+              <div class="digital-time__main">
+                <span id="dig-time-left">--:--</span><span class="dig-sec" id="dig-sec-left">:--</span><span class="digital-time__ampm" id="dig-ampm-left"></span>
+              </div>
+            </div>
+            <div class="digital-time__date" id="dig-date-left">---</div>
+            <div class="digital-time__tz" id="dig-tz-left">---</div>
+          </div>
+          <div class="time-input-area">
+            <div class="time-input-label">Edit time to convert</div>
+            <div class="time-inputs">
+              <input type="number" id="inp-h-left"  min="1" max="12" placeholder="HH" oninput="onTimeInput('left')">
+              <span class="time-sep">:</span>
+              <input type="number" id="inp-m-left"  min="0" max="59" placeholder="MM" oninput="onTimeInput('left')">
+              <button class="ampm-btn active" id="ampm-left" onclick="toggleAmPm('left')">AM</button>
             </div>
           </div>
-          <div class="digital-time__date" id="dig-date-left">---</div>
-          <div class="digital-time__tz" id="dig-tz-left">---</div>
         </div>
-        <div class="time-input-area">
-          <div class="time-input-label">Edit time to convert</div>
-          <div class="time-inputs">
-            <input type="number" id="inp-h-left"  min="1" max="12" placeholder="HH" oninput="onTimeInput('left')">
-            <span class="time-sep">:</span>
-            <input type="number" id="inp-m-left"  min="0" max="59" placeholder="MM" oninput="onTimeInput('left')">
-            <button class="ampm-btn active" id="ampm-left" onclick="toggleAmPm('left')">AM</button>
+
+        <!-- DIFF COLUMN -->
+        <div class="diff-col" id="diff-col">
+          <div class="diff-box" id="diff-box">
+            <div class="diff-box__hours" id="diff-hours">—</div>
+            <div class="diff-box__dir"   id="diff-dir">ahead</div>
+            <div class="diff-box__desc"  id="diff-desc"></div>
           </div>
+          <div class="diff-arrows" id="diff-arrows">↕</div>
         </div>
-      </div>
 
-      <!-- DIFF COLUMN -->
-      <div class="diff-col" id="diff-col">
-        <div class="diff-box" id="diff-box">
-          <div class="diff-box__hours" id="diff-hours">—</div>
-          <div class="diff-box__dir"   id="diff-dir">ahead</div>
-          <div class="diff-box__desc"  id="diff-desc"></div>
-        </div>
-        <div class="diff-arrows" id="diff-arrows">↕</div>
-      </div>
-
-      <!-- RIGHT CLOCK -->
-      <div class="clock-card" id="card-right">
-        <div class="clock-card__head">
-          <span class="clock-card__label">Compare with</span>
-          <span class="live-badge" id="badge-right"><span class="live-dot"></span> Live</span>
-        </div>
-        <div class="clock-card__body">
-          <button class="city-btn" onclick="openDropdown('right')" id="city-btn-right">
-            <span class="city-btn__flag" id="flag-right">🌍</span>
-            <span class="city-btn__text">
-              <span class="city-btn__name" id="city-name-right">
-                Select city
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <!-- RIGHT CLOCK -->
+        <div class="clock-card" id="card-right">
+          <div class="clock-card__head">
+            <span class="clock-card__label">Compare with</span>
+            <span class="live-badge" id="badge-right"><span class="live-dot"></span> Live</span>
+          </div>
+          <div class="clock-card__body">
+            <button class="city-btn" onclick="openDropdown('right')" id="city-btn-right">
+              <span class="city-btn__flag" id="flag-right">🌍</span>
+              <span class="city-btn__text">
+                <span class="city-btn__name" id="city-name-right">
+                  Select city
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <span class="city-btn__country" id="city-country-right"></span>
               </span>
-              <span class="city-btn__country" id="city-country-right"></span>
-            </span>
-          </button>
-          <button class="clock-toggle-btn" id="clock-toggle-right" onclick="toggleClock('right')">
-            <span>Analog clock</span>
-            <span class="clock-toggle-icon" id="clock-toggle-icon-right">▼</span>
-          </button>
-          <div class="clock-face-wrap" id="clock-wrap-right">
-            <canvas id="canvas-right" width="168" height="168"></canvas>
+            </button>
+            <button class="clock-toggle-btn" id="clock-toggle-right" onclick="toggleClock('right')">
+              <span>Analog clock</span>
+              <span class="clock-toggle-icon" id="clock-toggle-icon-right">▼</span>
+            </button>
+            <div class="clock-face-wrap" id="clock-wrap-right">
+              <canvas id="canvas-right" width="168" height="168"></canvas>
+            </div>
+            <div class="digital-time">
+              <div class="digital-time__main">
+                <span id="dig-time-right">--:--</span><span class="dig-sec" id="dig-sec-right">:--</span><span class="digital-time__ampm" id="dig-ampm-right"></span>
+              </div>
+            </div>
+            <div class="digital-time__date" id="dig-date-right">---</div>
+            <div class="digital-time__tz"   id="dig-tz-right">---</div>
           </div>
-          <div class="digital-time">
-            <div class="digital-time__main">
-              <span id="dig-time-right">--:--</span><span class="dig-sec" id="dig-sec-right">:--</span><span class="digital-time__ampm" id="dig-ampm-right"></span>
+          <div class="time-input-area">
+            <div class="time-input-label">Edit time to convert</div>
+            <div class="time-inputs">
+              <input type="number" id="inp-h-right" min="1" max="12" placeholder="HH" oninput="onTimeInput('right')">
+              <span class="time-sep">:</span>
+              <input type="number" id="inp-m-right" min="0" max="59" placeholder="MM" oninput="onTimeInput('right')">
+              <button class="ampm-btn active" id="ampm-right" onclick="toggleAmPm('right')">AM</button>
             </div>
           </div>
-          <div class="digital-time__date" id="dig-date-right">---</div>
-          <div class="digital-time__tz"   id="dig-tz-right">---</div>
         </div>
-        <div class="time-input-area">
-          <div class="time-input-label">Edit time to convert</div>
-          <div class="time-inputs">
-            <input type="number" id="inp-h-right" min="1" max="12" placeholder="HH" oninput="onTimeInput('right')">
-            <span class="time-sep">:</span>
-            <input type="number" id="inp-m-right" min="0" max="59" placeholder="MM" oninput="onTimeInput('right')">
-            <button class="ampm-btn active" id="ampm-right" onclick="toggleAmPm('right')">AM</button>
-          </div>
-        </div>
+
+      </div><!-- /compare-grid -->
+
+      <!-- ═══ QUICK CITIES ═══ -->
+      <div class="quick-section">
+        <div class="section-label">Quick add to compare</div>
+        <div class="quick-cities" id="quick-cities"></div>
       </div>
 
-    </div><!-- /compare-grid -->
+      <!-- ═══ WORLD CLOCK LIST ═══ -->
+      <div class="world-section">
+        <div class="section-label">World clocks</div>
+        <div class="world-list" id="world-list"></div>
+        <button class="btn-add-city" onclick="openDropdown('world')">
+          + Add another city
+        </button>
+      </div>
 
-    <!-- ═══ QUICK CITIES ═══ -->
-    <div class="quick-section">
-      <div class="section-label">Quick add to compare</div>
-      <div class="quick-cities" id="quick-cities"></div>
     </div>
-
-    <!-- ═══ WORLD CLOCK LIST ═══ -->
-    <div class="world-section">
-      <div class="section-label">World clocks</div>
-      <div class="world-list" id="world-list"></div>
-      <button class="btn-add-city" onclick="openDropdown('world')">
-        + Add another city
-      </button>
-    </div>
-
   </main>
 
   <!-- ═══ FOOTER ═══ -->
-  <footer>
-    <div class="footer-inner">
-      <span class="footer-copy">© 2026 indi.tools</span>
-      <span class="footer-made">Built with care in India 🇮🇳</span>
-    </div>
-  </footer>
+  <footer><div class="wrap f-in">
+    <span>© 2026 <b>INDI.TOOLS</b></span><span>BUILT WITH CARE IN INDIA</span>
+  </div></footer>
 
   <!-- ═══ TIMEZONE DROPDOWN ═══ -->
   <div id="tz-overlay" class="tz-overlay hidden" onclick="onOverlayClick(event)">
@@ -1150,8 +1038,76 @@
     return { str, ahead: diff > 0 };
   }
 
+  // Many systems still report the legacy IANA aliases rather than the
+  // current zone names. Asia/Calcutta in particular is what a lot of
+  // Indian machines return, and it does not match Asia/Kolkata in
+  // TZ_DATA — auto-detect fell through to the generic fallback and
+  // showed "Calcutta" with a globe and no country.
+  const TZ_ALIASES = {
+    'Asia/Calcutta':          'Asia/Kolkata',
+    'Asia/Katmandu':          'Asia/Kathmandu',
+    'Asia/Rangoon':           'Asia/Yangon',
+    'Asia/Saigon':            'Asia/Ho_Chi_Minh',
+    'Asia/Dacca':             'Asia/Dhaka',
+    'Asia/Thimbu':            'Asia/Thimphu',
+    'Europe/Kiev':            'Europe/Kyiv',
+    'America/Buenos_Aires':   'America/Argentina/Buenos_Aires',
+    'Australia/Canberra':     'Australia/Sydney',
+    'Pacific/Ponape':         'Pacific/Pohnpei',
+    'Atlantic/Faeroe':        'Atlantic/Faroe',
+    'US/Eastern':             'America/New_York',
+    'US/Central':             'America/Chicago',
+    'US/Mountain':            'America/Denver',
+    'US/Pacific':             'America/Los_Angeles'
+  };
+
+  function canonicalTz(tz) {
+    return TZ_ALIASES[tz] || tz;
+  }
+
+  // ── Flag emoji fallback ────────────────────────────────────────
+  // Windows ships no flag-emoji font: Chrome and Edge render a regional
+  // indicator pair as two boxed letters instead of one flag, so every
+  // flag on this page degrades into "I N", "G B" and so on. Detect it
+  // once and fall back to a country-code chip that keeps the layout.
+  const FLAGS_SUPPORTED = (function () {
+    try {
+      const c = document.createElement('canvas');
+      const ctx = c.getContext('2d');
+      if (!ctx) return true;
+      ctx.font = '16px sans-serif';
+      const pair   = ctx.measureText('\u{1F1EE}\u{1F1F3}').width;
+      const single = ctx.measureText('\u{1F1EE}').width;
+      return pair < single * 1.6;   // combined into a single glyph
+    } catch (_) { return true; }
+  })();
+
+  document.documentElement.classList.toggle('no-flag-emoji', !FLAGS_SUPPORTED);
+
+  function flagGlyph(flag) {
+    if (FLAGS_SUPPORTED || !flag) return flag;
+    const cps = Array.from(flag).map(ch => ch.codePointAt(0));
+    if (cps.length !== 2 || cps.some(cp => cp < 0x1F1E6 || cp > 0x1F1FF)) return '';
+    return cps.map(cp => String.fromCharCode(cp - 0x1F1E6 + 65)).join('');
+  }
+
+  // When several cities share one zone (India has four in TZ_DATA, all on
+  // Asia/Kolkata), naming the first one is misleading for everyone else in
+  // that zone. For the auto-detected card, fall back to the country.
+  function findDetectedCity(tz) {
+    const canonical = canonicalTz(tz);
+    const matches = TZ_DATA.filter(c => c.tz === canonical);
+    if (matches.length > 1 && matches[0].country) {
+      return { city: matches[0].country, country: '', flag: matches[0].flag, tz: canonical };
+    }
+    return findCity(tz);
+  }
+
   function findCity(tz) {
-    return TZ_DATA.find(c => c.tz === tz) || { city: tz.split('/').pop().replace(/_/g,' '), country: '', flag: '🌐', tz };
+    const canonical = canonicalTz(tz);
+    return TZ_DATA.find(c => c.tz === canonical)
+        || TZ_DATA.find(c => c.tz === tz)
+        || { city: canonical.split('/').pop().replace(/_/g,' '), country: '', flag: '🌐', tz: canonical };
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -1167,10 +1123,18 @@
 
     ctx.clearRect(0, 0, S, S);
 
+    // Canvas cannot use CSS variables, so read them at draw time. Without this
+    // the face stayed white and the hands black in dark mode.
+    const cs        = getComputedStyle(document.documentElement);
+    const cFace     = cs.getPropertyValue('--panel').trim()  || '#FFFFFF';
+    const cInk      = cs.getPropertyValue('--text').trim()   || '#121212';
+    const cTickDim  = cs.getPropertyValue('--line-2').trim() || '#C8C8C8';
+    const cSecond   = cs.getPropertyValue('--t3-ink').trim() || '#0C6B3F';
+
     // Face
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, TAU);
-    ctx.fillStyle = '#FFFFFF';
+    ctx.fillStyle = cFace;
     ctx.fill();
 
     // Hour & minute tick marks
@@ -1182,7 +1146,7 @@
       ctx.beginPath();
       ctx.moveTo(cx + (r - 2) * Math.cos(a), cy + (r - 2) * Math.sin(a));
       ctx.lineTo(cx + (r - 2 - len) * Math.cos(a), cy + (r - 2 - len) * Math.sin(a));
-      ctx.strokeStyle = isH ? '#0C0C0C' : '#C8C8C8';
+      ctx.strokeStyle = isH ? cInk : cTickDim;
       ctx.lineWidth = w;
       ctx.lineCap = 'round';
       ctx.stroke();
@@ -1190,11 +1154,11 @@
 
     // Hour hand
     const hA = ((h24 % 12) + min / 60 + sec / 3600) / 12 * TAU - Math.PI / 2;
-    hand(ctx, cx, cy, hA, r * 0.48, 5, '#0C0C0C');
+    hand(ctx, cx, cy, hA, r * 0.48, 5, cInk);
 
     // Minute hand
     const mA = (min + sec / 60) / 60 * TAU - Math.PI / 2;
-    hand(ctx, cx, cy, mA, r * 0.7, 3.5, '#0C0C0C');
+    hand(ctx, cx, cy, mA, r * 0.7, 3.5, cInk);
 
     // Second hand (smooth with ms interpolation)
     const smoothSec = sec + ms / 1000;
@@ -1203,16 +1167,16 @@
     ctx.beginPath();
     ctx.moveTo(cx + r * 0.2 * Math.cos(sA + Math.PI), cy + r * 0.2 * Math.sin(sA + Math.PI));
     ctx.lineTo(cx + r * 0.82 * Math.cos(sA), cy + r * 0.82 * Math.sin(sA));
-    ctx.strokeStyle = '#00D4C2';
+    ctx.strokeStyle = cSecond;
     ctx.lineWidth   = 1.5;
     ctx.lineCap     = 'round';
     ctx.stroke();
 
     // Center
     ctx.beginPath(); ctx.arc(cx, cy, 5, 0, TAU);
-    ctx.fillStyle = '#0C0C0C'; ctx.fill();
+    ctx.fillStyle = cInk; ctx.fill();
     ctx.beginPath(); ctx.arc(cx, cy, 2.5, 0, TAU);
-    ctx.fillStyle = '#00D4C2'; ctx.fill();
+    ctx.fillStyle = cSecond; ctx.fill();
   }
 
   function hand(ctx, cx, cy, angle, len, width, color) {
@@ -1291,7 +1255,7 @@
   function renderCityBtn(side) {
     const data = state[side];
     if (!data) return;
-    document.getElementById(`flag-${side}`).textContent        = data.flag;
+    document.getElementById(`flag-${side}`).textContent        = flagGlyph(data.flag);
     document.getElementById(`city-name-${side}`).innerHTML     =
       `${data.city} <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
     document.getElementById(`city-country-${side}`).textContent = data.country;
@@ -1311,7 +1275,7 @@
       const pct    = ((t.h24 * 60 + t.min) / 1440 * 100).toFixed(1);
 
       return `<div class="world-row">
-        <span class="world-row__flag">${c.flag}</span>
+        <span class="world-row__flag">${flagGlyph(c.flag)}</span>
         <div class="world-row__info">
           <div class="world-row__city">${c.city}</div>
           <div class="world-row__country">${c.country}</div>
@@ -1493,7 +1457,7 @@
       const t = getTimeInTZ(c.tz);
       const { display, ampm } = fmt12(t.h24, t.min);
       return `<div class="tz-item" onclick="selectCity(${JSON.stringify(c).replace(/"/g, '&quot;')})">
-        <span class="tz-item__flag">${c.flag}</span>
+        <span class="tz-item__flag">${flagGlyph(c.flag)}</span>
         <div>
           <div class="tz-item__name">${c.city}</div>
           <div class="tz-item__country">${c.country}</div>
@@ -1534,7 +1498,7 @@
     const cities    = QUICK_CITIES.map(name => TZ_DATA.find(c => c.city === name)).filter(Boolean);
     container.innerHTML = cities.map(c =>
       `<button class="quick-chip" onclick='setRight(${JSON.stringify(c).replace(/'/g,"&#39;")})'>
-        <span class="quick-chip__flag">${c.flag}</span>${c.city}
+        <span class="quick-chip__flag">${flagGlyph(c.flag)}</span>${c.city}
       </button>`
     ).join('');
   }
@@ -1551,8 +1515,8 @@
   // ─────────────────────────────────────────────────────────────
   function init() {
     // Detect local timezone
-    const localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const localCity = findCity(localTz);
+    const localTz = canonicalTz(Intl.DateTimeFormat().resolvedOptions().timeZone);
+    const localCity = findDetectedCity(localTz);
     state.left = localCity;
     renderCityBtn('left');
 
@@ -1578,5 +1542,6 @@
   init();
 </script>
 
+  <script src="../assets/theme.js"></script>
 </body>
 </html>
