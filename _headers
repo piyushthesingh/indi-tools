@@ -1,0 +1,16 @@
+# The libheif bundle is 1.2 MB and its contents never change, so it is
+# safe to cache for a year and worth avoiding on repeat visits.
+/assets/vendor/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Icons change rarely.
+/favicon.svg
+  Cache-Control: public, max-age=604800
+/favicon.ico
+  Cache-Control: public, max-age=604800
+/apple-touch-icon.png
+  Cache-Control: public, max-age=604800
+
+# base.css, theme.js and the app scripts deliberately keep Cloudflare's
+# default revalidation. Caching them for a day would mean a CSS fix takes
+# a day to reach anyone who had already visited, and a 304 is cheap.
