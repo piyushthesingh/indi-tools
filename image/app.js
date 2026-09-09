@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────────────────────
-   indi.tools — Image Converter & Compressor
+   indi.tools: Image Converter & Compressor
    ───────────────────────────────────────────────────────────── */
 (function () {
   'use strict';
@@ -88,7 +88,7 @@
     els.pngWarn.hidden = !(s.type === 'image/png' && s.mode !== 'quality');
     els.fmtHint.textContent =
       s.type === 'image/webp' ? 'WebP is roughly half the size of JPEG at the same quality, and every current browser reads it.'
-      : s.type === 'image/jpeg' ? 'Widest compatibility. No transparency — see the fill colour below.'
+      : s.type === 'image/jpeg' ? 'Widest compatibility. No transparency, so it is filled with the colour below.'
       : s.type === 'image/png' ? 'Lossless, keeps transparency, and produces much larger files for photographs.'
       : 'Smallest files, but not every browser can create AVIF.';
     els.pctVal.textContent = els.pct.value;
@@ -119,7 +119,7 @@
 
   /* ── processing ────────────────────────────────────────────── */
   /* Changing a setting starts a new generation. Results from an older
-     generation are dropped — otherwise a slow job from the previous
+     generation are dropped, otherwise a slow job from the previous
      settings lands last and overwrites the current result. */
   let generation = 0;
 
@@ -176,7 +176,7 @@
     const bar = it.el.querySelector('.prog i');
     it.el.classList.toggle('failed', it.status === 'error');
 
-    // 'queued' must be handled too — without it this fell through to the
+    // 'queued' must be handled too: without it this fell through to the
     // done branch and dereferenced a null result.
     if (it.status === 'queued' || it.status === 'working') {
       const label = it.status === 'queued' ? 'waiting…' : 'working…';
