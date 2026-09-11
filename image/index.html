@@ -211,7 +211,12 @@
        pills, and two thirds of the drop zone. The three controls people
        actually touch stay visible; the rest sit behind one disclosure. */
     @media (max-width:900px){
-      .layout { display:flex; flex-direction:column; }
+      /* align-items:start on the grid above keeps the sticky sidebar from
+         stretching to the row height. In a column flex container that same
+         property governs WIDTH instead, which collapsed the whole settings
+         column to its content width of 253px at every phone size. */
+      .layout { display:flex; flex-direction:column; align-items:stretch; }
+      .work, .side { width:100%; }
       /* Work first, then settings. With the settings expanded rather than
          collapsed, putting them first pushed the drop zone to 853px on an
          812px screen, so you could not see the thing you came to use. The
