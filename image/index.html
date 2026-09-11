@@ -4,16 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Image Converter &amp; Compressor · indi.tools</title>
-  <meta name="description" content="Convert and compress images to an exact file size in your browser. JPEG, PNG, WebP, AVIF and HEIC in; JPEG, PNG or WebP out. Nothing is uploaded, and location data is removed.">
+  <title>Image &amp; PDF Converter &amp; Compressor · indi.tools</title>
+  <meta name="description" content="Convert and compress images and PDFs to an exact file size in your browser. JPEG, PNG, WebP, AVIF, HEIC and PDF in; images, PDF or text out. Nothing is uploaded, and location data is removed.">
   <meta name="theme-color" content="#00371D">
   <link rel="canonical" href="https://indi.tools/image/">
 
-  <meta property="og:title" content="Image Converter &amp; Compressor · indi.tools">
-  <meta property="og:description" content="Compress to an exact file size, convert between formats, strip location data. Runs entirely in your browser.">
+  <meta property="og:title" content="Image &amp; PDF Converter &amp; Compressor · indi.tools">
+  <meta property="og:description" content="Compress images and PDFs to an exact file size, convert between formats, split and merge pages. Runs entirely in your browser.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://indi.tools/image/">
   <meta property="og:site_name" content="indi.tools">
+  <meta property="og:image" content="https://indi.tools/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
 
   <link rel="icon" href="/favicon.ico" sizes="32x32">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -29,6 +33,7 @@
   <style>
     main { flex:1; padding-bottom:3rem; }
     .layout { display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:1rem; align-items:start; }
+    .layout > * { min-width:0; max-width:100%; }
     @media (max-width:900px){ .layout{ display:flex; flex-direction:column; } .side{ order:1 } .work{ order:2 } }
 
     /* ── drop zone ── */
@@ -46,24 +51,30 @@
     .side { display:flex; flex-direction:column; gap:.75rem; position:sticky; top:1rem; }
     .card { background:var(--panel); border:1px solid var(--line); border-radius:var(--r); padding:1.1rem; box-shadow:var(--shadow-sm); }
     .card h3 { font-size:var(--t-sm); font-weight:700; margin-bottom:.75rem; }
+    .card h3 .of { font-family:var(--mono); font-size:var(--t-xs); font-weight:500; color:var(--faint); margin-left:.4rem; }
     .fieldset { display:flex; flex-direction:column; gap:.5rem; }
     label.lbl { font-size:var(--t-xs); font-weight:500; color:var(--dim); display:block; margin-bottom:.3rem; }
 
-    .seg { display:flex; gap:.25rem; background:var(--panel-2); padding:.25rem; border-radius:var(--r-sm); flex-wrap:wrap; }
+    /* A grid, not a wrapping flex row: with five options the flex version
+       left one button stretched tall and the last one centred on its own. */
+    .seg { display:grid; grid-template-columns:repeat(auto-fit,minmax(70px,1fr)); gap:.25rem;
+      background:var(--panel-2); padding:.25rem; border-radius:var(--r-sm); }
     .seg button {
-      flex:1; min-width:64px; font:inherit; font-size:var(--t-xs); font-weight:600; cursor:pointer;
-      padding:.42rem .5rem; border:none; border-radius:7px; background:transparent; color:var(--dim);
+      font:inherit; font-size:var(--t-xs); font-weight:600; cursor:pointer; line-height:1.25;
+      padding:.42rem .35rem; border:none; border-radius:7px; background:transparent; color:var(--dim);
     }
     .seg button[aria-pressed="true"] { background:var(--panel); color:var(--text); box-shadow:var(--shadow-sm); }
 
-    input[type=number], input[type=text], select {
-      width:100%; font:inherit; font-size:var(--t-sm); padding:.5rem .65rem;
+    input[type=number], input[type=text], input[type=password], select {
+      width:100%; font:inherit; font-size:var(--t-sm); padding:.5rem .65rem; height:36px;
       border:1px solid var(--line-2); border-radius:var(--r-sm);
-      background:var(--panel); color:var(--text);
+      background:var(--panel); color:var(--text); appearance:none;
     }
     .row { display:flex; gap:.5rem; }
-    .row > * { flex:1; min-width:0; }
+    .row > * { flex:1; min-width:0; max-width:100%; }
     input[type=range] { width:100%; accent-color:var(--brand); }
+    .chk { display:flex; align-items:flex-start; gap:.5rem; font-size:var(--t-xs); color:var(--dim); line-height:1.45; cursor:pointer; }
+    .chk input { width:15px; height:15px; flex:0 0 auto; margin-top:.1rem; accent-color:var(--brand); }
 
     .presets { display:flex; flex-wrap:wrap; gap:.35rem; }
     .presets button {
@@ -81,12 +92,24 @@
     .summary { font-family:var(--mono); font-size:var(--t-xs); color:var(--faint); }
     .summary b { color:var(--t3-ink); font-weight:600; }
 
+    /* combined output (many images into one PDF, or merged PDFs) */
+    .combined {
+      background:var(--brand-tint); border:1px solid var(--line-2); border-radius:var(--r);
+      padding:.8rem 1rem; display:flex; align-items:center; justify-content:space-between;
+      gap:.75rem; flex-wrap:wrap; margin-bottom:.6rem;
+    }
+    .combined .ctext { min-width:0 }
+    .combined .ctitle { font-size:var(--t-sm); font-weight:700; }
+    .combined .cmeta { font-family:var(--mono); font-size:var(--t-xs); color:var(--dim); margin-top:.2rem; }
+
     .items { list-style:none; display:flex; flex-direction:column; gap:.6rem; }
     .item { background:var(--panel); border:1px solid var(--line); border-radius:var(--r); padding:.8rem; display:grid;
       grid-template-columns:64px minmax(0,1fr) auto; gap:.85rem; align-items:center; }
     .thumb { width:64px; height:64px; border-radius:var(--r-sm); object-fit:cover; background:var(--panel-2); border:1px solid var(--line); }
+    .thumb.doc { object-fit:contain; background:var(--panel); }
     .meta { min-width:0; }
     .fname { font-size:var(--t-sm); font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .fname .kind { font-family:var(--mono); font-size:var(--t-xs); font-weight:500; color:var(--faint); margin-left:.4rem; }
     .sizes { font-family:var(--mono); font-size:var(--t-xs); color:var(--dim); margin-top:.2rem; }
     .sizes .save { color:var(--t3-ink); font-weight:600; }
     .sizes .grew { color:var(--t5-ink); font-weight:600; }
@@ -99,6 +122,28 @@
     .status.err { color:var(--t5-ink); }
     .item.failed { border-color:var(--t5-ink); }
 
+    /* per-page output list, when one input makes many files */
+    .pages { grid-column:1/-1; margin-top:.6rem; border-top:1px solid var(--line); padding-top:.6rem;
+      display:flex; flex-wrap:wrap; gap:.35rem; }
+    .pages a {
+      font-family:var(--mono); font-size:var(--t-xs); text-decoration:none;
+      padding:.28rem .55rem; border-radius:var(--r-sm); border:1px solid var(--line-2);
+      color:var(--dim); background:var(--panel);
+    }
+    .pages a:hover { border-color:var(--brand); color:var(--text); background:var(--brand-tint); }
+
+    /* password prompt on an encrypted PDF */
+    .pw { grid-column:1/-1; margin-top:.6rem; border-top:1px solid var(--line); padding-top:.6rem; }
+    .pw .row { max-width:340px }
+
+    /* extracted text */
+    .txt { grid-column:1/-1; margin-top:.6rem; border-top:1px solid var(--line); padding-top:.6rem; }
+    .txt textarea {
+      width:100%; min-height:160px; font:inherit; font-family:var(--mono); font-size:var(--t-xs);
+      line-height:1.55; padding:.6rem; border:1px solid var(--line-2); border-radius:var(--r-sm);
+      background:var(--panel-2); color:var(--text); resize:vertical;
+    }
+
     /* ── compare ── */
     .cmp { grid-column:1/-1; margin-top:.6rem; border-top:1px solid var(--line); padding-top:.7rem; }
     .cmpwrap { position:relative; max-width:100%; overflow:hidden; border-radius:var(--r-sm); border:1px solid var(--line); background:var(--panel-2); }
@@ -110,13 +155,15 @@
 
     .empty { text-align:center; color:var(--faint); font-size:var(--t-sm); padding:1.5rem 0; }
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+
     @media (max-width:560px){ .item{ grid-template-columns:52px minmax(0,1fr); } .thumb{width:52px;height:52px} .acts{ grid-column:1/-1; justify-content:flex-start } }
   </style>
 </head>
 <body>
 
   <div class="bar"><div class="wrap bar-in">
-    <nav class="breadcrumb"><a href="/">← indi.tools</a><span>/</span><span>Image Converter &amp; Compressor</span></nav>
+    <nav class="breadcrumb"><a href="/">← indi.tools</a><span>/</span><span>Image &amp; PDF Converter</span></nav>
     <div class="bar-r">
       <a href="https://piyushthesingh.com" target="_blank" rel="noopener noreferrer">Connect</a>
       <button class="tbtn" data-theme-toggle><span data-theme-label>DARK</span></button>
@@ -125,10 +172,10 @@
 
   <div class="wrap">
     <section class="mast">
-      <h1 class="page-title">Image Converter &amp; <em>Compressor</em></h1>
-      <p class="page-subtitle">Compress to an exact file size, convert between formats, and resize. Your photos are never uploaded, and location data is removed in the process.</p>
+      <h1 class="page-title">Image &amp; PDF <em>Converter</em></h1>
+      <p class="page-subtitle">Compress images and PDFs to an exact file size, convert between formats, and split, merge or rotate pages. Your files are never uploaded, and location data is removed in the process.</p>
       <div class="header-tags">
-        <span class="tag">Batch</span><span class="tag">Exact size targets</span><span class="tag">Strips GPS data</span><span class="tag">In-browser only</span>
+        <span class="tag">Batch</span><span class="tag">Exact size targets</span><span class="tag">PDF page tools</span><span class="tag">Strips GPS data</span><span class="tag">In-browser only</span>
       </div>
     </section>
   </div>
@@ -138,42 +185,145 @@
     <div class="layout">
 
       <div class="work">
-        <div class="drop" id="drop" tabindex="0" role="button" aria-label="Add images">
+        <div class="drop" id="drop" tabindex="0" role="button" aria-label="Add images or PDFs">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="M3.5 15v3.5a1.5 1.5 0 0 0 1.5 1.5h14a1.5 1.5 0 0 0 1.5-1.5V15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
           </svg>
-          <h2>Drop images here</h2>
+          <h2>Drop images or PDFs here</h2>
           <p>or click to choose &middot; or paste from the clipboard</p>
-          <p class="formats">JPEG · PNG · WebP · AVIF · GIF · BMP · HEIC</p>
-          <input type="file" id="picker" accept="image/*,.heic,.heif,.hif" multiple hidden>
+          <p class="formats">JPEG · PNG · WebP · AVIF · GIF · BMP · HEIC · PDF</p>
+          <input type="file" id="picker" accept="image/*,.heic,.heif,.hif,application/pdf,.pdf" multiple hidden>
         </div>
 
         <div class="toolbar">
           <span class="summary" id="summary"></span>
           <span class="acts">
+            <button class="btn-action" id="btn-merge" hidden>Merge PDFs into one</button>
             <button class="btn-action" id="btn-zip" hidden>Download all (.zip)</button>
             <button class="btn-action" id="btn-clear" hidden>Clear</button>
           </span>
         </div>
 
+        <div class="combined" id="combined" hidden>
+          <div class="ctext">
+            <div class="ctitle" id="c-title">Combined PDF</div>
+            <div class="cmeta" id="c-meta"></div>
+          </div>
+          <a class="btn-action" id="c-dl" download>Download</a>
+        </div>
+
         <ul class="items" id="items"></ul>
-        <p class="empty" id="empty">No images yet.</p>
+        <p class="empty" id="empty">No files yet.</p>
+
       </div>
 
       <aside class="side">
-        <div class="card">
-          <h3>Output format</h3>
+
+        <!-- ── images in the queue ── -->
+        <div class="card" id="card-fmt" hidden>
+          <h3>Output format <span class="of" id="fmt-of"></span></h3>
           <div class="seg" id="fmt" role="group" aria-label="Output format">
-            <button data-v="image/webp" aria-pressed="true">WebP</button>
-            <button data-v="image/jpeg" aria-pressed="false">JPEG</button>
+            <button data-v="image/jpeg" aria-pressed="true">JPEG</button>
             <button data-v="image/png"  aria-pressed="false">PNG</button>
             <button data-v="image/avif" aria-pressed="false" id="fmt-avif" hidden>AVIF</button>
+            <button data-v="application/pdf" aria-pressed="false">PDF</button>
           </div>
-          <p class="hintline" id="fmt-hint">WebP is roughly half the size of JPEG at the same quality, and every current browser reads it.</p>
+          <p class="hintline" id="fmt-hint">Widest compatibility. No transparency, so it is filled with the colour below.</p>
         </div>
 
-        <div class="card">
+        <div class="card" id="card-pageset" hidden>
+          <h3>Page setup</h3>
+          <div class="fieldset">
+            <div>
+              <label class="lbl" for="psize">Page size</label>
+              <select id="psize">
+                <option value="a4" selected>A4</option>
+                <option value="letter">Letter</option>
+                <option value="legal">Legal</option>
+                <option value="a5">A5</option>
+                <option value="a3">A3</option>
+                <option value="fit">Fit the page to the image</option>
+              </select>
+            </div>
+            <div id="porient-wrap">
+              <label class="lbl" for="porient">Orientation</label>
+              <select id="porient">
+                <option value="auto" selected>Follow each image</option>
+                <option value="portrait">Portrait</option>
+                <option value="landscape">Landscape</option>
+              </select>
+            </div>
+            <div id="pmargin-wrap">
+              <label class="lbl" for="pmargin">Margin: <b id="pmargin-val">0</b> mm</label>
+              <input type="range" id="pmargin" min="0" max="30" step="1" value="0">
+            </div>
+            <label class="chk"><input type="checkbox" id="pcombine" checked>
+              <span>Put every image into one PDF. Unchecked, each image becomes its own PDF.</span></label>
+          </div>
+          <p class="hintline" id="pdf-hint">A size target applies to the finished PDF, not to each page.</p>
+        </div>
+
+        <!-- ── PDFs in the queue ── -->
+        <div class="card" id="card-pdfop" hidden>
+          <h3>What to do with the PDF <span class="of" id="pdf-of"></span></h3>
+          <div class="seg" id="pdfop" role="group" aria-label="PDF action">
+            <button data-v="compress" aria-pressed="true">Compress</button>
+            <button data-v="image/jpeg" aria-pressed="false">To JPG</button>
+            <button data-v="image/png" aria-pressed="false">To PNG</button>
+            <button data-v="pages" aria-pressed="false">Page tools</button>
+            <button data-v="text" aria-pressed="false">Get text</button>
+          </div>
+          <p class="hintline" id="pdfop-hint"></p>
+        </div>
+
+        <div class="card" id="card-render" hidden>
+          <h3>Rendering</h3>
+          <div class="fieldset">
+            <div>
+              <label class="lbl" for="dpi">Detail: <b id="dpi-val">150</b> DPI</label>
+              <input type="range" id="dpi" min="50" max="300" step="10" value="150">
+            </div>
+            <div>
+              <label class="lbl" for="range">Pages <span id="range-max"></span></label>
+              <input type="text" id="range" placeholder="all pages" spellcheck="false">
+            </div>
+            <label class="chk" id="gray-wrap"><input type="checkbox" id="gray">
+              <span>Convert to grey. On a scanned document this alone often halves the size.</span></label>
+          </div>
+          <p class="hintline">150 DPI reads cleanly on screen and prints acceptably. 300 DPI is print quality and roughly four times the pixels. A page range narrows the output as well as the work: only those pages come out.</p>
+        </div>
+
+        <div class="card" id="card-pagetools" hidden>
+          <h3>Page tools</h3>
+          <div class="fieldset">
+            <div>
+              <label class="lbl" for="ptool">Operation</label>
+              <select id="ptool">
+                <option value="keep" selected>Keep only these pages</option>
+                <option value="drop">Remove these pages</option>
+                <option value="split">Split into one file per page</option>
+                <option value="rotate">Rotate pages</option>
+              </select>
+            </div>
+            <div>
+              <label class="lbl" for="trange">Pages <span id="trange-max"></span></label>
+              <input type="text" id="trange" placeholder="all pages" spellcheck="false">
+            </div>
+            <div id="rot-wrap" hidden>
+              <label class="lbl" for="rot">Turn by</label>
+              <select id="rot">
+                <option value="90" selected>90° clockwise</option>
+                <option value="180">180°</option>
+                <option value="270">90° anticlockwise</option>
+              </select>
+            </div>
+          </div>
+          <p class="hintline" id="ptool-hint">Keeping pages also reorders them: 3,1,2 comes out in that order. Nothing is re-encoded, so quality is untouched.</p>
+        </div>
+
+        <!-- ── shared ── -->
+        <div class="card" id="card-comp">
           <h3>Compression</h3>
           <div class="seg" id="mode" role="group" aria-label="Compression mode">
             <button data-v="size"    aria-pressed="true">Max size</button>
@@ -185,7 +335,7 @@
             <div>
               <label class="lbl" for="target">Target maximum</label>
               <div class="row">
-                <input type="number" id="target" min="1" step="1" value="100">
+                <input type="number" id="target" min="1" step="1" value="40">
                 <select id="unit"><option value="1024">KB</option><option value="1048576">MB</option></select>
               </div>
             </div>
@@ -204,7 +354,7 @@
           <p class="warn" id="png-warn" hidden>PNG is lossless and has no quality setting, so a size target can only be met by resizing.</p>
         </div>
 
-        <div class="card">
+        <div class="card" id="card-resize">
           <h3>Resize</h3>
           <label class="lbl">Maximum dimensions (optional)</label>
           <div class="row">
@@ -231,7 +381,11 @@
             <button data-preset="thumb">Thumbnail 400px</button>
             <button data-preset="avatar">Avatar 512px</button>
             <button data-preset="whatsapp">WhatsApp &lt; 100 KB</button>
+            <button data-preset="form200">Form upload &lt; 200 KB</button>
+            <button data-preset="form100">Form upload &lt; 100 KB</button>
+            <button data-preset="scan">Scan, grey, &lt; 500 KB</button>
           </div>
+          <p class="hintline">The last three are sized for the upload limits most government and exam portals enforce.</p>
         </div>
       </aside>
 
@@ -243,6 +397,7 @@
   </div></footer>
 
   <script src="../assets/theme.js"></script>
+  <script src="../assets/pdf-engine.js"></script>
   <script src="./app.js"></script>
 </body>
 </html>
