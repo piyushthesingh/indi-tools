@@ -20,10 +20,11 @@
     fmt: $('#fmt'), mode: $('#mode'), target: $('#target'), unit: $('#unit'),
     pct: $('#pct'), pctVal: $('#pct-val'), q: $('#q'), qVal: $('#q-val'),
     maxw: $('#maxw'), maxh: $('#maxh'), bg: $('#bg'), bghex: $('#bghex'),
-    bgCard: $('#bg-card'), pngWarn: $('#png-warn'), fmtHint: $('#fmt-hint'),
+    bgCard: $('#bg-card'), pngWarn: $('#png-warn'),
+    fmtHintLong: $('#fmt-hint-long'), fmtHintShort: $('#fmt-hint-short'),
     live: $('#live'),
     /* PDF */
-    pdfop: $('#pdfop'), pdfopHint: $('#pdfop-hint'),
+    pdfop: $('#pdfop'), pdfopHintLong: $('#pdfop-hint-long'), pdfopHintShort: $('#pdfop-hint-short'),
     dpi: $('#dpi'), dpiVal: $('#dpi-val'), range: $('#range'), rangeMax: $('#range-max'),
     gray: $('#gray'), grayWrap: $('#gray-wrap'),
     ptool: $('#ptool'), trange: $('#trange'), trangeMax: $('#trange-max'),
@@ -36,8 +37,12 @@
     cRender: $('#card-render'), cPagetools: $('#card-pagetools'),
     cComp: $('#card-comp'), cResize: $('#card-resize'),
     fmtOf: $('#fmt-of'), pdfOf: $('#pdf-of'),
+    /* the secondary settings collapse on phones only */
+    side: $('#side'), moreToggle: $('#more-toggle'), moreSum: $('#more-sum'),
+    sideMore: $('#side-more'),
     /* combined */
-    combined: $('#combined'), cTitle: $('#c-title'), cMeta: $('#c-meta'), cDl: $('#c-dl')
+    combined: $('#combined'), cTitle: $('#c-title'), cMeta: $('#c-meta'),
+    cDl: $('#c-dl'), cRing: $('#c-ring')
   };
 
   /* ── helpers ───────────────────────────────────────────────── */
@@ -84,11 +89,15 @@
       const w = new Worker('/assets/img-worker.js');
       w.onmessage = e => {
         const h = pending.get(e.data.id);
-        if (h) { pending.delete(e.data.id); h(e.data); }
+        if (!h) return;
+        // progress updates keep arriving until the result lands
+        if (e.data.progress !== undefined) { if (h.onProgress) h.onProgress(e.data.progress); return; }
+        pending.delete(e.data.id);
+        h.resolve(e.data);
       };
       w.onerror = err => {
         // fail every job on this worker rather than hanging forever
-        pending.forEach((h, id) => { h({ id, ok: false, error: err.message || 'Worker crashed' }); pending.delete(id); });
+        pending.forEach((h, id) => { h.resolve({ id, ok: false, error: err.message || 'Worker crashed' }); pending.delete(id); });
       };
       pool.push(w);
       return w;
@@ -98,10 +107,10 @@
     return w;
   }
 
-  function run(job, transfer) {
+  function run(job, transfer, onProgress) {
     return new Promise(resolve => {
       const id = ++seq;
-      pending.set(id, resolve);
+      pending.set(id, { resolve, onProgress });
       getWorker().postMessage({ id, job }, transfer || []);
     });
   }
@@ -148,6 +157,39 @@
     pages: 'Nothing is re-encoded here. Pages are copied across as they are.',
     text: 'Only works if the PDF has a text layer. A scan of a printed page has none.'
   };
+  /* The same facts in one phone line. CSS picks which pair is shown, so
+     there is no resize listener to keep in step. */
+  const FMT_SHORT = {
+    'image/jpeg': 'Widest support, no transparency.',
+    'image/png': 'Lossless, keeps transparency, bigger.',
+    'image/avif': 'Smallest, not supported everywhere.',
+    'application/pdf': 'One page per image.'
+  };
+  const OP_SHORT = {
+    compress: 'Text stops being selectable.',
+    'image/jpeg': 'One JPG per page. Target is per page.',
+    'image/png': 'One PNG per page. Target is per page.',
+    pages: 'Nothing is re-encoded.',
+    text: 'Needs a text layer. No OCR.'
+  };
+
+  /* What the disclosure row says, so it is not a mystery box. Only the
+     cards that are actually inside it and visible get a mention. */
+  function moreSummary(s, c) {
+    const bits = [];
+    if (!els.cPageset.hidden) bits.push(s.psize === 'fit' ? 'fit to image' : s.psize.toUpperCase());
+    if (!els.cRender.hidden) {
+      bits.push(s.dpi + ' DPI');
+      if (s.gray) bits.push('grey');
+      if (String(s.range).trim()) bits.push('pages ' + s.range.trim());
+    }
+    if (!els.cPagetools.hidden) {
+      bits.push(s.ptool === 'keep' ? 'keep pages' : s.ptool === 'drop' ? 'remove pages'
+        : s.ptool === 'split' ? 'one file per page' : 'rotate ' + s.rot + '°');
+    }
+    if (!els.cResize.hidden && (s.maxW || s.maxH)) bits.push('max ' + (s.maxW || '?') + '×' + (s.maxH || '?'));
+    return bits.join(' · ') || 'presets, resize and the rest';
+  }
 
   function counts() {
     const img = items.filter(i => i.kind === 'image').length;
@@ -187,8 +229,10 @@
 
     els.bgCard.hidden = !(hasImg && (s.type === 'image/jpeg' || s.type === 'application/pdf'));
 
-    els.fmtHint.textContent = FMT_HINTS[s.type] || '';
-    els.pdfopHint.textContent = OP_HINTS[s.op] || '';
+    els.fmtHintLong.textContent = FMT_HINTS[s.type] || '';
+    els.fmtHintShort.textContent = FMT_SHORT[s.type] || '';
+    els.pdfopHintLong.textContent = OP_HINTS[s.op] || '';
+    els.pdfopHintShort.textContent = OP_SHORT[s.op] || '';
 
     /* page setup: orientation and margin mean nothing when the page is
        cut to the image */
@@ -218,6 +262,12 @@
     els.pmarginVal.textContent = els.pmargin.value;
 
     els.merge.hidden = !(c.pdf > 1);
+
+    /* Nothing to disclose if every card in there is hidden, which happens
+       when a PDF is in the queue and the operation needs no extra settings. */
+    const anyMore = [...els.sideMore.querySelectorAll(':scope > .card')].some(el => !el.hidden);
+    els.moreToggle.hidden = !anyMore;
+    els.moreSum.textContent = moreSummary(s, c);
   }
 
   /* ── adding files ──────────────────────────────────────────── */
@@ -234,7 +284,7 @@
     for (const { f, kind } of incoming) {
       const it = {
         id: ++seq, file: f, kind, name: f.name || (kind === 'pdf' ? 'document.pdf' : 'image'),
-        origSize: f.size, status: 'queued', result: null, outputs: [], error: '',
+        origSize: f.size, status: 'queued', result: null, outputs: [], error: '', progress: 0,
         srcUrl: null, el: null, showCmp: false, showText: '',
         doc: null, pages: 0, password: '', needPw: false, note: ''
       };
@@ -264,7 +314,7 @@
     const gen = ++generation;
     clearCombined();
     for (const it of items) {
-      it.status = 'queued'; it.error = ''; it.note = ''; it.showText = '';
+      it.status = 'queued'; it.error = ''; it.note = ''; it.showText = ''; it.progress = 0;
       paint(it);
     }
 
@@ -311,7 +361,7 @@
           mode: s.mode === 'quality' ? 'quality' : 'size',
           targetBytes: perPage, quality: s.quality,
           maxW: s.maxW, maxH: s.maxH, bg: s.bg, wantBytes: true
-        });
+        }, null, p => { if (gen === generation) setProgress(it, p); });
         if (gen !== generation) return null;
         if (!res.ok) { fail(it, res.error); return null; }
         it.result = res; it.status = 'done'; it.outputs = [];
@@ -329,7 +379,8 @@
         if (gen !== generation) return;
         setCombined(new Blob([bytes], { type: 'application/pdf' }),
           'indi-tools.pdf', pages.length + (pages.length === 1 ? ' page' : ' pages'),
-          s.mode !== 'quality' ? target : 0);
+          s.mode !== 'quality' ? target : 0,
+          imgs.reduce((a, i) => a + i.origSize, 0));
       } catch (e) {
         imgs.forEach(it => fail(it, e.message || 'Could not build the PDF'));
       }
@@ -342,7 +393,7 @@
         file: it.file, type: encodeType, mode: s.mode,
         targetBytes: s.targetBytes, percent: s.percent, quality: s.quality,
         maxW: s.maxW, maxH: s.maxH, bg: s.bg, wantBytes: toPdf
-      });
+      }, null, p => { if (gen === generation) setProgress(it, toPdf ? p * 0.9 : p); });
       if (gen !== generation) return;
       if (!res.ok) { fail(it, res.error); return; }
       it.result = res;
@@ -358,6 +409,7 @@
       } else {
         setOutputs(it, [{ name: baseName(it.name) + '.' + extFor(encodeType), blob: res.blob }]);
       }
+      setProgress(it, 1);
       it.status = 'done';
       paint(it); updateSummary();
     });
@@ -401,7 +453,11 @@
   /* Render the chosen pages and encode each one, reusing the image
      worker's size search. Bitmaps are transferred away and closed
      immediately, so only a few are ever alive at once. */
-  async function renderAndEncode(it, pages, dpi, s, perPageBytes, type, gen) {
+  async function renderAndEncode(it, pages, dpi, s, perPageBytes, type, gen, span, base) {
+    const total = pages.length;
+    let finished = 0;
+    span = span === undefined ? 1 : span;
+    base = base || 0;
     return mapLimit(pages, RENDER_LIMIT, async (n) => {
       if (gen !== generation) return null;
       const r = await IndiPDF.renderBitmap(it.doc, n, dpi, s.gray);
@@ -414,6 +470,8 @@
       }, [r.bitmap]);
       if (gen !== generation) return null;
       if (!res.ok) throw new Error(res.error);
+      finished++;
+      setProgress(it, base + (finished / total) * span);
       return {
         page: n, bytes: res.bytes, type,
         ptWidth: r.ptWidth, ptHeight: r.ptHeight,
@@ -432,6 +490,9 @@
     return pages;
   }
 
+  /* [start, width] of the progress bar given to each corrective pass */
+  const PASS_SPANS = [[0, 0.50], [0.50, 0.30], [0.80, 0.17]];
+
   async function pdfCompress(it, s, gen) {
     const pages = pageSelection(it, s.range);
     const target = s.mode === 'percent'
@@ -445,9 +506,11 @@
        came in well under their share; a third is the last attempt
        before we report the real number honestly. */
     for (let pass = 0; pass < 3; pass++) {
-      it.note = pages.length > 8 ? 'rendering ' + pages.length + ' pages, pass ' + (pass + 1) : '';
+      it.note = pages.length > 8 ? 'rendering ' + pages.length + ' pages, pass ' + (pass + 1)
+        : (pass > 0 ? 'pass ' + (pass + 1) : '');
       paint(it);
-      const enc = (await renderAndEncode(it, pages, dpi, s, budget, 'image/jpeg', gen)).filter(Boolean);
+      const [base, span] = PASS_SPANS[pass] || PASS_SPANS[PASS_SPANS.length - 1];
+      const enc = (await renderAndEncode(it, pages, dpi, s, budget, 'image/jpeg', gen, span, base)).filter(Boolean);
       if (gen !== generation) return;
       if (!enc.length) throw new Error('No pages were rendered.');
       const bytes = await IndiPDF.pdfFromRasterPages(enc);
@@ -463,6 +526,7 @@
       if (ratio < 0.55) dpi = Math.max(50, Math.round(dpi * 0.72));
     }
 
+    setProgress(it, 1);
     const blob = new Blob([out.bytes], { type: 'application/pdf' });
     it.note = out.pages + (out.pages === 1 ? ' page' : ' pages') + ' at ' + out.dpi + ' DPI' +
       (out.quality ? ' · q' + Math.round(out.quality * 100) : '') +
@@ -472,7 +536,7 @@
        images makes it bigger, every time. Say so rather than leaving the
        user to work out why compressing grew the file. */
     if (blob.size > it.origSize) {
-      it.note += ' · this PDF was already smaller than its rendered pages, so nothing here will shrink it';
+      it.note += ' · already smaller than its pages render to, so compressing cannot help';
     } else if (out.quality && out.quality < 0.35) {
       it.note += ' · the pages are heavily degraded at this target: raise it, or drop the DPI instead';
     }
@@ -491,6 +555,7 @@
     paint(it);
     const enc = (await renderAndEncode(it, pages, s.dpi, s, perPage, type, gen)).filter(Boolean);
     if (gen !== generation) return;
+    setProgress(it, 1);
     const ext = extFor(type);
     const width = String(it.pages).length;
     setOutputs(it, enc.map(e => ({
@@ -508,11 +573,12 @@
 
   async function pdfToText(it, s, gen) {
     const pages = IndiPDF.parseRange(s.range, it.pages);
-    let out = '';
+    let out = '', seen = 0;
     for (const n of pages) {
       if (gen !== generation) return;
       const t = await IndiPDF.pageText(it.doc, n);
       out += (pages.length > 1 ? '\n\n───── page ' + n + ' ─────\n\n' : '') + t;
+      setProgress(it, ++seen / pages.length);
     }
     out = out.trim();
     if (!out) {
@@ -537,6 +603,7 @@
     const asked = IndiPDF.parseRange(s.trange, total);
     if (!asked.length) throw new Error('That range selects no pages. This PDF has ' + total + '.');
     const all = Array.from({ length: total }, (_, i) => i + 1);
+    setProgress(it, 0.35);
     const bytes = new Uint8Array(await it.file.arrayBuffer());
 
     if (s.ptool === 'split') {
@@ -570,11 +637,88 @@
         ? asked.length + ' of ' + total + ' pages turned by ' + rotate + '°, nothing re-encoded'
         : keep.length + ' of ' + total + ' pages kept, nothing re-encoded';
     }
+    setProgress(it, 1);
     it.status = 'done';
     paint(it); updateSummary();
   }
 
   function avg(a) { const v = a.filter(x => typeof x === 'number'); return v.length ? v.reduce((x, y) => x + y, 0) / v.length : 0; }
+
+  /* ── progress and the result dial ──────────────────────────── */
+  const RING_C = 150.796;            // 2 * pi * r, with r = 24 in the viewBox
+
+  /* Writes straight to the DOM rather than going through paint(), so a
+     stream of progress messages does not rebuild the whole row. */
+  function setProgress(it, p) {
+    it.progress = Math.max(0, Math.min(1, p));
+    if (!it.el) return;
+    const bar = it.el.querySelector('.prog i');
+    if (bar) bar.style.width = (it.progress * 100).toFixed(1) + '%';
+    const box = it.el.querySelector('.prog');
+    if (box) box.setAttribute('aria-valuenow', Math.round(it.progress * 100));
+  }
+
+  function renderRing(host, before, after) {
+    if (!host) return;
+    host.replaceChildren();
+    if (!before) return;
+    const pct = Math.round((1 - after / before) * 100);
+    const grew = pct < 0;
+    const mag = Math.min(100, Math.abs(pct));
+    const times = before > 0 ? after / before : 1;
+
+    /* Rasterising a small text PDF can produce "7440% larger", which is
+       true and unreadable in a 56px dial. Past a doubling, a multiple
+       says the same thing in three characters. */
+    const asMultiple = grew && times >= 2;
+    const shown = asMultiple ? (times >= 10 ? Math.round(times) : Math.round(times * 10) / 10) : Math.abs(pct);
+    const suffix = asMultiple ? '' : '%';
+    const prefix = asMultiple ? '×' : '';
+
+    const el = document.createElement('div');
+    el.className = 'ring pop' + (grew ? ' grew' : (mag === 0 ? ' flat' : ''));
+    el.setAttribute('role', 'img');
+    el.setAttribute('aria-label', asMultiple
+      ? shown + ' times larger'
+      : Math.abs(pct) + ' percent ' + (grew ? 'larger' : 'smaller'));
+    el.innerHTML =
+      '<svg viewBox="0 0 56 56" aria-hidden="true">' +
+        '<circle class="track" cx="28" cy="28" r="24"/>' +
+        '<circle class="arc" cx="28" cy="28" r="24"/>' +
+      '</svg>' +
+      '<b class="rnum">' + prefix + '0' + suffix + '</b>' +
+      '<span class="rcap">' + (grew ? 'LARGER' : mag === 0 ? 'SAME' : 'SMALLER') + '</span>';
+    host.appendChild(el);
+    animateRing(el, mag, shown, prefix, suffix);
+  }
+
+  function animateRing(el, mag, label, prefix, suffix) {
+    const arc = el.querySelector('.arc');
+    const num = el.querySelector('.rnum');
+    const dp = String(label).includes('.') ? 1 : 0;
+    const fmt = v => prefix + (dp ? v.toFixed(1) : Math.round(v)) + suffix;
+    const settle = () => {
+      arc.style.strokeDashoffset = (RING_C * (1 - mag / 100)).toFixed(2);
+      num.textContent = fmt(label);
+    };
+    const still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (still || document.hidden) { settle(); return; }
+
+    // the CSS transition needs one frame holding the start value
+    arc.style.strokeDashoffset = RING_C;
+    requestAnimationFrame(() => { arc.style.strokeDashoffset = (RING_C * (1 - mag / 100)).toFixed(2); });
+
+    const DUR = 950, t0 = performance.now();
+    const ease = t => 1 - Math.pow(1 - t, 3);
+    (function tick() {
+      const t = Math.min(1, (performance.now() - t0) / DUR);
+      num.textContent = fmt(ease(t) * label);
+      if (t < 1) requestAnimationFrame(tick);
+    })();
+    /* requestAnimationFrame does not run while the tab is in the
+       background, so guarantee the final value lands either way. */
+    setTimeout(settle, DUR + 80);
+  }
 
   /* ── outputs ───────────────────────────────────────────────── */
   function setOutputs(it, outs) {
@@ -594,9 +738,10 @@
   function clearCombined() {
     if (combined && combined.url) URL.revokeObjectURL(combined.url);
     combined = null;
+    els.cRing.replaceChildren();
     els.combined.hidden = true;
   }
-  function setCombined(blob, name, meta, target) {
+  function setCombined(blob, name, meta, target, before) {
     clearCombined();
     combined = { blob, name, url: URL.createObjectURL(blob) };
     els.cTitle.textContent = name;
@@ -606,11 +751,13 @@
     els.cDl.download = name;
     els.cDl.hidden = false;
     els.combined.hidden = false;
+    renderRing(els.cRing, before || 0, blob.size);
   }
   function setCombinedError(title, msg) {
     clearCombined();
     els.cTitle.textContent = title;
     els.cMeta.textContent = msg;
+    els.cRing.replaceChildren();
     els.cDl.hidden = true;
     els.combined.hidden = false;
   }
@@ -622,7 +769,8 @@
     li.innerHTML =
       '<img class="thumb" alt="">' +
       '<div class="meta"><div class="fname"></div><div class="sizes"></div><div class="dims"></div>' +
-      '<div class="prog"><i></i></div></div>' +
+      '<div class="prog" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i></i></div></div>' +
+      '<div class="ringwrap"></div>' +
       '<div class="acts"></div>';
     it.el = li;
     els.list.appendChild(li);
@@ -660,7 +808,8 @@
     const sizes = it.el.querySelector('.sizes');
     const dims = it.el.querySelector('.dims');
     const acts = it.el.querySelector('.acts');
-    const bar = it.el.querySelector('.prog i');
+    const prog = it.el.querySelector('.prog');
+    const ringHost = it.el.querySelector('.ringwrap');
     it.el.classList.toggle('failed', it.status === 'error');
     const pw = it.el.querySelector('.pw'); if (pw) pw.remove();
     const pl = it.el.querySelector('.pages'); if (pl) pl.remove();
@@ -672,14 +821,16 @@
       const label = it.status === 'queued' ? 'waiting…' : (it.note || 'working…');
       sizes.innerHTML = fmtBytes(it.origSize) + ' <span class="status">· ' + esc(label) + '</span>';
       dims.textContent = it.kind === 'pdf' && it.pages ? it.pages + (it.pages === 1 ? ' page' : ' pages') : '';
-      bar.style.width = it.status === 'queued' ? '8%' : '45%';
+      prog.hidden = false;
+      ringHost.replaceChildren();
+      setProgress(it, it.status === 'queued' ? 0 : (it.progress || 0.04));
       acts.innerHTML = ''; addRemove(acts, it);
       return;
     }
 
     if (it.status === 'error') {
       sizes.innerHTML = fmtBytes(it.origSize) + ' <span class="status err">· ' + esc(it.error) + '</span>';
-      dims.textContent = ''; bar.style.width = '0'; acts.innerHTML = '';
+      dims.textContent = ''; prog.hidden = true; ringHost.replaceChildren(); acts.innerHTML = '';
       addRemove(acts, it);
       if (it.needPw) renderPassword(it);
       return;
@@ -691,7 +842,9 @@
         (it.result ? ' → ' + fmtBytes(it.result.blob.size) : '') +
         ' <span class="status">· ' + esc(it.note || 'ready') + '</span>';
       dims.textContent = it.result ? it.result.origWidth + '×' + it.result.origHeight : '';
-      bar.style.width = '100%';
+      prog.hidden = true;
+      if (it.result && it.result.blob) renderRing(ringHost, it.origSize, it.result.blob.size);
+      else ringHost.replaceChildren();
       acts.innerHTML = ''; addRemove(acts, it);
       return;
     }
@@ -714,7 +867,8 @@
       if (r.note) d += ' · ' + r.note;
     } else if (it.note) d = it.note;
     dims.textContent = d;
-    bar.style.width = Math.max(0, Math.min(100, grew ? 100 : pct)) + '%';
+    prog.hidden = true;
+    renderRing(ringHost, it.origSize, after);
 
     acts.innerHTML = '';
     if (it.outputs.length === 1) {
@@ -926,7 +1080,8 @@
       for (const it of pdfs) buffers.push(new Uint8Array(await it.file.arrayBuffer()));
       const bytes = await IndiPDF.merge(buffers);
       const blob = new Blob([bytes], { type: 'application/pdf' });
-      setCombined(blob, 'indi-tools-merged.pdf', pdfs.length + ' PDFs joined, nothing re-encoded', 0);
+      setCombined(blob, 'indi-tools-merged.pdf', pdfs.length + ' PDFs joined, nothing re-encoded', 0,
+        pdfs.reduce((a, i) => a + i.origSize, 0));
       updateSummary();
     } catch (e) {
       setCombinedError('Could not merge these PDFs', e.message || 'Unknown error');
@@ -1003,6 +1158,11 @@
     els.gray.checked = !!p.gray;
     syncUI(); reprocess();
   }));
+
+  els.moreToggle.addEventListener('click', () => {
+    const open = els.side.classList.toggle('more-open');
+    els.moreToggle.setAttribute('aria-expanded', String(open));
+  });
 
   els.zip.addEventListener('click', downloadAll);
   els.merge.addEventListener('click', mergeAll);
