@@ -453,19 +453,22 @@
   /* Render the chosen pages and encode each one, reusing the image
      worker's size search. Bitmaps are transferred away and closed
      immediately, so only a few are ever alive at once. */
-  async function renderAndEncode(it, pages, dpi, s, perPageBytes, type, gen, span, base) {
+  /* perPage is either one byte budget for every page, or an array aligned
+     to `pages` so a dense page can be given more room than a blank one. */
+  async function renderAndEncode(it, pages, dpi, s, perPage, type, gen, span, base) {
     const total = pages.length;
     let finished = 0;
     span = span === undefined ? 1 : span;
     base = base || 0;
-    return mapLimit(pages, RENDER_LIMIT, async (n) => {
+    return mapLimit(pages, RENDER_LIMIT, async (n, idx) => {
+      const cap = Array.isArray(perPage) ? perPage[idx] : perPage;
       if (gen !== generation) return null;
       const r = await IndiPDF.renderBitmap(it.doc, n, dpi, s.gray);
       if (gen !== generation) { r.bitmap.close(); return null; }
       const res = await run({
         bitmap: r.bitmap, sourceSize: 0, type,
-        mode: perPageBytes ? 'size' : 'quality',
-        targetBytes: perPageBytes || 0, quality: s.quality,
+        mode: cap ? 'size' : 'quality',
+        targetBytes: cap || 0, quality: s.quality,
         maxW: s.maxW, maxH: s.maxH, bg: '#FFFFFF', wantBytes: true
       }, [r.bitmap]);
       if (gen !== generation) return null;
@@ -491,55 +494,134 @@
   }
 
   /* [start, width] of the progress bar given to each corrective pass */
-  const PASS_SPANS = [[0, 0.50], [0.50, 0.30], [0.80, 0.17]];
+  const PASS_SPANS = [[0, 0.40], [0.40, 0.25], [0.65, 0.15], [0.80, 0.10], [0.90, 0.07]];
+  const MIN_PAGE_BYTES = 400;      // below this a JPEG page is a smear
+  const MAX_PASSES = 5;
 
   async function pdfCompress(it, s, gen) {
     const pages = pageSelection(it, s.range);
-    const target = s.mode === 'percent'
-      ? Math.max(8192, Math.round(it.origSize * s.percent / 100))
-      : s.targetBytes;
-    const RESERVE = 0.93;            // leaves room for the PDF's own structure
-    let budget = s.mode === 'quality' ? 0 : Math.max(2048, Math.floor(target * RESERVE / pages.length));
-    let dpi = s.dpi, out = null, missed = false;
+    const N = pages.length;
+    const askedDpi = s.dpi;
 
-    /* One pass usually lands close. A second corrects for pages that
-       came in well under their share; a third is the last attempt
-       before we report the real number honestly. */
-    for (let pass = 0; pass < 3; pass++) {
-      it.note = pages.length > 8 ? 'rendering ' + pages.length + ' pages, pass ' + (pass + 1)
-        : (pass > 0 ? 'pass ' + (pass + 1) : '');
-      paint(it);
-      const [base, span] = PASS_SPANS[pass] || PASS_SPANS[PASS_SPANS.length - 1];
-      const enc = (await renderAndEncode(it, pages, dpi, s, budget, 'image/jpeg', gen, span, base)).filter(Boolean);
+    /* Fixed quality has no target to chase, so it is a single pass. */
+    if (s.mode === 'quality') {
+      const enc = (await renderAndEncode(it, pages, askedDpi, s, 0, 'image/jpeg', gen, 1, 0)).filter(Boolean);
       if (gen !== generation) return;
       if (!enc.length) throw new Error('No pages were rendered.');
       const bytes = await IndiPDF.pdfFromRasterPages(enc);
       if (gen !== generation) return;
-      out = { bytes, dpi, pages: enc.length, quality: avg(enc.map(e => e.quality)) };
-      if (!budget) break;                                   // fixed quality: one pass only
-      if (bytes.length <= target) { missed = false; break; }
-      missed = true;
-      const ratio = (target * RESERVE) / bytes.length;
-      if (ratio > 0.97) break;                              // as close as this loop gets
-      budget = Math.max(1536, Math.floor(budget * ratio));
-      // When quality alone is clearly not enough, take pixels out too.
-      if (ratio < 0.55) dpi = Math.max(50, Math.round(dpi * 0.72));
+      finishCompress(it, s, { bytes, dpi: askedDpi, pages: enc.length, quality: avg(enc.map(e => e.quality)) },
+        false, askedDpi, 0, 0);
+      return;
     }
 
-    setProgress(it, 1);
+    const target = s.mode === 'percent'
+      ? Math.max(8192, Math.round(it.origSize * s.percent / 100))
+      : s.targetBytes;
+
+    /* Already under the limit. Rasterising would only make it bigger, so
+       hand back the file untouched rather than doing 22 renders to produce
+       a worse version of something that already passes. */
+    if (s.mode === 'size' && it.origSize <= target) {
+      setProgress(it, 1);
+      it.note = 'already ' + fmtBytes(it.origSize) + ', under your ' + fmtBytes(target) +
+        ' limit, so it is untouched and the text stays selectable';
+      setOutputs(it, [{ name: it.name, blob: it.file }]);
+      it.status = 'done';
+      paint(it); updateSummary();
+      return;
+    }
+
+    /* A PDF's own structure costs roughly 700 to 800 bytes per page: page
+       object, content stream, image XObject, resource dictionary. On a
+       22 page file that is about 17 KB, which is most of a 40 KB target.
+       The old flat 7% reserve was out by six times on exactly that case,
+       so the overhead is measured from each pass instead of guessed. */
+    let overhead = Math.min(N * 800, Math.round(target * 0.6));
+    let weights = pages.map(() => 1 / N);
+    let dpi = askedDpi, out = null, missed = true, lastTotal = -1;
+    const MARGIN = 1024;
+
+    for (let pass = 0; pass < MAX_PASSES; pass++) {
+      const avail = Math.max(N * MIN_PAGE_BYTES, target - overhead - MARGIN);
+      const budgets = weights.map(w => Math.max(MIN_PAGE_BYTES, Math.round(avail * w)));
+
+      it.note = (N > 8 ? 'rendering ' + N + ' pages' : '') +
+        (pass ? (N > 8 ? ', ' : '') + 'pass ' + (pass + 1) : '');
+      paint(it);
+
+      const [base, span] = PASS_SPANS[Math.min(pass, PASS_SPANS.length - 1)];
+      const enc = (await renderAndEncode(it, pages, dpi, s, budgets, 'image/jpeg', gen, span, base)).filter(Boolean);
+      if (gen !== generation) return;
+      if (!enc.length) throw new Error('No pages were rendered.');
+      const bytes = await IndiPDF.pdfFromRasterPages(enc);
+      if (gen !== generation) return;
+
+      const sum = enc.reduce((a, e) => a + e.bytes.length, 0);
+      overhead = Math.max(0, bytes.length - sum);
+      out = { bytes, dpi, pages: enc.length, quality: avg(enc.map(e => e.quality)) };
+
+      if (bytes.length <= target) { missed = false; break; }
+      missed = true;
+
+      /* Pages that could not reach their budget even at the lowest quality
+         can only be fixed by removing pixels. JPEG size tracks pixel count
+         roughly linearly, so scale the DPI by the root of the shortfall. */
+      let worst = 1, anyOver = false;
+      enc.forEach((e, i) => {
+        if (e.missedTarget) {
+          anyOver = true;
+          worst = Math.min(worst, budgets[i] / Math.max(1, e.bytes.length));
+        }
+      });
+      if (anyOver) {
+        const next = Math.max(36, Math.round(dpi * Math.sqrt(Math.max(0.25, worst))));
+        if (next < dpi) dpi = next;
+      }
+
+      /* Hand headroom back: a near-blank page does not need an equal share
+         of the budget, and a dense one needs more than its share. */
+      if (enc.length === N && sum > 0) {
+        const raw = enc.map(e => Math.max(0.004, e.bytes.length / sum));
+        const rsum = raw.reduce((x, y) => x + y, 0);
+        weights = raw.map(w => w / rsum);
+      }
+
+      // no change and no lever left to pull
+      if (bytes.length === lastTotal && !anyOver) break;
+      lastTotal = bytes.length;
+    }
+
+    finishCompress(it, s, out, missed, askedDpi, overhead, N);
+  }
+
+  function finishCompress(it, s, out, missed, askedDpi, overhead, N) {
     const blob = new Blob([out.bytes], { type: 'application/pdf' });
-    it.note = out.pages + (out.pages === 1 ? ' page' : ' pages') + ' at ' + out.dpi + ' DPI' +
-      (out.quality ? ' · q' + Math.round(out.quality * 100) : '') +
-      (s.gray ? ' · grey' : '') + ' · text is no longer selectable';
-    if (missed) it.note += ' · target not reached';
+    const bits = [out.pages + (out.pages === 1 ? ' page' : ' pages')];
+    bits.push(out.dpi === askedDpi ? out.dpi + ' DPI'
+      : out.dpi + ' DPI, down from ' + askedDpi + ' to reach the target');
+    if (out.quality) bits.push('q' + Math.round(out.quality * 100));
+    if (s.gray) bits.push('grey');
+    bits.push('text is no longer selectable');
+    it.note = bits.join(' \u00b7 ');
+
+    /* When the target is missed, report the floor that was actually
+       measured rather than attributing it to a cause. Between the PDF's
+       structure and the smallest a JPEG page will go, a many-page document
+       has a hard minimum, and the useful thing to say is what it is. */
+    if (missed) {
+      it.note += ' \u00b7 target not reached: ' + N + (N === 1 ? ' page' : ' pages') +
+        ' will not go below about ' + fmtBytes(blob.size) + ' as images';
+    }
     /* A text-only PDF is mostly instructions, not pixels. Redrawing it as
        images makes it bigger, every time. Say so rather than leaving the
        user to work out why compressing grew the file. */
     if (blob.size > it.origSize) {
-      it.note += ' · already smaller than its pages render to, so compressing cannot help';
-    } else if (out.quality && out.quality < 0.35) {
-      it.note += ' · the pages are heavily degraded at this target: raise it, or drop the DPI instead';
+      it.note += ' \u00b7 already smaller than its pages render to, so compressing cannot help';
+    } else if (!missed && out.quality && out.quality < 0.35) {
+      it.note += ' \u00b7 the pages are heavily degraded at this target: raise it, or drop the DPI instead';
     }
+    setProgress(it, 1);
     setOutputs(it, [{ name: baseName(it.name) + '-compressed.pdf', blob }]);
     it.status = 'done';
     paint(it); updateSummary();
