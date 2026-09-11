@@ -80,9 +80,9 @@ async function encode(canvas, type, quality) {
 }
 
 /* ── find the largest quality that still fits the target ────── */
-async function searchQuality(bitmap, scale, type, targetBytes, bg, report, from, to) {
+async function searchQuality(bitmap, scale, type, targetBytes, bg, report, from, to, hiCap) {
   const cv = drawScaled(bitmap, scale, bg);
-  let lo = 0.05, hi = 0.96, best = null;
+  let lo = 0.05, hi = hiCap || 0.96, best = null;
   // 9 iterations narrows quality to ~0.002, well past what is visible
   for (let i = 0; i < 9; i++) {
     const mid = (lo + hi) / 2;
@@ -123,9 +123,15 @@ async function process(job, report) {
   }
 
   // ── size target (absolute KB, or a percentage of the original) ──
-  const target = mode === 'percent'
+  /* A ceiling of 100 KB on a 20 KB file still means 20 KB. Without this the
+     search happily re-encodes a small file upwards to fill the allowance,
+     which is how a 20 KB photo came back 75% larger. Rendered PDF pages
+     pass sourceSize 0 and are not capped, since they have no source file
+     of their own to compare against. */
+  const asked = mode === 'percent'
     ? Math.max(1024, Math.round(sourceSize * (percent / 100)))
     : targetBytes;
+  const target = sourceSize ? Math.min(asked, sourceSize) : asked;
 
   // PNG ignores the quality argument entirely: it is lossless: so the
   // only lever is dimensions. Shrink until it fits, then report honestly.
@@ -144,11 +150,24 @@ async function process(job, report) {
       : (s < scale ? 'PNG has no quality setting, so it was resized to reach the target.' : ''));
   }
 
-  // Lossy: search quality first, then shrink if quality alone cannot get there.
-  let s = scale, res = await searchQuality(bitmap, s, type, target, flatten, report, 0.25, 0.9), guard = 0;
+  /* A size target is a ceiling, not a quota to spend. Encoding at a good
+     quality first means a file that already fits is left at that quality
+     instead of being pushed up to fill the target, which is how a 109 KB
+     PDF was ending up at 1 MB under a 1 MB limit. It is also eight
+     encodes cheaper in the common case. */
+  const GOOD_Q = 0.82;
+  const good = await encode(drawScaled(bitmap, scale, flatten), type, GOOD_Q);
+  if (good.size <= target) {
+    report(1);
+    return done(good, bitmap, scale, GOOD_Q, false);
+  }
+
+  // Too big at a good quality, so search below it, then shrink if even the
+  // quality floor cannot get there.
+  let s = scale, res = await searchQuality(bitmap, s, type, target, flatten, report, 0.25, 0.9, GOOD_Q), guard = 0;
   while (res.hitFloor && res.blob.size > target && s > 0.06 && guard++ < 14) {
     s *= 0.85;
-    res = await searchQuality(bitmap, s, type, target, flatten, report, 0.9, 0.98);
+    res = await searchQuality(bitmap, s, type, target, flatten, report, 0.9, 0.98, GOOD_Q);
   }
   report(1);
   return done(res.blob, bitmap, s, res.quality, res.blob.size > target,
