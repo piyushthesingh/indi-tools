@@ -86,7 +86,10 @@ async function searchQuality(bitmap, scale, type, targetBytes, bg) {
 /* ── main pipeline ─────────────────────────────────────────── */
 async function process(job) {
   const { file, type, mode, targetBytes, percent, quality, maxW, maxH, bg } = job;
-  const { bitmap } = await decode(file);
+  /* Two kinds of source. A File, which needs decoding, or an already
+     decoded ImageBitmap, which is how rendered PDF pages arrive. */
+  const bitmap = job.bitmap || (await decode(file)).bitmap;
+  const sourceSize = job.sourceSize || (file ? file.size : 0);
 
   // fit within any requested dimension cap
   let scale = 1;
@@ -103,7 +106,7 @@ async function process(job) {
 
   // ── size target (absolute KB, or a percentage of the original) ──
   const target = mode === 'percent'
-    ? Math.max(1024, Math.round(file.size * (percent / 100)))
+    ? Math.max(1024, Math.round(sourceSize * (percent / 100)))
     : targetBytes;
 
   // PNG ignores the quality argument entirely: it is lossless: so the
@@ -144,8 +147,17 @@ self.onmessage = async (e) => {
   const { id, job } = e.data;
   try {
     const r = await process(job);
-    self.postMessage({ id, ok: true, ...r });
+    if (job.wantBytes) {
+      // The PDF writer needs the raw bytes, not a Blob it would have to
+      // re-read on the main thread.
+      r.bytes = new Uint8Array(await r.blob.arrayBuffer());
+      self.postMessage({ id, ok: true, ...r }, [r.bytes.buffer]);
+    } else {
+      self.postMessage({ id, ok: true, ...r });
+    }
   } catch (err) {
     self.postMessage({ id, ok: false, error: err && err.message ? err.message : String(err) });
+  } finally {
+    if (job.bitmap && job.bitmap.close) job.bitmap.close();
   }
 };
