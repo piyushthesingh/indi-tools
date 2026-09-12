@@ -11,12 +11,29 @@
 /assets/vendor/*
   Cache-Control: public, max-age=31536000
 
-# Icons change rarely.
+# Brand assets change rarely, and a stale one is cosmetic rather than
+# broken, so a week is a fair trade. Not immutable, for the same reason
+# the vendor rule is not: these names carry no content hash.
 /favicon.svg
   Cache-Control: public, max-age=604800
 /favicon.ico
   Cache-Control: public, max-age=604800
+/favicon-32x32.png
+  Cache-Control: public, max-age=604800
 /apple-touch-icon.png
+  Cache-Control: public, max-age=604800
+/android-chrome-192x192.png
+  Cache-Control: public, max-age=604800
+/android-chrome-512x512.png
+  Cache-Control: public, max-age=604800
+/maskable-icon-512x512.png
+  Cache-Control: public, max-age=604800
+/site.webmanifest
+  Cache-Control: public, max-age=604800
+
+# The share image is fetched by link-preview crawlers, not by visitors,
+# and those cache it themselves for a long time anyway.
+/og-image.png
   Cache-Control: public, max-age=604800
 
 # base.css, theme.js and the app scripts deliberately keep Cloudflare's
