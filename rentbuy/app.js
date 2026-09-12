@@ -32,8 +32,23 @@
   }
 
   /* ── chart ─────────────────────────────────────────────────── */
+  let lastRows = null, lastBreakEven = null;
+
   function drawChart(rows, breakEven) {
-    const W = 720, H = 300, PAD = { l: 58, r: 14, t: 14, b: 26 };
+    lastRows = rows; lastBreakEven = breakEven;
+    const el = $('#chart');
+
+    /* Size the viewBox to the box the SVG actually occupies, so one unit
+       is one CSS pixel and font-size 10 renders at 10px. With the old
+       fixed 720-wide viewBox, a 306px-wide phone scaled everything by
+       0.425 and the axis labels came out 5px tall. */
+    const W = Math.max(260, Math.round(el.getBoundingClientRect().width) || 720);
+    /* 2.4:1 reads well wide, but at phone widths that is a 127px sliver,
+       so the chart is allowed to get proportionally taller as it narrows. */
+    const H = Math.round(Math.min(300, Math.max(200, W * 0.42)));
+    el.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+
+    const PAD = { l: 58, r: 14, t: 14, b: 26 };
     const iw = W - PAD.l - PAD.r, ih = H - PAD.t - PAD.b;
     const maxY = Math.max(...rows.map(r => Math.max(r.buyNet, r.rentNet)), 1);
     const minY = Math.min(...rows.map(r => Math.min(r.buyNet, r.rentNet)), 0);
@@ -64,6 +79,38 @@
     g += '<path d="' + path('rentNet') + '" fill="none" stroke="var(--t2-ink)" stroke-width="2.5" stroke-linejoin="round"/>';
     g += '<path d="' + path('buyNet')  + '" fill="none" stroke="var(--t3-ink)" stroke-width="2.5" stroke-linejoin="round"/>';
     $('#chart').innerHTML = g;
+  }
+
+  /* ── the sticky answer bar (phone only) ────────────────────── */
+  /* The card version is a sentence and a half, which does not fit a
+     44px bar, so the same fact is said in a few words. */
+  function setPeek(text, emi) {
+    const v = $('#peek-v');
+    if (!v) return;
+    v.textContent = emi ? text + '  \u00b7  EMI ' + emi : text;
+  }
+
+  /* Hide the bar whenever the real verdict is on screen, since two copies
+     of the same answer at once is just clutter.
+
+     This reads the position directly on scroll rather than observing the
+     card. An IntersectionObserver's first callback fired before the chart
+     and the year-by-year table had rendered, while the page was still
+     short enough that the verdict genuinely was on screen, so it hid the
+     bar and then had no scroll event to correct itself. The bar never
+     appeared on load, which was the one thing it existed to do. */
+  function syncPeek() {
+    const bar = $('#peek'), card = $('#verdict');
+    if (!bar || !card) return;
+    const r = card.getBoundingClientRect();
+    bar.hidden = r.top < window.innerHeight * 0.9 && r.bottom > 0;
+  }
+
+  function initPeek() {
+    const bar = $('#peek'), card = $('#verdict');
+    if (!bar || !card) return;
+    bar.addEventListener('click', () => card.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    window.addEventListener('scroll', syncPeek, { passive: true });
   }
 
   /* ── render ────────────────────────────────────────────────── */
@@ -99,6 +146,7 @@
       $('#why').textContent = !inp.price
         ? 'Nothing to work out yet.'
         : 'Add what you would pay in rent for something similar.';
+      setPeek(!inp.price ? 'Enter a property price' : 'Add a monthly rent', '');
       drawChart(r.rows, null);
       $('#sens').textContent = '';
       renderTable(r);
@@ -115,6 +163,8 @@
       $('#why').textContent = 'From year ' + r.breakEven + ' onwards the house is the better financial call, and by year '
         + inp.horizon + ' buying is ahead by ' + big(Math.abs(gap)) + '. Sell before then and the '
         + Math.round(inp.buyCostPct + inp.sellCostPct) + '% lost to stamp duty and selling costs will not have been earned back.';
+      setPeek(rentYears <= 0 ? 'Buying wins from year 1'
+        : 'Renting wins to year ' + rentYears, money(r.emi));
     } else {
       box.classList.add('rent');
       $('#head').innerHTML = 'Renting stays ahead for all <b>' + inp.horizon + ' years</b>.';
@@ -122,6 +172,7 @@
         + inp.investReturn + '% invested against ' + inp.appreciation + '% in the property. By year ' + inp.horizon
         + ' renting and investing leaves you ' + big(Math.abs(gap)) + ' better off. Close that '
         + (inp.investReturn - inp.appreciation).toFixed(1) + ' point gap and the answer changes quickly.';
+      setPeek('Renting stays ahead ' + inp.horizon + ' yrs', money(r.emi));
     }
 
     drawChart(r.rows, r.breakEven);
@@ -129,6 +180,7 @@
     renderTable(r);
     $('#live').textContent = r.breakEven ? 'Buying overtakes renting in year ' + r.breakEven
                                          : 'Renting stays ahead for the whole period.';
+    syncPeek();
   }
 
   /* How far one assumption has to move before the answer flips. */
@@ -189,5 +241,19 @@
 
   IDS.forEach(id => $('#' + id).addEventListener('input', recalc));
   ['regime','marginalRate','c80'].forEach(id => $('#' + id).addEventListener('change', recalc));
+
+  /* The viewBox now depends on the rendered width, so a rotation or a
+     window resize has to redraw. Nothing else on the page needs it. */
+  let rt;
+  window.addEventListener('resize', () => {
+    clearTimeout(rt);
+    rt = setTimeout(() => { if (lastRows) drawChart(lastRows, lastBreakEven); syncPeek(); }, 150);
+  });
+
+  initPeek();
   recalc();
+  /* The chart and table change the page height after the first render, so
+     settle the bar once layout is final. */
+  window.addEventListener('load', syncPeek);
+  setTimeout(syncPeek, 0);
 })();
