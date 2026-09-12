@@ -30,6 +30,11 @@
   Cache-Control: public, max-age=604800
 /site.webmanifest
   Cache-Control: public, max-age=604800
+# The header logo is on every page, and it lives under /assets/ where the
+# default is revalidate-always. Without this it costs a conditional
+# request on every page view for a file that never changes.
+/assets/logo-white.svg
+  Cache-Control: public, max-age=604800
 
 # The share image is fetched by link-preview crawlers, not by visitors,
 # and those cache it themselves for a long time anyway.
