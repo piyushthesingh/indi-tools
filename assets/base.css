@@ -106,6 +106,15 @@ textarea:focus-visible, select:focus-visible, summary:focus-visible, [tabindex]:
 .bar-in { display:flex; align-items:center; justify-content:space-between; gap:1rem; min-height:56px; flex-wrap:wrap; padding-block:.5rem; }
 .mark { font-family:var(--mono); font-size:.9375rem; font-weight:600; letter-spacing:-.01em; color:var(--band-tx); text-decoration:none; }
 .mark span { color:var(--mark-accent); }
+
+/* The logo in the band. --band is the same forest green in both themes, so
+   one all-white asset serves light and dark and nothing needs swapping.
+   Width and height are set on the element too, so the band does not reflow
+   once the SVG arrives. */
+a.mark { display:inline-flex; align-items:center; }
+.mark img { display:block; height:30px; width:auto; }
+.breadcrumb a.mark:hover { text-decoration:none; }
+@media (max-width:640px){ .mark img { height:26px; } }
 .bar-r { display:flex; align-items:center; gap:1rem; }
 .bar-r a { font-size:var(--t-sm); color:var(--band-dim); text-decoration:none; }
 .bar-r a:hover { color:var(--band-tx); }
