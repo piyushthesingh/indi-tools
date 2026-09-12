@@ -29,8 +29,32 @@
     return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
   }
 
+  /* Capacity of a version 40 code in byte mode, per correction level.
+     Below these lengths an overflow is arithmetically impossible, so if
+     encoding still fails the cause is something else and saying "too much
+     data" would send the user looking in the wrong place. */
+  const CAPACITY = { L: 2953, M: 2331, Q: 1663, H: 1273 };
+  const esc = t => { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; };
+
+  function fail(html) {
+    $('#qr-out').innerHTML = '<p class="empty">' + html + '</p>';
+    $('#meta').textContent = ''; $('#dl').hidden = true; current = null;
+    $('#warn').hidden = true;
+  }
+
   /* ── build ─────────────────────────────────────────────────── */
   function build() {
+    /* The library is a separate file, and the two things that stop it
+       arriving are a content blocker and a cached bad copy. Both look
+       identical from here, so name them both. */
+    if (typeof window.qrcode !== 'function') {
+      fail('The QR library did not load, so no code can be drawn. A content blocker ' +
+        'or a stale cached copy is the usual cause: try a hard reload, or open this ' +
+        'page with the blocker switched off.');
+      $('#payload').hidden = true;
+      return;
+    }
+
     const data = P.BUILD[type](values());
     const warn = $('#warn');
 
@@ -51,9 +75,13 @@
       qr.addData(data);
       qr.make();
     } catch (e) {
-      $('#qr-out').innerHTML = '<p class="empty">That is too much data for one QR code. Shorten it, or drop the error correction to L.</p>';
-      $('#meta').textContent = ''; $('#dl').hidden = true; current = null;
-      warn.hidden = true;
+      const bytes = new TextEncoder().encode(data).length;
+      if (bytes > (CAPACITY[level] || 2953) * 0.75) {
+        fail('That is too much data for one QR code. Shorten it, or drop the error correction to L.');
+      } else {
+        // 36 characters cannot overflow a QR code, so report what actually broke
+        fail('Could not build the code: ' + esc(e && e.message ? e.message : String(e)));
+      }
       return;
     }
 
