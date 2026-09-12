@@ -2,8 +2,14 @@
 # standard fonts) are several megabytes between them and their contents
 # never change, so they are cached for a year. The splat matches
 # subdirectories too, which is what standard_fonts/ needs.
+#
+# Deliberately NOT immutable. These filenames carry no content hash, so
+# immutable would mean a browser that once cached a bad or truncated copy
+# never checks again, and a reload cannot rescue it. Without it, normal
+# visits still hit cache and only an explicit reload revalidates, which
+# costs one cheap 304.
 /assets/vendor/*
-  Cache-Control: public, max-age=31536000, immutable
+  Cache-Control: public, max-age=31536000
 
 # Icons change rarely.
 /favicon.svg
