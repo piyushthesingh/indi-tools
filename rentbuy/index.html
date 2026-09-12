@@ -36,7 +36,55 @@
   <style>
     main { flex:1; padding-bottom:3rem; }
     .layout { display:grid; grid-template-columns:360px minmax(0,1fr); gap:1rem; align-items:start; }
-    @media (max-width:980px){ .layout{ display:flex; flex-direction:column; } }
+    /* Two wordings, CSS picks. Declared before the media query so the
+       narrow-screen override actually wins at equal specificity. */
+    .sub-short { display:none; }
+    .sub-long { display:inline; }
+
+    @media (max-width:980px){
+      /* align-items:start above stops the grid stretching a short column
+         to the row height. In a column flex container that same property
+         governs WIDTH, which would shrink both columns to fit-content. */
+      .layout { display:flex; flex-direction:column; align-items:stretch; }
+      .layout > * { width:100%; }
+      /* The fields come first. Leading with a verdict, four KPIs and a
+         disclaimer about numbers nobody has typed yet reads as noise, and
+         it pushed the actual inputs two or three screens down. The answer
+         stays reachable through the sticky bar below instead. */
+      .inputs  { order:1; }
+      .results { order:2; }
+    }
+
+    /* ── the answer, kept in view on a phone ──
+       Without this the fields and the result are a screen apart, so you
+       cannot see what changing a number does. Hidden automatically once
+       the real verdict card is on screen, so nothing is said twice. */
+    .peek { display:none; }
+    @media (max-width:980px){
+      .peek {
+        position:fixed; left:0; right:0; bottom:0; z-index:40;
+        display:flex; align-items:center; gap:.75rem; width:100%;
+        border:0; border-top:1px solid var(--strip-line);
+        background:var(--strip); color:var(--strip-tx);
+        padding:.55rem 1rem; font:inherit; text-align:left; cursor:pointer;
+        box-shadow:0 -2px 12px rgba(0,0,0,.10);
+      }
+      .peek-t { flex:1; min-width:0; }
+      .peek-k { display:block; font-family:var(--mono); font-size:.5625rem; letter-spacing:.08em; opacity:.72; }
+      .peek-v { display:block; font-size:var(--t-sm); font-weight:700; line-height:1.3; }
+      .peek-go { flex:0 0 auto; font-family:var(--mono); font-size:var(--t-xs); opacity:.85; }
+      /* so the bar never sits on top of the last card */
+      body { padding-bottom:58px; }
+    }
+
+    @media (max-width:640px){
+      .mast { padding:1.1rem 0 .9rem; }
+      .page-title { font-size:1.5rem; }
+      .header-tags { display:none; }
+      .page-subtitle { margin-top:.4rem; font-size:var(--t-sm); }
+      .sub-long { display:none; }
+      .sub-short { display:inline; }
+    }
     .layout > * { min-width:0; max-width:100%; }
 
     .card { background:var(--panel); border:1px solid var(--line); border-radius:var(--r); padding:1.1rem; box-shadow:var(--shadow-sm); }
@@ -113,7 +161,7 @@
 <body>
 
   <div class="bar"><div class="wrap bar-in">
-    <nav class="breadcrumb"><a href="/">← indi.tools</a><span>/</span><span>Rent vs Buy</span></nav>
+    <nav class="breadcrumb"><a class="mark" href="/" aria-label="indi.tools home"><img src="/assets/logo-white.svg" alt="indi.tools" width="96" height="30"></a><span>/</span><span>Rent vs Buy</span></nav>
     <div class="bar-r">
       <a href="https://piyushthesingh.com" target="_blank" rel="noopener noreferrer">Connect</a>
       <button class="tbtn" data-theme-toggle><span data-theme-label>DARK</span></button>
@@ -123,7 +171,7 @@
   <div class="wrap">
     <section class="mast">
       <h1 class="page-title">Rent <em>vs</em> Buy</h1>
-      <p class="page-subtitle">Most calculators compare an EMI to a rent cheque and stop there. This one also counts what your down payment would have earned invested, the stamp duty you never get back, and the fact that home loan deductions are worth nothing under the new tax regime.</p>
+      <p class="page-subtitle"><span class="sub-long">Most calculators compare an EMI to a rent cheque and stop there. This one also counts what your down payment would have earned invested, the stamp duty you never get back, and the fact that home loan deductions are worth nothing under the new tax regime.</span><span class="sub-short">Counts the return your down payment gives up, not just the EMI.</span></p>
       <div class="header-tags">
         <span class="tag">Opportunity cost</span><span class="tag">Both tax regimes</span><span class="tag">In-browser only</span>
       </div>
@@ -134,7 +182,7 @@
     <p class="sr-only" id="live" aria-live="polite"></p>
     <div class="layout">
 
-      <div>
+      <div class="inputs">
         <div class="card">
           <h2>The property</h2>
           <p class="sub">Annual rates unless stated.</p>
@@ -200,7 +248,7 @@
         </div>
       </div>
 
-      <div>
+      <div class="results">
         <div class="verdict" id="verdict">
           <span class="lbl">THE ANSWER</span>
           <div class="head" id="head"></div>
@@ -233,17 +281,27 @@
           <div class="tbl"><table id="tbl"></table></div>
         </details>
 
-        <p class="disclaim">
-          A projection, not a forecast. It assumes one self-occupied home, a fixed loan rate, steady growth
-          in both property and investments, and no rental vacancy or major repairs. Deductions under 24(b)
-          and 80C are applied only in the old regime, where they exist for a self-occupied property.
-          The 80C headroom setting matters: if EPF already fills your limit, the loan principal earns you nothing
-          extra, and assuming otherwise flatters buying by lakhs over the period. Buying a home is also a decision
-          about stability and control, and none of that is in these numbers.
-        </p>
+        <details class="more"><summary>What this does not account for</summary>
+          <p class="disclaim">
+            A projection, not a forecast. It assumes one self-occupied home, a fixed loan rate, steady growth
+            in both property and investments, and no rental vacancy or major repairs. Deductions under 24(b)
+            and 80C are applied only in the old regime, where they exist for a self-occupied property.
+            The 80C headroom setting matters: if EPF already fills your limit, the loan principal earns you nothing
+            extra, and assuming otherwise flatters buying by lakhs over the period. Buying a home is also a decision
+            about stability and control, and none of that is in these numbers.
+          </p>
+        </details>
       </div>
     </div>
   </main>
+
+  <button type="button" class="peek" id="peek" hidden aria-label="Jump to the full answer">
+    <span class="peek-t">
+      <span class="peek-k" id="peek-k">THE ANSWER</span>
+      <span class="peek-v" id="peek-v"></span>
+    </span>
+    <span class="peek-go" aria-hidden="true">SEE IT ↓</span>
+  </button>
 
   <footer><div class="wrap f-in">
     <span>© 2026 <b>INDI.TOOLS</b></span><span>MADE IN INDIA</span>
