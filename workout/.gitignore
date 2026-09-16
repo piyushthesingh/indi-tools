@@ -1,0 +1,8 @@
+# macOS folder metadata
+.DS_Store
+
+# Source exercise art. tools/build.py turns each PNG into the JPEGs the app
+# actually loads (assets/Exercises/web and assets/Exercises/thumb), which are
+# committed. The sources are about 350 MB, so they stay out of the repo.
+# Remove this line if you do want them versioned.
+assets/Exercises/*.png
