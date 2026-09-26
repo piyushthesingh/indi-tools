@@ -478,17 +478,35 @@ body.sheet-open { overflow: hidden; }
 .confirm-text strong { color: var(--text); display: block; font-size: var(--t-base); }
 
 /* ─── money now, investments ─── */
-.panel.money { margin-top: 0; margin-bottom: 16px; }
-.stats.three { grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.stats.three .stat-num { font-size: 1.15rem; }
-.stats.three .total .stat-num { color: var(--brand); }
-.money-detail { margin-top: 10px; }
-.money-detail summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; margin: 0; }
-.money-detail .legend + .legend { border-top: 1px solid var(--line-2); margin-top: 4px; padding-top: 4px; }
 .add-row.two-btn { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .card-hero .qa-foot { margin-top: 2px; }
 .past-row .mini-date { min-height: 44px; border-radius: 10px; border: 1px solid var(--line-2); background: var(--panel); padding: 0 8px; font-size: 16px; flex: none; width: 150px; }
 .past-row .grow { flex: 1; width: auto; min-width: 0; }
+
+/* ─── money now card, recurring summary ─── */
+.panel.money { padding: 0; overflow: hidden; margin-top: 0; margin-bottom: 16px; }
+.money-card { display: flex; flex-direction: column; gap: 2px; width: 100%; padding: 12px 16px 14px; border: 0; background: none; text-align: left; cursor: pointer; container-type: inline-size; }
+.money-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.money-head .label { margin: 0; }
+.money-note { font-size: .6875rem; color: var(--faint); }
+.money-figure { font-size: 1.5rem; font-weight: 700; letter-spacing: -.02em; white-space: nowrap; }
+.money-detail { padding: 0 16px 14px; border-top: 1px solid var(--line); }
+.money-line { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; font-size: var(--t-sm); color: var(--dim); }
+.money-line .amt { color: var(--text); font-weight: 600; white-space: nowrap; }
+.money-line.sum { border-top: 1px solid var(--line); color: var(--text); font-weight: 600; }
+.money-accounts { margin-top: 4px; }
+.money-accounts summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; margin: 0; }
+.money-empty { display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; text-decoration: none; color: inherit; }
+.money-empty .label { margin: 0; }
+.switch-row.flush { margin-top: 0; width: 100%; }
+.rec-summary { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 4px 14px; margin-bottom: 10px; }
+.rec-row { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; }
+.rec-row + .rec-row { border-top: 1px solid var(--line); }
+.rec-label { font-weight: 600; font-size: var(--t-sm); }
+.rec-fig { display: flex; flex-direction: column; align-items: flex-end; text-align: right; font-size: var(--t-sm); color: var(--dim); }
+.rec-fig strong { color: var(--text); }
+.rec-year { font-size: var(--t-xs); }
+.rec-row.income strong { color: var(--live); }
 
 /* ─── fit long amounts (kept last so it wins over the base sizes) ─── */
 /* Long amounts (a crore and up) shrink to fit instead of running off the
@@ -497,8 +515,8 @@ body.sheet-open { overflow: hidden; }
 .big { font-size: min(clamp(2.75rem, 13vw, 3.5rem), calc(100cqi / (var(--chars, 8) * .6))); }
 .tile-amt { white-space: nowrap; font-size: min(var(--t-lg), calc(100cqi / (var(--chars, 8) * .6))); }
 .stat-num { white-space: nowrap; font-size: min(1.5rem, calc(100cqi / (var(--chars, 8) * .6))); }
-.stats.three .stat-num { font-size: min(1.15rem, calc(100cqi / (var(--chars, 8) * .6))); }
 .donut-total { white-space: nowrap; font-size: min(1.35rem, calc(100cqi / (var(--chars, 8) * .62))); }
+.money-figure { font-size: min(1.5rem, calc(100cqi / (var(--chars, 8) * .6))); }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
