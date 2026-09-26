@@ -5,6 +5,7 @@
    moneyNow   cash − cardsOwed
    invested   invested so far, at cost (no returns or interest)
    total      moneyNow + invested
+   digital / cashInHand split `cash` into bank, UPI, wallet vs cash
 
    Accounts with "Track balance" off are listed as not included, because
    their balance is unknown. */
@@ -42,10 +43,11 @@ export function moneyNow(accounts, txns, today) {
   }
   const sum = (rows) => rows.reduce((s, r) => s + r.amount, 0);
   const cash = sum(cashRows);
+  const digital = sum(cashRows.filter((r) => r.account.kind !== 'cash'));
   const cardsOwed = sum(cardRows);
   const invested = sum(investRows);
   return {
-    cash, cardsOwed, moneyNow: cash - cardsOwed, invested, total: cash - cardsOwed + invested,
+    cash, digital, cashInHand: cash - digital, cardsOwed, moneyNow: cash - cardsOwed, invested, total: cash - cardsOwed + invested,
     cashRows, cardRows, investRows, untracked,
   };
 }

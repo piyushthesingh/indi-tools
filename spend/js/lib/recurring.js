@@ -157,3 +157,25 @@ export function validateRule(r) {
   return null;
 }
 
+
+/* Run-rate of recurring items, per kind: expense, investment (transfers
+   into an investment), transfer (other transfers) and income.
+   monthly   = monthly items + weekly items averaged per month (× 52 ÷ 12)
+   yearlyOnly = items that repeat once a year
+   annual    = 12 × monthly + yearlyOnly
+   Paused items and items whose end date has passed are left out. */
+export function recurringTotals(rules, kindOf = () => null, today = '0000-01-01') {
+  const out = {};
+  for (const r of rules) {
+    if (r.paused || (r.endDate && r.endDate < today) || !r.template?.amount) continue;
+    const t = r.template;
+    const kind = t.type === 'transfer' ? (kindOf(t.toAccountId) === 'investment' ? 'investment' : 'transfer') : t.type;
+    const bucket = (out[kind] ||= { monthly: 0, yearlyOnly: 0, annual: 0, count: 0 });
+    bucket.count++;
+    if (r.frequency === 'monthly') bucket.monthly += t.amount;
+    else if (r.frequency === 'weekly') bucket.monthly += Math.round((t.amount * 52) / 12);
+    else if (r.frequency === 'yearly') bucket.yearlyOnly += t.amount;
+  }
+  for (const b of Object.values(out)) b.annual = 12 * b.monthly + b.yearlyOnly;
+  return out;
+}
