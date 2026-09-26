@@ -74,7 +74,7 @@ for backups from older versions.
 
 | Store | Key | Notes |
 |---|---|---|
-| accounts | id | payment methods: `kind` is credit_card, upi, bank, wallet or cash. Cards add statementDay, dueDay, limit, openingOutstanding, cashback. Others add trackBalance, openingBalance. |
+| accounts | id | `kind` is credit_card, upi, bank, wallet, cash or investment. Cards add statementDay, dueDay, limit, openingOutstanding, cashback. Investments add history (`[{ id, date, amount }]`, money invested before tracking). Others add trackBalance, openingBalance. |
 | categories | id | name, icon (emoji), color, type (expense/income), order, archived. Defaults have stable ids (`cat-food`…). |
 | transactions | id | type, amount, date, accountId, toAccountId, categoryId, payee, note, recurringId, createdAt, updatedAt. Indexed on date, accountId, toAccountId, categoryId, type. |
 | recurring | id | template, frequency, dayOfMonth / weekday, startDate, endDate, lastGeneratedDate, mode (confirm/auto), paused, pending (dates waiting in "To log"). |
@@ -91,8 +91,13 @@ Rules that are never broken:
 - **Spend** is expenses minus refunds. **Transfers** (card bills, moving money,
   cash withdrawals) are never spend. **Income** is counted on its own. Home,
   Activity, Insights, budgets and the CSV all use the same `spendOf()`.
-- Groups (Credit cards, Digital cash, Cash) are derived from `kind`, never
-  stored.
+- Groups (Credit cards, Digital cash, Cash, Investments) are derived from
+  `kind`, never stored.
+- **Investments** only move by transfer (bank → investment, or back out as a
+  redemption), so investing is never spend. They never appear as a way to
+  pay or receive. A SIP is a recurring transfer into an investment.
+  Money invested before tracking lives in the account's `history`, not as
+  transfers, so it does not come out of a bank balance a second time.
 - Accounts and categories that are in use are archived, not deleted, so
   history keeps its names.
 
@@ -121,6 +126,13 @@ For statement day S and due day D:
 - A refund of an already billed purchase lowers unbilled (which can go below
   zero) and leaves billed due alone, as a bank does: the credit appears on the
   next statement.
+
+## Money now (Insights, `lib/networth.js`)
+
+Always as of today: bank, UPI, wallet and cash balances (only accounts with
+"Track balance" on) minus what is owed on cards = money now. Invested so far
+(at cost: history + transfers in − transfers out, no returns) is shown apart,
+and the total of both is the net worth figure.
 
 ## Recurring
 
