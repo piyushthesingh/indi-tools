@@ -303,6 +303,7 @@ export async function replaceAllData(data) {
 export async function deleteAllData() {
   await db.deleteAll();
   await load();
+  emit(); // other open tabs go back to onboarding too
 }
 
 /* Onboarding's final step: all accounts, the optional budget and the
