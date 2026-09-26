@@ -3,21 +3,26 @@
 
 export const SCHEMA_VERSION = 1;
 
-export const KINDS = ['credit_card', 'upi', 'bank', 'wallet', 'cash'];
+export const KINDS = ['credit_card', 'upi', 'bank', 'wallet', 'cash', 'investment'];
 
 /* Groups are derived from kind, never stored. */
 export const GROUPS = [
   { id: 'cards', name: 'Credit cards', kinds: ['credit_card'] },
   { id: 'digital', name: 'Digital cash', kinds: ['upi', 'bank', 'wallet'] },
   { id: 'cash', name: 'Cash', kinds: ['cash'] },
+  { id: 'investments', name: 'Investments', kinds: ['investment'] },
 ];
+
+/* Investments only take money in or out by transfer; they are never a way
+   to pay for an expense or receive income. */
+export const SPENDABLE_KINDS = ['credit_card', 'upi', 'bank', 'wallet', 'cash'];
 
 export function groupOf(kind) {
   return GROUPS.find((g) => g.kinds.includes(kind))?.id ?? 'digital';
 }
 
 export const KIND_LABELS = {
-  credit_card: 'Credit card', upi: 'UPI', bank: 'Bank account', wallet: 'Wallet', cash: 'Cash',
+  credit_card: 'Credit card', upi: 'UPI', bank: 'Bank account', wallet: 'Wallet', cash: 'Cash', investment: 'Investment',
 };
 
 /* Colours chosen to read on both the dark and light backgrounds and to be
@@ -124,6 +129,10 @@ export function makeAccount(fields, now = new Date().toISOString()) {
       openingOutstanding: fields.openingOutstanding ?? 0,
       cashback: fields.cashback ?? null,
     };
+  }
+  if (kind === 'investment') {
+    // history: amounts invested before tracking began, each with its date
+    return { ...base, history: (fields.history || []).map((e) => ({ id: e.id ?? uuid(), date: e.date, amount: e.amount })) };
   }
   return { ...base, trackBalance: !!fields.trackBalance, openingBalance: fields.openingBalance ?? 0 };
 }

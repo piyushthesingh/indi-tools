@@ -10,6 +10,7 @@
 
 import { parseAmount } from './money.js';
 import { TYPES, categoryTypeFor } from './transactions.js';
+import { SPENDABLE_KINDS } from './defaults.js';
 
 export const LINK_PARAMS = ['amt', 'via', 'cat', 'payee', 'note', 'type', 'to'];
 
@@ -60,7 +61,8 @@ export function parseDeepLink(search, { accounts, categories }) {
   }
   if (p.has('via')) {
     const a = matchAccount(accounts, p.get('via'));
-    if (a) prefill.accountId = a.id;
+    // an investment can only be the source of a transfer, never how you paid
+    if (a && (prefill.type === 'transfer' || SPENDABLE_KINDS.includes(a.kind))) prefill.accountId = a.id;
     else notes.push(`No payment method with code "${p.get('via')}"`);
   }
   if (p.has('to') && prefill.type === 'transfer') {

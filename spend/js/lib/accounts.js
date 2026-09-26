@@ -36,6 +36,9 @@ export function validateAccount(a, others = []) {
     if (!isDay(a.dueDay)) return 'Pick a due day.';
     if (a.limit != null && !(Number.isInteger(a.limit) && a.limit > 0)) return 'The limit must be more than zero, or left blank.';
     if (!Number.isInteger(a.openingOutstanding ?? 0)) return 'Check the amount owed.';
+  } else if (a.kind === 'investment') {
+    const bad = (a.history || []).find((e) => !(Number.isInteger(e.amount) && e.amount > 0) || !/^\d{4}-\d{2}-\d{2}$/.test(e.date || ''));
+    if (bad) return 'Each past investment needs a date and an amount above zero.';
   } else if (!Number.isInteger(a.openingBalance ?? 0)) {
     return 'Check the opening balance.';
   }

@@ -55,6 +55,11 @@ export function parseBackup(text) {
   if (bad) return { ok: false, error: 'Some transactions in this backup are damaged.' };
 
   let data = Object.fromEntries(DATA_KEYS.map((k) => [k, d[k] ?? (k === 'settings' ? {} : [])]));
+  // a hand-edited or tampered file must not smuggle CSS (url(…)) in as a colour;
+  // only values that are present and invalid are replaced, so a clean backup restores unchanged
+  const clean = (r) => (r && r.color != null && safeColor(r.color) !== r.color ? { ...r, color: safeColor(r.color) } : r);
+  data.accounts = data.accounts.map(clean);
+  data.categories = data.categories.map(clean);
   try {
     data = migrateData(data, v);
   } catch (e) {
@@ -62,6 +67,11 @@ export function parseBackup(text) {
   }
   const backup = { ...obj, schemaVersion: SCHEMA_VERSION, data };
   return { ok: true, backup, counts: countsOf(data), fromVersion: v };
+}
+
+/* A colour from a file is only kept if it is a plain hex colour. */
+export function safeColor(c) {
+  return typeof c === 'string' && /^#[0-9a-f]{3,8}$/i.test(c) ? c : '#8A9BA8';
 }
 
 export function countsOf(data) {

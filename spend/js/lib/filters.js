@@ -3,7 +3,7 @@
    `month` wins over from/to; month "all" means no date limit. Empty values
    mean "any". */
 
-import { monthStart, monthEnd } from './dates.js';
+import { monthStart, monthEnd, isDateStr } from './dates.js';
 import { groupOf } from './defaults.js';
 import { summarize } from './totals.js';
 
@@ -65,5 +65,13 @@ export function filtersFromQuery(query) {
     const v = p.get(PARAM[k]);
     if (v) f[k] = v;
   }
+  // a hand-typed or stale link must not produce "month 13"
+  if (f.month && f.month !== 'all' && !isMonthKey(f.month)) delete f.month;
+  if (f.from && !isDateStr(f.from)) delete f.from;
+  if (f.to && !isDateStr(f.to)) delete f.to;
   return f;
+}
+
+export function isMonthKey(k) {
+  return /^\d{4}-(0[1-9]|1[0-2])$/.test(k || '');
 }
