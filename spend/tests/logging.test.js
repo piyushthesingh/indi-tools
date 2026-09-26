@@ -194,3 +194,9 @@ test('QA regression: auto-logged recurring items do not change the last used acc
   ];
   assert.equal(lastUsedAccountId(txns, ['hdfc', 'upi'], 'expense'), 'upi');
 });
+
+test('audit regression: bad months and dates in links are ignored', () => {
+  assert.deepEqual(filtersFromQuery('month=2026-13&from=2026-02-30&to=2026-09-01'), { to: '2026-09-01' });
+  assert.deepEqual(filtersFromQuery('month=all'), { month: 'all' });
+  assert.deepEqual(filtersFromQuery('month=2026-09'), { month: '2026-09' });
+});

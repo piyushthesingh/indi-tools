@@ -145,3 +145,17 @@ describe('QA regressions: deep links', () => {
     assert.equal(parseDeepLink('?payee=Big+Basket', ctx).prefill.payee, 'Big Basket');
   });
 });
+
+import { safeColor } from '../js/lib/backup.js';
+describe('audit regressions: backup colours', () => {
+  test('only hex colours survive a restore', () => {
+    assert.equal(safeColor('#4F8EF7'), '#4F8EF7');
+    assert.equal(safeColor('url(https://evil.example/x)'), '#8A9BA8');
+    assert.equal(safeColor('red; background:url(x)'), '#8A9BA8');
+    assert.equal(safeColor(undefined), '#8A9BA8');
+    const bad = { app: 'indi-spend', schemaVersion: 1, data: { accounts: [{ id: 'a', name: 'X', color: 'url(x)' }], categories: [{ id: 'c', name: 'Y', icon: '🍕', color: 'expression(1)' }] } };
+    const p = parseBackup(JSON.stringify(bad));
+    assert.equal(p.backup.data.accounts[0].color, '#8A9BA8');
+    assert.equal(p.backup.data.categories[0].color, '#8A9BA8');
+  });
+});
