@@ -1,7 +1,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { budgetFor, budgetStatus, categoryStatus } from '../js/lib/budgets.js';
-import { occurrencesBetween, generate, pendingItems, occurrenceId, nextOccurrence, describeFrequency, validateRule, backfill, ruleUsage, MAX_CATCH_UP } from '../js/lib/recurring.js';
+import { occurrencesBetween, generate, pendingItems, occurrenceId, nextOccurrence, describeFrequency, validateRule, backfill, ruleUsage, MAX_CATCH_UP, recurringTotals } from '../js/lib/recurring.js';
 import { estimateCashback, rateFor, hasCashback } from '../js/lib/cashback.js';
 import { computeBanners } from '../js/lib/banners.js';
 import { addDays } from '../js/lib/dates.js';
@@ -300,5 +300,32 @@ describe('QA regressions: recurring', () => {
     assert.equal(ruleUsage('a', rules), 2);
     assert.equal(ruleUsage('c', rules), 1);
     assert.equal(ruleUsage('z', rules), 0);
+  });
+});
+
+describe('recurring totals', () => {
+  const rule = (type, amount, frequency, extra = {}) => ({ frequency, template: { type, amount: amount * 100, toAccountId: extra.to ?? null }, ...extra });
+  const kinds = { sip: 'investment', card: 'credit_card' };
+  const rules = [
+    rule('expense', 25000, 'monthly'),            // rent
+    rule('expense', 649, 'monthly'),              // netflix
+    rule('expense', 1200, 'yearly'),              // domain
+    rule('expense', 300, 'weekly'),               // maid, 300 × 52 / 12 = 1300 a month
+    rule('expense', 999, 'monthly', { paused: true }),
+    rule('expense', 500, 'monthly', { endDate: '2026-01-31' }),
+    rule('transfer', 5000, 'monthly', { to: 'sip' }),
+    rule('transfer', 10000, 'monthly', { to: 'card' }),
+    rule('income', 90000, 'monthly'),
+  ];
+  const t = recurringTotals(rules, (id) => kinds[id], '2026-09-26');
+  test('monthly and yearly run-rate for expenses', () => {
+    assert.equal(t.expense.monthly, r(25000 + 649 + 1300));
+    assert.equal(t.expense.yearlyOnly, r(1200));
+    assert.equal(t.expense.annual, 12 * r(26949) + r(1200));
+    assert.equal(t.expense.count, 4, 'paused and ended are left out');
+  });
+  test('SIPs, other transfers and income are kept apart', () => {
+    assert.deepEqual([t.investment.monthly, t.transfer.monthly, t.income.monthly], [r(5000), r(10000), r(90000)]);
+    assert.equal(t.investment.annual, r(60000));
   });
 });

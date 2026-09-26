@@ -78,3 +78,11 @@ test('deep links never pay for an expense from an investment', () => {
   assert.equal(parseDeepLink('?via=nifty&type=expense', ctx).prefill.accountId, undefined);
   assert.equal(parseDeepLink('?via=bank&to=nifty&type=transfer', ctx).prefill.toAccountId, 'sip');
 });
+
+test('money now splits digital cash from cash in hand', () => {
+  const wallet = makeAccount({ id: 'cash', name: 'Cash', kind: 'cash', shortCode: 'cash', trackBalance: true, openingBalance: r(2000) });
+  const m = moneyNow([bank, wallet, card], txns, '2026-09-26');
+  assert.equal(m.digital, r(86000));
+  assert.equal(m.cashInHand, r(2000));
+  assert.equal(m.cash, r(88000));
+});
