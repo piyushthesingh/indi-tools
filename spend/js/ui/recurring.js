@@ -9,7 +9,7 @@ import { state, activeAccounts, accountById, categoryById, byOrder, saveRule, de
 import { GROUPS, SPENDABLE_KINDS } from '../lib/defaults.js';
 import { formatINR, parseAmount, paiseToInput } from '../lib/money.js';
 import { todayStr, formatShort, parseDateStr } from '../lib/dates.js';
-import { pendingItems, describeFrequency, nextOccurrence, occurrenceTransaction } from '../lib/recurring.js';
+import { pendingItems, describeFrequency, nextOccurrence, occurrenceTransaction, recurringTotals } from '../lib/recurring.js';
 import { TYPE_LABELS } from '../lib/transactions.js';
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -201,6 +201,7 @@ export function recurringList() {
   const rules = [...state.recurring].sort((a, b) => ruleTitle(a).localeCompare(ruleTitle(b)));
   const pending = pendingItems(state.recurring).length;
   return h('div', {},
+    recurringSummary(today),
     pending > 0 && h('button', { type: 'button', class: 'btn block', onclick: openToLog }, `${pending} to log`),
     rules.length
       ? h('ul', { class: 'rows' }, rules.map((rule) => {
@@ -218,4 +219,24 @@ export function recurringList() {
       : h('p', { class: 'hint', text: 'Rent, SIPs, subscriptions: add them once and Spend reminds you, or logs them for you.' }),
     h('div', { class: 'add-row' }, h('button', { type: 'button', class: 'btn block', onclick: () => openRuleEditor() }, icon('plus', 'ico sm'), 'Add recurring')),
   );
+}
+
+/* Monthly and yearly run-rate, one line per kind. Yearly = 12 × monthly
+   + items that repeat once a year. Paused and ended items are left out. */
+function recurringSummary(today) {
+  const totals = recurringTotals(state.recurring, (id) => accountById(id)?.kind, today);
+  const kinds = [['expense', 'Spending'], ['investment', 'SIPs and investing'], ['transfer', 'Other transfers'], ['income', 'Income']]
+    .filter(([k]) => totals[k]);
+  if (!kinds.length) return null;
+  return h('div', { class: 'rec-summary' }, kinds.map(([k, label]) => {
+    const t = totals[k];
+    const how = t.yearlyOnly
+      ? (t.monthly ? `12 × ${formatINR(t.monthly)} + ${formatINR(t.yearlyOnly)}` : 'yearly items')
+      : `12 × ${formatINR(t.monthly)}`;
+    return h('div', { class: 'rec-row' + (k === 'income' ? ' income' : '') },
+      h('span', { class: 'rec-label', text: label }),
+      h('span', { class: 'rec-fig' },
+        h('span', {}, h('strong', { text: formatINR(t.monthly) }), ' a month'),
+        h('span', { class: 'rec-year' }, h('strong', { text: formatINR(t.annual) }), ` a year (${how})`)));
+  }));
 }

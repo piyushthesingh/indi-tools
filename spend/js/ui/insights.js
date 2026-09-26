@@ -228,38 +228,60 @@ function swipeMonths(el, onSwipe) {
   });
 }
 
-/* ─── money now (always as of today, not the selected month) ─── */
+/* ─── money now (always as of today, not the selected month) ───
+   A small card with one flat number. By default it leaves investments out
+   (many people keep those private); Settings can include them. Tapping the
+   card shows the breakdown. */
+
+let moneyOpen = false; // stays open while moving between months
 
 function moneyNowPanel() {
   const today = todayStr();
   const m = moneyNow(state.accounts, state.transactions, today);
-  const hasAny = m.cashRows.length || m.investRows.length;
-  if (!hasAny) {
-    return h('section', { class: 'panel money' },
-      h('h2', { class: 'label', text: 'Money now' }),
-      h('p', { class: 'hint', text: 'Turn on "Track balance" for your bank accounts in Manage, and add your investments there, to see what you have today.' }),
-      h('a', { class: 'btn sm', href: '#/accounts', text: 'Open Manage' }));
+  const withInv = state.settings.moneyIncludesInvestments === true;
+  if (!m.cashRows.length && !m.investRows.length) {
+    return h('a', { class: 'panel money money-empty', href: '#/accounts' },
+      h('span', { class: 'label', text: 'Money now' }),
+      h('span', { class: 'hint', text: 'Turn on "Track balance" for your bank accounts in Manage to see it here.' }));
   }
-  const stat = (label, value, sub, cls = '') => h('div', { class: 'stat ' + cls },
-    h('span', { class: 'label', text: label }),
-    h('span', { class: 'stat-num', style: fitStyle(formatINR(value)), text: formatINR(value) }),
-    sub && h('span', { class: 'row-sub', text: sub }));
+  const figure = withInv ? m.total : m.moneyNow;
+  const detail = h('div', { class: 'money-detail', id: 'money-detail', hidden: !moneyOpen });
+  const line = (label, value, cls = '') => h('div', { class: 'money-line ' + cls },
+    h('span', { text: label }), h('span', { class: 'amt', text: value }));
   const row = (a, amount, sign = '') => h('li', {},
     h('a', { class: 'legend-row', href: '#/account/' + a.id },
       h('span', { class: 'swatch', style: { '--c': a.color } }),
       h('span', { class: 'legend-name', text: a.name }),
       h('span', { class: 'legend-amt', text: sign + formatINR(amount) })));
-  return h('section', { class: 'panel money' },
-    h('h2', { class: 'label', text: 'Money now' }),
-    h('div', { class: 'stats three' },
-      stat('Bank and cash', m.moneyNow, m.cardsOwed > 0 ? `after ${formatINR(m.cardsOwed)} card dues` : m.cardsOwed < 0 ? `incl. ${formatINR(-m.cardsOwed)} card credit` : 'no card dues'),
-      stat('Invested', m.invested, 'at cost'),
-      stat('Total', m.total, 'net worth', 'total')),
-    h('details', { class: 'money-detail' },
-      h('summary', { class: 'label', text: 'See accounts' }),
-      m.cashRows.length > 0 && h('ul', { class: 'legend' }, m.cashRows.map((r) => row(r.account, r.amount))),
-      m.cardRows.some((r) => r.amount !== 0) && h('ul', { class: 'legend' },
-        m.cardRows.filter((r) => r.amount !== 0).map((r) => row(r.account, Math.abs(r.amount), r.amount > 0 ? '−' : '+'))),
-      m.investRows.length > 0 && h('ul', { class: 'legend' }, m.investRows.map((r) => row(r.account, r.amount))),
-      m.untracked.length > 0 && h('p', { class: 'hint', text: `Not included (balance not tracked): ${m.untracked.map((a) => a.name).join(', ')}. Turn on "Track balance" in Manage to include them.` })));
+  mount(detail,
+    line('Digital cash', formatINR(m.digital)),
+    m.cashRows.some((r) => r.account.kind === 'cash') && line('Cash', formatINR(m.cashInHand)),
+    line(m.cardsOwed >= 0 ? 'Card dues' : 'Card credit', (m.cardsOwed > 0 ? '−' : m.cardsOwed < 0 ? '+' : '') + formatINR(Math.abs(m.cardsOwed))),
+    line('Money now, excluding investments', formatINR(m.moneyNow), 'sum'),
+    m.investRows.length > 0 && line('Investments', formatINR(m.invested)),
+    m.investRows.length > 0 && line('Including investments', formatINR(m.total), 'sum'),
+    h('details', { class: 'money-accounts' },
+      h('summary', { class: 'label', text: 'Accounts' }),
+      h('ul', { class: 'legend' },
+        m.cashRows.map((r) => row(r.account, r.amount)),
+        m.cardRows.filter((r) => r.amount !== 0).map((r) => row(r.account, Math.abs(r.amount), r.amount > 0 ? '−' : '+')),
+        m.investRows.map((r) => row(r.account, r.amount)))),
+    m.untracked.length > 0 && h('p', { class: 'hint', text: `Not included (balance not tracked): ${m.untracked.map((a) => a.name).join(', ')}.` }),
+    h('p', { class: 'hint' }, 'Investments are ', withInv ? 'included' : 'left out', ' of the headline number. ',
+      h('a', { href: '#/settings?section=money', text: 'Change in Settings' })));
+
+  const toggle = h('button', {
+    type: 'button', class: 'money-card', 'aria-expanded': String(moneyOpen), 'aria-controls': 'money-detail',
+    'aria-label': `Money now ${formatINR(figure)}, ${withInv ? 'including' : 'excluding'} investments. ${moneyOpen ? 'Hide' : 'Show'} details`,
+    onclick: () => {
+      moneyOpen = !moneyOpen;
+      detail.hidden = !moneyOpen;
+      toggle.setAttribute('aria-expanded', String(moneyOpen));
+    },
+  },
+    h('span', { class: 'money-head' },
+      h('span', { class: 'label', text: 'Money now' }),
+      h('span', { class: 'money-note', text: withInv ? '*including investments' : '*excluding investments' })),
+    h('span', { class: 'money-figure', style: fitStyle(formatINR(figure)), text: formatINR(figure) }));
+  return h('section', { class: 'panel money' }, toggle, detail);
 }

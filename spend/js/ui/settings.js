@@ -41,6 +41,18 @@ export function renderSettings(rerender, query = '') {
       h('h2', { class: 'label', text: 'Backup and restore' }),
       backupSection()),
 
+    h('section', { class: 'group', id: 'money' },
+      h('h2', { class: 'label', text: 'Money now' }),
+      h('ul', { class: 'rows' }, h('li', { class: 'row' },
+        h('label', { class: 'switch-row flush' },
+          h('span', {},
+            h('span', { class: 'row-title', text: 'Include investments' }),
+            h('span', { class: 'row-sub', text: 'Off: the Money now number on Insights is bank and cash minus card dues. On: investments are added to it.' })),
+          h('input', {
+            type: 'checkbox', role: 'switch', checked: state.settings.moneyIncludesInvestments === true,
+            onchange: (e) => setSetting('moneyIncludesInvestments', e.target.checked),
+          }))))),
+
     h('section', { class: 'group' },
       h('h2', { class: 'label', text: 'Payment methods and categories' }),
       h('ul', { class: 'rows' },
