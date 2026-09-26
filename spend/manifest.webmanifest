@@ -1,0 +1,75 @@
+{
+  "id": "/spend/",
+  "name": "Spend",
+  "short_name": "Spend",
+  "description": "Private, offline expense tracker that knows your credit card statement cycles.",
+  "start_url": "/spend/",
+  "scope": "/spend/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0C1410",
+  "theme_color": "#0C1410",
+  "categories": [
+    "finance",
+    "productivity"
+  ],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Add expense",
+      "short_name": "Expense",
+      "description": "Log an expense",
+      "url": "/spend/?type=expense",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Add transfer",
+      "short_name": "Transfer",
+      "description": "Pay a card or move money",
+      "url": "/spend/?type=transfer",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}

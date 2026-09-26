@@ -1,0 +1,9 @@
+{
+  "name": "indi-spend",
+  "private": true,
+  "type": "module",
+  "description": "Tests only. The app itself has no dependencies and no build step.",
+  "scripts": {
+    "test": "node --test tests/"
+  }
+}
