@@ -10,6 +10,7 @@ import { GROUPS, KIND_LABELS } from '../lib/defaults.js';
 import { formatINR } from '../lib/money.js';
 import { cardSummary } from '../lib/cycles.js';
 import { accountBalance } from '../lib/accounts.js';
+import { investedToDate } from '../lib/networth.js';
 import { categoryUsage } from '../lib/categories.js';
 import { todayStr } from '../lib/dates.js';
 import { statementPhrase } from './cardtext.js';
@@ -73,8 +74,9 @@ function accountsView() {
       return h('section', { class: 'group' }, h('h2', { class: 'label', text: g.name }), sortableList(list, 'accounts', row));
     }),
     !active.length && h('p', { class: 'empty', text: 'No payment methods yet. Add one to start logging.' }),
-    h('div', { class: 'add-row' },
-      h('button', { type: 'button', class: 'btn block', onclick: () => openAccountEditor(null) }, icon('plus', 'ico sm'), 'Add payment method')),
+    h('div', { class: 'add-row two-btn' },
+      h('button', { type: 'button', class: 'btn', onclick: () => openAccountEditor(null) }, icon('plus', 'ico sm'), 'Payment method'),
+      h('button', { type: 'button', class: 'btn', onclick: () => openAccountEditor(null, { kind: 'investment' }) }, icon('plus', 'ico sm'), 'Investment')),
     archived.length > 0 && h('details', { class: 'group archived' },
       h('summary', { class: 'label', text: `Archived (${archived.length})` }),
       h('ul', { class: 'rows' }, archived.map((a) => h('li', {}, row(a))))),
@@ -86,6 +88,7 @@ function accountSub(a, today) {
     const s = cardSummary(a, state.transactions, today);
     return `Unbilled ${formatINR(s.unbilled)} · ${statementPhrase(s.daysToStatement)}`;
   }
+  if (a.kind === 'investment') return `Invested so far ${formatINR(investedToDate(a, state.transactions, today))}`;
   if (a.trackBalance) return `${KIND_LABELS[a.kind]} · balance ${formatINR(accountBalance(a, state.transactions, today))}`;
   return KIND_LABELS[a.kind];
 }

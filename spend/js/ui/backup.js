@@ -81,6 +81,7 @@ export function pickRestoreFile() {
     if (!parsed.ok) { toast(parsed.error, { duration: 6000 }); return; }
     openRestoreSheet(parsed, file.name);
   });
+  input.addEventListener('cancel', () => input.remove()); // picker closed without a file
   document.body.append(input);
   input.click();
 }

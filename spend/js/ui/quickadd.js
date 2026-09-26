@@ -12,7 +12,7 @@ import {
   state, activeAccounts, accountById, categoryById,
   addTransaction, updateTransaction, deleteTransaction, restoreTransaction,
 } from '../state.js';
-import { GROUPS } from '../lib/defaults.js';
+import { GROUPS, SPENDABLE_KINDS } from '../lib/defaults.js';
 import { parseAmount, formatINR, paiseToInput, isExpression } from '../lib/money.js';
 import { todayStr, addDays, formatShort, formatDayHeader, toDateStr } from '../lib/dates.js';
 import { TYPE_LABELS, validateTransaction } from '../lib/transactions.js';
@@ -38,24 +38,50 @@ export function openQuickAdd({ edit = null, prefill = {}, fromLink = false, onSa
     payee: src.payee || '',
     note: src.note || '',
     date: src.date || today,
-    more: !!(edit?.payee || edit?.note || src.payee || src.note),
+    noteOpen: !!(edit?.note || src.note),
   };
   if (!m.accountId) {
-    const ids = accounts.filter((a) => a.id !== m.toAccountId).map((a) => a.id);
-    // paying a card: default "from" to a non-card method
-    const nonCard = accounts.filter((a) => a.kind !== 'credit_card' && a.id !== m.toAccountId).map((a) => a.id);
+    const usable = accounts.filter((a) => m.type === 'transfer' || SPENDABLE_KINDS.includes(a.kind));
+    const ids = usable.filter((a) => a.id !== m.toAccountId).map((a) => a.id);
+    // paying a card or investing: default "from" to a bank or cash, not a card or investment
+    const nonCard = usable.filter((a) => a.kind !== 'credit_card' && a.kind !== 'investment' && a.id !== m.toAccountId).map((a) => a.id);
     m.accountId = lastUsedAccountId(state.transactions, m.toAccountId && nonCard.length ? nonCard : ids, m.type);
   }
 
-  const autoSave = () => !edit && !fromLink && !m.more && m.type !== 'transfer';
+  // the fast path: a category tap saves. Not while editing, reviewing a link,
+  // on transfers, or once "Add a note" is open (they are still typing)
+  const autoSave = () => !edit && !fromLink && !m.noteOpen && m.type !== 'transfer';
 
   /* ─── persistent pieces (kept across re-renders so focus survives) ─── */
   const amount = h('input', {
-    id: 'qa-amount', class: 'amount-field', type: 'text', inputmode: 'decimal', enterkeyhint: 'done',
+    id: 'qa-amount', class: 'amount-field', type: 'text', inputmode: 'decimal', enterkeyhint: 'next',
     autocomplete: 'off', placeholder: '0', 'aria-describedby': 'qa-amount-calc qa-error', value: m.amountText,
     oninput: () => { m.amountText = amount.value; showCalc(); clearError(); },
-    onkeydown: (e) => { if (e.key === 'Enter') { e.preventDefault(); if (m.categoryId || m.type === 'transfer') save(); else amount.blur(); } },
+    // keyboard "Next" goes on to the payee
+    onkeydown: (e) => { if (e.key === 'Enter') { e.preventDefault(); payee.focus(); } },
   });
+
+  /* Payee or title, upfront and optional. A payee used before brings back
+     its last category. "Done" closes the keyboard so the chips show. */
+  const payeeLabel = h('label', { for: 'qa-payee' });
+  const payee = h('input', {
+    id: 'qa-payee', type: 'text', list: 'qa-payees', autocomplete: 'off', autocapitalize: 'sentences',
+    enterkeyhint: 'done', value: m.payee, maxlength: 80,
+    oninput: () => {
+      m.payee = payee.value;
+      if (m.categoryPicked || m.type === 'transfer') return;
+      const cat = lastCategoryForPayee(state.transactions, m.payee, m.type);
+      if (cat && cat !== m.categoryId) { m.categoryId = cat; renderCats(); revealSelected(catsEl); }
+    },
+    onkeydown: (e) => { if (e.key === 'Enter') { e.preventDefault(); payee.blur(); } },
+  });
+  const payeeField = h('div', { class: 'field payee-field' },
+    payeeLabel, payee,
+    h('datalist', { id: 'qa-payees' }, payeeList(state.transactions).map((p) => h('option', { value: p }))));
+  function renderPayeeLabel() {
+    payeeLabel.textContent = m.type === 'transfer' ? 'Title (optional)' : m.type === 'income' ? 'From or title (optional)' : 'Payee or title (optional)';
+    payee.placeholder = m.type === 'transfer' ? 'e.g. Card bill' : m.type === 'income' ? 'e.g. Acme salary' : 'e.g. Swiggy, Rent, Movie night';
+  }
   const calc = h('p', { class: 'calc', id: 'qa-amount-calc' });
   const errorEl = h('p', { class: 'error', id: 'qa-error', role: 'alert' });
   const opBtn = (op, label) => h('button', {
@@ -91,7 +117,8 @@ export function openQuickAdd({ edit = null, prefill = {}, fromLink = false, onSa
 
   function renderTitle() {
     const to = accountById(m.toAccountId);
-    const label = m.type === 'transfer' && to?.kind === 'credit_card' ? 'Card payment' : TYPE_LABELS[m.type];
+    const label = m.type !== 'transfer' ? TYPE_LABELS[m.type]
+      : to?.kind === 'credit_card' ? 'Card payment' : to?.kind === 'investment' ? 'Investment' : TYPE_LABELS.transfer;
     titleEl.textContent = edit ? 'Edit ' + label.toLowerCase() : 'Add ' + label.toLowerCase();
   }
 
@@ -109,16 +136,23 @@ export function openQuickAdd({ edit = null, prefill = {}, fromLink = false, onSa
     const wasCatType = m.type === 'income' ? 'income' : 'expense';
     m.type = k;
     const nowCatType = k === 'income' ? 'income' : 'expense';
-    if (wasCatType !== nowCatType) { m.categoryId = null; m.categoryPicked = false; }
+    if (wasCatType !== nowCatType) {
+      m.categoryId = null;
+      m.categoryPicked = false;
+      if (m.payee && k !== 'transfer') m.categoryId = lastCategoryForPayee(state.transactions, m.payee, k);
+    }
     if (k === 'transfer') { m.toAccountId = null; }
+    else if (accountById(m.accountId)?.kind === 'investment') { m.accountId = null; m.accountPicked = false; }
     // only re-default the method if the user has not chosen one themselves
-    if (!edit && !m.accountPicked) m.accountId = lastUsedAccountId(state.transactions, accounts.map((a) => a.id), k) || m.accountId;
+    const allowed = accounts.filter((a) => k === 'transfer' || SPENDABLE_KINDS.includes(a.kind)).map((a) => a.id);
+    if (!edit && !m.accountPicked) m.accountId = lastUsedAccountId(state.transactions, allowed, k) || m.accountId;
     clearError();
     renderAll();
   }
 
   function accountChips(selectedId, onPick, { exclude } = {}) {
-    const list = pickable(selectedId).filter((a) => a.id !== exclude);
+    const list = pickable(selectedId).filter((a) => a.id !== exclude
+      && (m.type === 'transfer' || SPENDABLE_KINDS.includes(a.kind)));
     if (!list.length) return h('p', { class: 'hint', text: 'No payment methods yet. Add one in Accounts.' });
     return h('div', { class: 'chips' },
       GROUPS.map((g, gi) => {
@@ -208,31 +242,17 @@ export function openQuickAdd({ edit = null, prefill = {}, fromLink = false, onSa
   }
 
   function renderMore() {
-    if (!m.more) {
+    if (!m.noteOpen) {
       mount(moreEl, h('button', {
         type: 'button', class: 'link-btn', 'aria-expanded': 'false',
-        onclick: () => { m.more = true; renderMore(); renderCats(); renderFoot(); moreEl.querySelector('input')?.focus(); },
-      }, 'More: payee, note'));
+        onclick: () => { m.noteOpen = true; renderMore(); renderCats(); moreEl.querySelector('input')?.focus(); },
+      }, 'Add a note'));
       return;
     }
-    const listId = 'qa-payees';
-    const payee = h('input', {
-      id: 'qa-payee', type: 'text', list: listId, autocomplete: 'off', autocapitalize: 'words',
-      placeholder: 'e.g. Swiggy', value: m.payee, maxlength: 80,
-      oninput: () => {
-        m.payee = payee.value;
-        if (m.categoryPicked || m.type === 'transfer') return;
-        const cat = lastCategoryForPayee(state.transactions, m.payee, m.type);
-        if (cat && cat !== m.categoryId) { m.categoryId = cat; renderCats(); }
-      },
-    });
     mount(moreEl,
       h('div', { class: 'field' },
-        h('label', { for: 'qa-payee', text: m.type === 'income' ? 'From' : 'Payee' }), payee,
-        h('datalist', { id: listId }, payeeList(state.transactions).map((p) => h('option', { value: p })))),
-      h('div', { class: 'field' },
         h('label', { for: 'qa-note', text: 'Note' }),
-        h('input', { id: 'qa-note', type: 'text', value: m.note, maxlength: 200, oninput: (e) => { m.note = e.target.value; } })),
+        h('input', { id: 'qa-note', type: 'text', value: m.note, maxlength: 200, enterkeyhint: 'done', oninput: (e) => { m.note = e.target.value; } })),
     );
   }
 
@@ -262,16 +282,30 @@ export function openQuickAdd({ edit = null, prefill = {}, fromLink = false, onSa
     );
   }
 
+  let confirmingDelete = false;
   function renderFoot() {
-    const saveBtn = h('button', { type: 'button', class: 'btn primary', text: 'Save', onclick: save });
+    footEl.classList.remove('two', 'confirm');
+    if (edit && confirmingDelete) {
+      // ask first: deleting takes it out of history and every total
+      const what = edit.type === 'transfer' ? 'transfer' : TYPE_LABELS[edit.type].toLowerCase();
+      footEl.classList.add('confirm');
+      mount(footEl,
+        h('p', { class: 'confirm-text', role: 'alert' },
+          h('strong', { text: `Delete this ${formatINR(edit.amount)} ${what}?` }),
+          ' It will be removed from your history and totals.'),
+        h('button', { type: 'button', class: 'btn', text: 'Cancel', onclick: () => { confirmingDelete = false; renderFoot(); } }),
+        h('button', { type: 'button', class: 'btn danger-fill', text: 'Delete', onclick: remove }));
+      footEl.querySelector('.btn')?.focus();
+      return;
+    }
     mount(footEl,
-      edit ? h('button', { type: 'button', class: 'btn danger', text: 'Delete', onclick: remove }) : null,
-      saveBtn);
+      edit ? h('button', { type: 'button', class: 'btn danger', text: 'Delete', onclick: () => { confirmingDelete = true; renderFoot(); } }) : null,
+      h('button', { type: 'button', class: 'btn primary', text: 'Save', onclick: save }));
     footEl.classList.toggle('two', !!edit);
   }
 
   function renderAll() {
-    renderTitle(); renderType(); renderAccounts(); renderCats(); renderFoot();
+    renderTitle(); renderType(); renderPayeeLabel(); renderAccounts(); renderCats(); renderFoot();
   }
 
   /* bring selected chips into view in their scrolling rows */
@@ -343,6 +377,7 @@ export function openQuickAdd({ edit = null, prefill = {}, fromLink = false, onSa
       h('div', { class: 'ops' }, opBtn('+', 'Plus'), opBtn('−', 'Minus'))),
     calc,
     errorEl,
+    payeeField,
     dateEl,
     accountsEl,
     catsEl,

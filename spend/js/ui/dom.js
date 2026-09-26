@@ -1,6 +1,8 @@
 /* Tiny element builder. Text always goes in as text nodes, so user data
    (payees, notes, names) can never become markup. */
 
+export const SAFE_COLOR = /^(#[0-9a-f]{3,8}|var\(--[a-z0-9-]+\))$/i;
+
 export function h(tag, props, ...children) {
   const el = document.createElement(tag);
   if (props) {
@@ -10,7 +12,12 @@ export function h(tag, props, ...children) {
       else if (k === 'text') el.textContent = v;
       else if (k === 'style' && typeof v === 'object') {
         // setProperty, because assigning to el.style ignores custom properties like --c
-        for (const [p, val] of Object.entries(v)) el.style.setProperty(p.startsWith('--') ? p : p.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase()), val);
+        for (const [p, val] of Object.entries(v)) {
+          // colours come from saved data (and so from restored backup files):
+          // allow only hex colours and the app's own tokens, never url(…)
+          if (p === '--c' && !SAFE_COLOR.test(String(val))) continue;
+          el.style.setProperty(p.startsWith('--') ? p : p.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase()), val);
+        }
       }
       else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2).toLowerCase(), v);
       else if (k === 'value') el.value = v;

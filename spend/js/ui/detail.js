@@ -15,6 +15,9 @@ import { groupByDate, filtersToQuery } from '../lib/filters.js';
 import { byNewest } from '../lib/transactions.js';
 import { todayStr, formatShort, formatDayHeader, monthKey, monthStart, monthEnd, monthName } from '../lib/dates.js';
 import { spendTotal } from '../lib/totals.js';
+import { investedToDate } from '../lib/networth.js';
+import { openRuleEditor } from './recurring.js';
+import { describeFrequency, nextOccurrence } from '../lib/recurring.js';
 import { estimateCashback, hasCashback } from '../lib/cashback.js';
 
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -26,7 +29,9 @@ export function renderDetail([id], query) {
       header('Not found', null),
       h('p', { class: 'empty', text: 'This payment method no longer exists.' }));
   }
-  return a.kind === 'credit_card' ? cardDetail(a, query) : otherDetail(a);
+  if (a.kind === 'credit_card') return cardDetail(a, query);
+  if (a.kind === 'investment') return investmentDetail(a);
+  return otherDetail(a);
 }
 
 function header(title, a) {
@@ -158,5 +163,65 @@ function otherDetail(a) {
       h('span', { class: 'label', text: monthName(key) }),
       h('a', { href: '#/activity?' + filtersToQuery({ month: key, accountId: a.id }), text: 'Open in Activity' })),
     txList(thisMonth, `Nothing with ${a.name} this month yet.`),
+  );
+}
+
+/* ─── investment ─── */
+
+function investmentDetail(a) {
+  const today = todayStr();
+  const total = investedToDate(a, state.transactions, today);
+  const past = (a.history || []).reduce((sum, e) => sum + e.amount, 0);
+  const moves = state.transactions.filter((t) => t.type === 'transfer' && (t.toAccountId === a.id || t.accountId === a.id));
+  const sips = state.recurring.filter((r) => r.template?.toAccountId === a.id);
+  const key = monthKey(today);
+  const thisMonth = moves.filter((t) => t.date >= monthStart(key) && t.date <= today)
+    .reduce((sum, t) => sum + (t.toAccountId === a.id ? t.amount : -t.amount), 0);
+
+  const invest = () => openQuickAdd({ prefill: { type: 'transfer', toAccountId: a.id } });
+  const sip = () => openRuleEditor(null, { investTo: a.id });
+
+  // one list: past investments (from the account) and logged transfers, newest first
+  const rows = [
+    // money taken out of the investment shows as a minus
+    ...moves.map((t) => ({ date: t.date, node: txRow(t, { sign: t.accountId === a.id ? '−' : '' }) })),
+    ...(a.history || []).map((e) => ({
+      date: e.date,
+      node: h('button', { type: 'button', class: 'tx', onclick: () => openAccountEditor(a), 'aria-label': `Invested before tracking, ${formatINR(e.amount)}, ${formatShort(e.date, today)}. Edit` },
+        h('span', { class: 'tx-ico', style: { '--c': a.color }, 'aria-hidden': 'true', text: '↗' }),
+        h('span', { class: 'row-main' }, h('span', { class: 'row-title', text: 'Invested before tracking' }), h('span', { class: 'row-sub', text: formatShort(e.date, today) })),
+        h('span', { class: 'tx-amt', text: formatINR(e.amount) })),
+    })),
+  ].sort((x, y) => (x.date < y.date ? 1 : x.date > y.date ? -1 : 0));
+
+  return h('div', { class: 'screen' },
+    header(a.name, a),
+    archivedNote(a),
+    h('div', { class: 'card-hero', style: { '--c': a.color } },
+      h('div', { class: 'stats' },
+        h('div', { class: 'stat' }, h('span', { class: 'label', text: 'Invested so far' }),
+          h('span', { class: 'stat-num', style: fitStyle(formatINR(total)), text: formatINR(total) }),
+          h('span', { class: 'row-sub', text: 'At cost, without returns' })),
+        h('div', { class: 'stat' }, h('span', { class: 'label', text: `In ${monthName(key)}` }),
+          h('span', { class: 'stat-num', style: fitStyle(formatINR(thisMonth)), text: formatINR(thisMonth) }),
+          past > 0 && h('span', { class: 'row-sub', text: `${formatINR(past)} from before tracking` }))),
+      h('div', { class: 'qa-foot two' },
+        h('button', { type: 'button', class: 'btn', text: 'Set up a SIP', onclick: sip }),
+        h('button', { type: 'button', class: 'btn primary', text: 'Add investment', onclick: invest }))),
+    sips.length > 0 && h('section', { class: 'group' },
+      h('h2', { class: 'label', text: 'SIPs' }),
+      h('ul', { class: 'rows' }, sips.map((r) => {
+        const next = r.paused ? null : nextOccurrence(r, today);
+        return h('li', {}, h('button', { type: 'button', class: 'row-link pad', onclick: () => openRuleEditor(r) },
+          h('span', { class: 'row-main' },
+            h('span', { class: 'row-title', text: `${formatINR(r.template.amount)} · ${describeFrequency(r)}` }),
+            h('span', { class: 'row-sub', text: `From ${accountById(r.template.accountId)?.name ?? '?'} · ${r.paused ? 'paused' : next ? 'next ' + formatShort(next, today) : 'ended'}` })),
+          icon('chevron', 'ico sm dim')));
+      }))),
+    h('section', { class: 'group' },
+      h('h2', { class: 'label', text: 'History' }),
+      rows.length
+        ? h('ul', { class: 'rows' }, rows.map((r) => h('li', {}, r.node)))
+        : h('p', { class: 'empty', text: 'Nothing yet. Add what you have invested so far with Edit, or log a new investment.' })),
   );
 }

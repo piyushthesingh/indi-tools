@@ -9,7 +9,8 @@ import { GROUPS } from '../lib/defaults.js';
 import { formatINR, formatCompact } from '../lib/money.js';
 import { todayStr, monthKey, addMonths, monthName } from '../lib/dates.js';
 import { breakdown, slices, monthlyTotals, topPayees, monthSummary, wholePercents } from '../lib/insights.js';
-import { filtersToQuery } from '../lib/filters.js';
+import { filtersToQuery, isMonthKey } from '../lib/filters.js';
+import { moneyNow } from '../lib/networth.js';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
 const VIEW_LABELS = { category: 'By category', account: 'By payment method', group: 'By group' };
@@ -25,7 +26,7 @@ function s(tag, attrs = {}, ...children) {
 export function renderInsights(_params, query) {
   const p = new URLSearchParams(query);
   const current = monthKey(todayStr());
-  const key = /^\d{4}-\d{2}$/.test(p.get('month') || '') ? p.get('month') : current;
+  const key = isMonthKey(p.get('month')) ? p.get('month') : current;
   const view = VIEW_LABELS[p.get('by')] ? p.get('by') : 'category';
   const go = (changes) => {
     const q = new URLSearchParams({ month: key, by: view, ...changes });
@@ -41,6 +42,7 @@ export function renderInsights(_params, query) {
 
   const screen = h('div', { class: 'screen insights' },
     h('header', { class: 'top' }, h('h1', { class: 'title', text: 'Insights' })),
+    moneyNowPanel(),
 
     h('div', { class: 'period' },
       h('button', { type: 'button', class: 'icon-btn', 'aria-label': 'Previous month', onclick: () => go({ month: addMonths(key, -1) }) }, icon('back')),
@@ -224,4 +226,40 @@ function swipeMonths(el, onSwipe) {
     x0 = null;
     if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5) onSwipe(dx < 0 ? 1 : -1);
   });
+}
+
+/* ─── money now (always as of today, not the selected month) ─── */
+
+function moneyNowPanel() {
+  const today = todayStr();
+  const m = moneyNow(state.accounts, state.transactions, today);
+  const hasAny = m.cashRows.length || m.investRows.length;
+  if (!hasAny) {
+    return h('section', { class: 'panel money' },
+      h('h2', { class: 'label', text: 'Money now' }),
+      h('p', { class: 'hint', text: 'Turn on "Track balance" for your bank accounts in Manage, and add your investments there, to see what you have today.' }),
+      h('a', { class: 'btn sm', href: '#/accounts', text: 'Open Manage' }));
+  }
+  const stat = (label, value, sub, cls = '') => h('div', { class: 'stat ' + cls },
+    h('span', { class: 'label', text: label }),
+    h('span', { class: 'stat-num', style: fitStyle(formatINR(value)), text: formatINR(value) }),
+    sub && h('span', { class: 'row-sub', text: sub }));
+  const row = (a, amount, sign = '') => h('li', {},
+    h('a', { class: 'legend-row', href: '#/account/' + a.id },
+      h('span', { class: 'swatch', style: { '--c': a.color } }),
+      h('span', { class: 'legend-name', text: a.name }),
+      h('span', { class: 'legend-amt', text: sign + formatINR(amount) })));
+  return h('section', { class: 'panel money' },
+    h('h2', { class: 'label', text: 'Money now' }),
+    h('div', { class: 'stats three' },
+      stat('Bank and cash', m.moneyNow, m.cardsOwed > 0 ? `after ${formatINR(m.cardsOwed)} card dues` : m.cardsOwed < 0 ? `incl. ${formatINR(-m.cardsOwed)} card credit` : 'no card dues'),
+      stat('Invested', m.invested, 'at cost'),
+      stat('Total', m.total, 'net worth', 'total')),
+    h('details', { class: 'money-detail' },
+      h('summary', { class: 'label', text: 'See accounts' }),
+      m.cashRows.length > 0 && h('ul', { class: 'legend' }, m.cashRows.map((r) => row(r.account, r.amount))),
+      m.cardRows.some((r) => r.amount !== 0) && h('ul', { class: 'legend' },
+        m.cardRows.filter((r) => r.amount !== 0).map((r) => row(r.account, Math.abs(r.amount), r.amount > 0 ? '−' : '+'))),
+      m.investRows.length > 0 && h('ul', { class: 'legend' }, m.investRows.map((r) => row(r.account, r.amount))),
+      m.untracked.length > 0 && h('p', { class: 'hint', text: `Not included (balance not tracked): ${m.untracked.map((a) => a.name).join(', ')}. Turn on "Track balance" in Manage to include them.` })));
 }

@@ -99,13 +99,14 @@ function dayTotal(g) {
   return '';
 }
 
-export function txRow(t, { onOpen } = {}) {
+export function txRow(t, { onOpen, sign: forceSign } = {}) {
   const cat = categoryById(t.categoryId);
   const acc = accountById(t.accountId);
   let title, sub, emoji, color;
   if (t.type === 'transfer') {
     const to = accountById(t.toAccountId);
-    title = t.payee || (to?.kind === 'credit_card' ? 'Card payment' : 'Transfer');
+    title = t.payee || (to?.kind === 'credit_card' ? 'Card payment' : to?.kind === 'investment' ? 'Investment'
+      : acc?.kind === 'investment' ? 'Redemption' : 'Transfer');
     sub = `${acc?.name ?? '?'} → ${to?.name ?? '?'}`;
     emoji = '⇄';
     color = to?.color || 'var(--faint)';
@@ -115,7 +116,7 @@ export function txRow(t, { onOpen } = {}) {
     emoji = cat?.icon || '•';
     color = cat?.color || 'var(--faint)';
   }
-  const sign = t.type === 'income' || t.type === 'refund' ? '+' : '';
+  const sign = forceSign ?? (t.type === 'income' || t.type === 'refund' ? '+' : '');
   return h('button', {
     type: 'button', class: 'tx', onclick: () => (onOpen ? onOpen(t) : openQuickAdd({ edit: t })),
     'aria-label': `${title}, ${sign}${formatINR(t.amount)}, ${sub}${t.note ? ', ' + t.note : ''}`,

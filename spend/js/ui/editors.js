@@ -1,6 +1,6 @@
 /* Add / edit sheets for payment methods and categories. */
 
-import { h, mount } from './dom.js';
+import { h, mount, SAFE_COLOR } from './dom.js';
 import { openSheet } from './sheet.js';
 import { toast } from './toast.js';
 import {
@@ -8,7 +8,8 @@ import {
   saveCategory, setCategoryArchived, deleteCategory,
 } from '../state.js';
 import { KIND_LABELS, ACCOUNT_COLORS, uniqueShortCode, slugify, nextColor } from '../lib/defaults.js';
-import { parseAmount, paiseToInput } from '../lib/money.js';
+import { parseAmount, paiseToInput, formatINR } from '../lib/money.js';
+import { todayStr } from '../lib/dates.js';
 import { usageCount } from '../lib/accounts.js';
 import { firstGrapheme, categoryUsage, EMOJI_SUGGESTIONS } from '../lib/categories.js';
 import { ruleUsage } from '../lib/recurring.js';
@@ -67,8 +68,9 @@ function confirmButton(label, confirmLabel, run) {
 
 export function openAccountEditor(existing = null, { kind = 'credit_card', focus = null } = {}) {
   const id = 'ae' + ++seq;
-  const a = existing ? { ...existing } : {
-    kind, name: '', color: nextColor(state.accounts.map((x) => x.color)), shortCode: '',
+  // a deep enough copy: nested lists must not be edited in place before Save
+  const a = existing ? { ...existing, history: (existing.history || []).map((e) => ({ ...e })) } : {
+    kind, name: '', color: nextColor(state.accounts.map((x) => x.color)), shortCode: '', history: [],
     statementDay: null, dueDay: null, limit: null, openingOutstanding: 0, trackBalance: false, openingBalance: 0,
   };
   let codeTouched = !!existing;
@@ -107,6 +109,8 @@ export function openAccountEditor(existing = null, { kind = 'credit_card', focus
           field(id + 'owed', existing ? 'Owed when added' : 'Owed right now', moneyInput(id + 'owed', a.openingOutstanding, (v) => { a.openingOutstanding = v ?? 0; }))),
         cashbackEditor(id, cb, focus === 'cashback'),
       );
+    } else if (a.kind === 'investment') {
+      mount(kindFields, pastInvestments(id, a));
     } else {
       const bal = field(id + 'bal', 'Opening balance', moneyInput(id + 'bal', a.openingBalance, (v) => { a.openingBalance = v ?? 0; }, '0'),
         'What was in it when you started tracking. Spend adds and subtracts from here.');
@@ -121,9 +125,12 @@ export function openAccountEditor(existing = null, { kind = 'credit_card', focus
   }
   renderKindFields();
 
+  const editorTitle = () => (a.kind === 'investment' ? (existing ? 'Edit investment' : 'Add investment') : existing ? 'Edit payment method' : 'Add payment method');
+  const titleEl = h('span', { text: editorTitle() });
+
   const kindControl = existing
     ? h('p', { class: 'static', text: KIND_LABELS[a.kind] })
-    : h('select', { id: id + 'kind', onchange: (e) => { a.kind = e.target.value; renderKindFields(); } },
+    : h('select', { id: id + 'kind', onchange: (e) => { a.kind = e.target.value; renderKindFields(); titleEl.textContent = editorTitle(); } },
       Object.entries(KIND_LABELS).map(([k, label]) => h('option', { value: k, text: label, selected: a.kind === k })));
 
   const body = h('div', {},
@@ -131,7 +138,7 @@ export function openAccountEditor(existing = null, { kind = 'credit_card', focus
     field(id + 'kind', 'Type', kindControl),
     kindFields,
     h('div', { class: 'field' }, h('span', { class: 'label-like', text: 'Colour' }), colorPicker('color', a.color, (c) => { a.color = c; })),
-    field(id + 'code', 'Short code', code, 'Used in shortcut links, e.g. ?via=' + (a.shortCode || 'hdfc') + '.'),
+    field(id + 'code', 'Short code', code, 'Used in shortcut links, e.g. ?' + (a.kind === 'investment' ? 'to=' : 'via=') + (a.shortCode || 'hdfc') + '.'),
     errorEl,
   );
 
@@ -142,6 +149,7 @@ export function openAccountEditor(existing = null, { kind = 'credit_card', focus
         const any = (cb.defaultPct || 0) > 0 || Object.values(categoryPct).some((v) => v > 0);
         a.cashback = any ? { defaultPct: cb.defaultPct || 0, categoryPct, excludedCategoryIds: [...cb.excluded], capPerCycle: cb.cap || null } : null;
       }
+      if (a.kind === 'investment') a.history = (a.history || []).filter((e) => e.amount);
       if (!a.shortCode) a.shortCode = uniqueShortCode(slugify(a.name || a.kind), state.accounts.filter((x) => x.id !== a.id).map((x) => x.shortCode));
       const rec = await saveAccount(a, existing);
       sheet.close({ restoreFocus: false });
@@ -171,12 +179,45 @@ export function openAccountEditor(existing = null, { kind = 'credit_card', focus
   }
 
   const sheet = openSheet({
-    title: existing ? 'Edit payment method' : 'Add payment method',
+    title: titleEl,
     body,
     footer: h('div', { class: 'qa-foot' + (danger ? ' two' : '') }, danger, h('button', { type: 'button', class: 'btn primary', text: 'Save', onclick: save })),
   });
   if (!existing) name.focus();
   return sheet;
+}
+
+/* Money invested before tracking began, each with its own date: one
+   lumpsum dated today is fine, or backdate each one. These do not come out
+   of any bank balance here (that money left the bank long ago). New
+   investing is logged as a transfer from a bank. */
+function pastInvestments(id, a) {
+  if (!a.history) a.history = [];
+  const list = h('div');
+  const total = h('p', { class: 'hint' });
+  const today = todayStr();
+  const render = () => {
+    const sum = a.history.reduce((s, e) => s + (e.amount || 0), 0);
+    total.textContent = a.history.length ? `Invested before tracking: ${formatINR(sum)}` : '';
+    mount(list, a.history.map((e, i) => h('div', { class: 'rate-row past-row' },
+      h('input', {
+        type: 'date', 'aria-label': 'Date', value: e.date || today, max: today, class: 'mini-date',
+        onchange: (ev) => { e.date = ev.target.value || today; },
+      }),
+      h('input', {
+        type: 'text', inputmode: 'decimal', autocomplete: 'off', placeholder: 'Amount', 'aria-label': 'Amount invested', class: 'mini-amount grow',
+        value: e.amount ? paiseToInput(e.amount) : '',
+        onchange: (ev) => { e.amount = parseAmount(ev.target.value) || null; render(); },
+      }),
+      h('button', { type: 'button', class: 'icon-btn', 'aria-label': 'Remove this entry', onclick: () => { a.history.splice(i, 1); render(); } }, '×'))));
+  };
+  render();
+  return h('div', { class: 'field' },
+    h('span', { class: 'label-like', text: 'Invested before tracking (optional)' }),
+    h('p', { class: 'hint', text: 'Add one lumpsum dated today, or backdate each investment. Future SIPs are logged as transfers from your bank, set up from the investment page.' }),
+    list,
+    h('button', { type: 'button', class: 'link-btn', text: '+ Add past investment', onclick: () => { a.history.push({ date: today, amount: null }); render(); list.querySelector('.past-row:last-child .mini-amount')?.focus(); } }),
+    total);
 }
 
 /* Optional cashback estimate for a card: default %, per-category %,
@@ -231,7 +272,7 @@ export function openCategoryEditor(existing = null, { type = 'expense' } = {}) {
   const preview = h('span', { class: 'emoji-preview', 'aria-hidden': 'true' });
   const renderPreview = () => {
     preview.textContent = c.icon || '?';
-    preview.style.setProperty('--c', c.color);
+    if (SAFE_COLOR.test(c.color)) preview.style.setProperty('--c', c.color);
   };
   const emojiInput = h('input', {
     id: id + 'emoji', type: 'text', value: c.icon, autocomplete: 'off', class: 'emoji-input',

@@ -6,7 +6,7 @@ import { openSheet } from './sheet.js';
 import { toast } from './toast.js';
 import { openQuickAdd } from './quickadd.js';
 import { state, activeAccounts, accountById, categoryById, byOrder, saveRule, deleteRule, resolvePending, deleteTransaction } from '../state.js';
-import { GROUPS } from '../lib/defaults.js';
+import { GROUPS, SPENDABLE_KINDS } from '../lib/defaults.js';
 import { formatINR, parseAmount, paiseToInput } from '../lib/money.js';
 import { todayStr, formatShort, parseDateStr } from '../lib/dates.js';
 import { pendingItems, describeFrequency, nextOccurrence, occurrenceTransaction } from '../lib/recurring.js';
@@ -17,13 +17,14 @@ const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frida
 export function ruleTitle(rule) {
   const t = rule.template;
   if (t.payee) return t.payee;
+  if (t.type === 'transfer' && accountById(t.toAccountId)?.kind === 'investment') return 'SIP · ' + accountById(t.toAccountId).name;
   if (t.type === 'transfer') return `${accountById(t.accountId)?.name ?? '?'} → ${accountById(t.toAccountId)?.name ?? '?'}`;
   return categoryById(t.categoryId)?.name ?? TYPE_LABELS[t.type];
 }
 
 function ruleIcon(rule) {
   const t = rule.template;
-  if (t.type === 'transfer') return { emoji: '⇄', color: accountById(t.toAccountId)?.color || 'var(--faint)' };
+  if (t.type === 'transfer') return { emoji: accountById(t.toAccountId)?.kind === 'investment' ? '↗' : '⇄', color: accountById(t.toAccountId)?.color || 'var(--faint)' };
   const c = categoryById(t.categoryId);
   return { emoji: c?.icon || '•', color: c?.color || 'var(--faint)' };
 }
@@ -86,12 +87,16 @@ async function undoLog(ruleId, t) {
 
 /* ─── rule editor ─── */
 
-export function openRuleEditor(existing = null, { from = null } = {}) {
+export function openRuleEditor(existing = null, { from = null, investTo = null } = {}) {
   const today = todayStr();
   const seedT = existing?.template || (from ? {
     type: from.type, amount: from.amount, accountId: from.accountId, toAccountId: from.toAccountId,
     categoryId: from.categoryId, payee: from.payee, note: from.note,
-  } : { type: 'expense', amount: null, accountId: activeAccounts()[0]?.id, toAccountId: null, categoryId: null, payee: '', note: '' });
+  } : investTo ? {
+    // a SIP: monthly transfer from a bank (or cash) into the investment
+    type: 'transfer', amount: null, toAccountId: investTo, categoryId: null, payee: '', note: '',
+    accountId: activeAccounts().find((a) => a.kind === 'bank')?.id ?? activeAccounts().find((a) => SPENDABLE_KINDS.includes(a.kind) && a.kind !== 'credit_card')?.id ?? null,
+  } : { type: 'expense', amount: null, accountId: activeAccounts().find((a) => SPENDABLE_KINDS.includes(a.kind))?.id, toAccountId: null, categoryId: null, payee: '', note: '' });
   const seedDate = from?.date || today;
   const r = existing ? structuredClone(existing) : {
     template: { ...seedT }, frequency: 'monthly', dayOfMonth: parseDateStr(seedDate).d, weekday: new Date(seedDate + 'T12:00').getDay(),
@@ -100,6 +105,8 @@ export function openRuleEditor(existing = null, { from = null } = {}) {
   if (r.weekday == null) r.weekday = new Date(r.startDate + 'T12:00').getDay();
   if (r.dayOfMonth == null) r.dayOfMonth = parseDateStr(r.startDate).d;
   const t = r.template;
+  // "Investment" is a transfer into an investment account, shown as its own type
+  let uiType = t.type === 'transfer' && accountById(t.toAccountId)?.kind === 'investment' ? 'investment' : t.type;
   const errorEl = h('p', { class: 'error', role: 'alert' });
   const body = h('div');
 
@@ -114,26 +121,35 @@ export function openRuleEditor(existing = null, { from = null } = {}) {
         onclick: () => { onpick(v); render(); },
       }))));
 
-  const accountOptions = (exclude) => {
-    const accs = [...activeAccounts(), ...[t.accountId, t.toAccountId].map(accountById).filter((a) => a?.archived)];
+  const accountOptions = (exclude, keep = () => true) => {
+    const accs = [...activeAccounts(), ...[t.accountId, t.toAccountId].map(accountById).filter((a) => a?.archived)].filter(keep);
     return [['', 'Pick one'], ...GROUPS.flatMap((g) => accs.filter((a) => g.kinds.includes(a.kind) && a.id !== exclude).sort(byOrder).map((a) => [a.id, a.name]))];
   };
+  const spendable = (a) => SPENDABLE_KINDS.includes(a.kind);
+  const isInvestment = (a) => a.kind === 'investment';
 
   function render() {
     const catType = t.type === 'income' ? 'income' : 'expense';
     const cats = state.categories.filter((c) => c.type === catType && (!c.archived || c.id === t.categoryId)).sort(byOrder);
     if (t.categoryId && !cats.some((c) => c.id === t.categoryId)) t.categoryId = null;
     mount(body,
-      seg('Type', [['expense', 'Expense'], ['income', 'Income'], ['transfer', 'Transfer']], t.type, (v) => { t.type = v; }),
+      seg('Type', [['expense', 'Expense'], ['income', 'Income'], ['transfer', 'Transfer'], ['investment', 'Investment']], uiType, (v) => {
+        uiType = v;
+        t.type = v === 'investment' ? 'transfer' : v;
+        if (v === 'investment' && !isInvestment(accountById(t.toAccountId) || {})) t.toAccountId = null;
+        if (v !== 'transfer' && v !== 'investment' && !spendable(accountById(t.accountId) || {})) t.accountId = null;
+      }),
       field('rr-amt', 'Amount', h('div', { class: 'amount-input' }, h('span', { class: 'cur', text: '₹' }),
         h('input', { id: 'rr-amt', type: 'text', inputmode: 'decimal', autocomplete: 'off', value: t.amount ? paiseToInput(t.amount) : '', onchange: (e) => { t.amount = parseAmount(e.target.value); } }))),
       field('rr-acc', t.type === 'transfer' ? 'From' : t.type === 'income' ? 'Received in' : 'Paid with',
-        select('rr-acc', accountOptions(t.type === 'transfer' ? t.toAccountId : null), t.accountId, (v) => { t.accountId = v || null; })),
+        select('rr-acc', accountOptions(t.type === 'transfer' ? t.toAccountId : null, uiType === 'transfer' ? () => true : spendable), t.accountId, (v) => { t.accountId = v || null; })),
+      uiType === 'investment' && !activeAccounts().some(isInvestment)
+        ? h('p', { class: 'hint', text: 'Add an investment in Manage first (e.g. Nifty 50 SIP, PPF), then set up its SIP here.' }) : null,
       t.type === 'transfer'
-        ? field('rr-to', 'To', select('rr-to', accountOptions(t.accountId), t.toAccountId, (v) => { t.toAccountId = v || null; }))
+        ? field('rr-to', uiType === 'investment' ? 'Invest in' : 'To', select('rr-to', accountOptions(t.accountId, uiType === 'investment' ? isInvestment : () => true), t.toAccountId, (v) => { t.toAccountId = v || null; }))
         : field('rr-cat', 'Category', select('rr-cat', [['', 'Pick one'], ...cats.map((c) => [c.id, `${c.icon} ${c.name}`])], t.categoryId, (v) => { t.categoryId = v || null; })),
       h('div', { class: 'row2' },
-        field('rr-payee', t.type === 'income' ? 'From' : 'Payee', h('input', { id: 'rr-payee', type: 'text', value: t.payee || '', placeholder: 'e.g. Landlord', oninput: (e) => { t.payee = e.target.value; } })),
+        field('rr-payee', t.type === 'income' ? 'From' : uiType === 'investment' ? 'Title' : 'Payee', h('input', { id: 'rr-payee', type: 'text', value: t.payee || '', placeholder: uiType === 'investment' ? 'e.g. Nifty SIP' : 'e.g. Landlord', oninput: (e) => { t.payee = e.target.value; } })),
         field('rr-note', 'Note', h('input', { id: 'rr-note', type: 'text', value: t.note || '', oninput: (e) => { t.note = e.target.value; } }))),
       seg('Repeats', [['monthly', 'Monthly'], ['weekly', 'Weekly'], ['yearly', 'Yearly']], r.frequency, (v) => { r.frequency = v; }),
       r.frequency === 'weekly'
@@ -171,7 +187,7 @@ export function openRuleEditor(existing = null, { from = null } = {}) {
     },
   });
   const sheet = openSheet({
-    title: existing ? 'Edit recurring' : 'New recurring',
+    title: uiType === 'investment' ? (existing ? 'Edit SIP' : 'New SIP') : existing ? 'Edit recurring' : 'New recurring',
     body,
     footer: h('div', { class: 'qa-foot' + (del ? ' two' : '') }, del, h('button', { type: 'button', class: 'btn primary', text: 'Save', onclick: save })),
   });
