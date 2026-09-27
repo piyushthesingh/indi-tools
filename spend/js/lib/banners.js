@@ -29,7 +29,8 @@ export function computeBanners({
   for (const { card, summary } of due) out.push({ kind: 'due', priority: 2, card, summary });
 
   const closing = cardSummaries
-    .filter(({ summary: s }) => s.daysToStatement >= 0 && s.daysToStatement <= 3)
+    // nothing unbilled means nothing to warn about
+    .filter(({ summary: s }) => s.daysToStatement >= 0 && s.daysToStatement <= 3 && s.unbilled > 0)
     .sort((a, b) => a.summary.daysToStatement - b.summary.daysToStatement);
   for (const { card, summary } of closing) out.push({ kind: 'statement', priority: 3, card, summary });
 
