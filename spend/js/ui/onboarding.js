@@ -32,7 +32,7 @@ export function renderOnboarding(root, onDone) {
   function welcome() {
     return h('section', { class: 'onb-step onb-welcome' },
       h('img', { src: 'icons/icon-192.png', alt: '', width: 72, height: 72, class: 'onb-logo' }),
-      h('h1', { text: 'Spend' }),
+      h('h1', { text: 'Worthday' }),
       h('p', { class: 'lead', text: 'See what you have spent this month, and what each card will bill, the moment you open it.' }),
       h('div', { class: 'note' },
         h('p', { class: 'strong', text: 'Your data stays on this phone. No account, no sync.' }),
@@ -185,7 +185,7 @@ export function renderOnboarding(root, onDone) {
     };
     return h('section', { class: 'onb-step' },
       h('h1', { text: 'Set a monthly budget?' }),
-      h('p', { class: 'lead', text: 'Spend will show how much you can spend each day for the rest of the month. You can change it in Settings.' }),
+      h('p', { class: 'lead', text: 'Worthday will show how much you can spend each day for the rest of the month. You can change it in Settings.' }),
       h('div', { class: 'field' },
         h('label', { for: 'budget', text: 'Monthly budget' }),
         h('div', { class: 'amount-input' }, h('span', { class: 'cur', text: '₹' }), input),

@@ -2,6 +2,7 @@
    shown in Settings. */
 
 import { h, mount, icon } from './dom.js';
+import { glyph } from './caticon.js';
 import { openSheet } from './sheet.js';
 import { toast } from './toast.js';
 import { openQuickAdd } from './quickadd.js';
@@ -24,9 +25,9 @@ export function ruleTitle(rule) {
 
 function ruleIcon(rule) {
   const t = rule.template;
-  if (t.type === 'transfer') return { emoji: accountById(t.toAccountId)?.kind === 'investment' ? '↗' : '⇄', color: accountById(t.toAccountId)?.color || 'var(--faint)' };
+  if (t.type === 'transfer') return { mark: accountById(t.toAccountId)?.kind === 'investment' ? 'invest' : 'transfer', color: accountById(t.toAccountId)?.color || 'var(--faint)' };
   const c = categoryById(t.categoryId);
-  return { emoji: c?.icon || '•', color: c?.color || 'var(--faint)' };
+  return { mark: c, color: c?.color || 'var(--faint)' };
 }
 
 /* ─── To log ─── */
@@ -43,7 +44,7 @@ export function openToLog() {
       const acc = accountById(rule.template.accountId);
       return h('li', { class: 'tolog' },
         h('div', { class: 'tolog-main' },
-          h('span', { class: 'tx-ico', style: { '--c': ic.color }, 'aria-hidden': 'true', text: ic.emoji }),
+          h('span', { class: 'tx-ico-wrap', style: { '--c': ic.color } }, glyph(ic.mark, 'tx-ico')),
           h('span', { class: 'row-main' },
             h('span', { class: 'row-title', text: ruleTitle(rule) }),
             h('span', { class: 'row-sub', text: `${formatShort(date, today)} · ${acc?.name ?? '?'}` })),
@@ -147,7 +148,7 @@ export function openRuleEditor(existing = null, { from = null, investTo = null }
         ? h('p', { class: 'hint', text: 'Add an investment in Manage first (e.g. Nifty 50 SIP, PPF), then set up its SIP here.' }) : null,
       t.type === 'transfer'
         ? field('rr-to', uiType === 'investment' ? 'Invest in' : 'To', select('rr-to', accountOptions(t.accountId, uiType === 'investment' ? isInvestment : () => true), t.toAccountId, (v) => { t.toAccountId = v || null; }))
-        : field('rr-cat', 'Category', select('rr-cat', [['', 'Pick one'], ...cats.map((c) => [c.id, `${c.icon} ${c.name}`])], t.categoryId, (v) => { t.categoryId = v || null; })),
+        : field('rr-cat', 'Category', select('rr-cat', [['', 'Pick one'], ...cats.map((c) => [c.id, c.name])], t.categoryId, (v) => { t.categoryId = v || null; })),
       h('div', { class: 'row2' },
         field('rr-payee', t.type === 'income' ? 'From' : uiType === 'investment' ? 'Title' : 'Payee', h('input', { id: 'rr-payee', type: 'text', value: t.payee || '', placeholder: uiType === 'investment' ? 'e.g. Nifty SIP' : 'e.g. Landlord', oninput: (e) => { t.payee = e.target.value; } })),
         field('rr-note', 'Note', h('input', { id: 'rr-note', type: 'text', value: t.note || '', oninput: (e) => { t.note = e.target.value; } }))),
@@ -160,7 +161,7 @@ export function openRuleEditor(existing = null, { from = null, investTo = null }
         field('rr-start', 'Starts', h('input', { id: 'rr-start', type: 'date', value: r.startDate, onchange: (e) => { if (e.target.value) r.startDate = e.target.value; } })),
         field('rr-end', 'Ends', h('input', { id: 'rr-end', type: 'date', value: r.endDate || '', onchange: (e) => { r.endDate = e.target.value || null; } }), 'Optional')),
       seg('When it is due', [['confirm', 'Ask me first'], ['auto', 'Log it for me']], r.mode, (v) => { r.mode = v; }),
-      h('p', { class: 'hint', text: r.mode === 'auto' ? 'It is saved automatically when you open Spend on or after the day.' : 'It waits in "To log" on Home until you log or skip it.' }),
+      h('p', { class: 'hint', text: r.mode === 'auto' ? 'It is saved automatically when you open Worthday on or after the day.' : 'It waits in "To log" on Home until you log or skip it.' }),
       existing && h('label', { class: 'switch-row' },
         h('span', {}, h('span', { class: 'row-title', text: 'Paused' }), h('span', { class: 'row-sub', text: 'Nothing is added while paused, and missed dates are not caught up later.' })),
         h('input', { type: 'checkbox', role: 'switch', checked: !!r.paused, onchange: (e) => { r.paused = e.target.checked; } })),
@@ -210,13 +211,13 @@ export function recurringList() {
         const sub = [describeFrequency(rule), rule.mode === 'auto' ? 'logged for you' : 'asks first',
           rule.paused ? 'paused' : next ? 'next ' + formatShort(next, today) : 'ended'].join(' · ');
         return h('li', {}, h('button', { type: 'button', class: 'row-link', onclick: () => openRuleEditor(rule) },
-          h('span', { class: 'tx-ico', style: { '--c': ic.color }, 'aria-hidden': 'true', text: ic.emoji }),
+          h('span', { class: 'tx-ico-wrap', style: { '--c': ic.color } }, glyph(ic.mark, 'tx-ico')),
           h('span', { class: 'row-main' },
             h('span', { class: 'row-title', text: ruleTitle(rule) }),
             h('span', { class: 'row-sub', text: sub })),
           h('span', { class: 'tx-amt ' + rule.template.type, text: formatINR(rule.template.amount) })));
       }))
-      : h('p', { class: 'hint', text: 'Rent, SIPs, subscriptions: add them once and Spend reminds you, or logs them for you.' }),
+      : h('p', { class: 'hint', text: 'Rent, SIPs, subscriptions: add them once and Worthday reminds you, or logs them for you.' }),
     h('div', { class: 'add-row' }, h('button', { type: 'button', class: 'btn block', onclick: () => openRuleEditor() }, icon('plus', 'ico sm'), 'Add recurring')),
   );
 }

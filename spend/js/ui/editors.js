@@ -1,6 +1,7 @@
 /* Add / edit sheets for payment methods and categories. */
 
 import { h, mount, SAFE_COLOR } from './dom.js';
+import { fillGlyph } from './caticon.js';
 import { openSheet } from './sheet.js';
 import { toast } from './toast.js';
 import {
@@ -113,7 +114,7 @@ export function openAccountEditor(existing = null, { kind = 'credit_card', focus
       mount(kindFields, pastInvestments(id, a));
     } else {
       const bal = field(id + 'bal', 'Opening balance', moneyInput(id + 'bal', a.openingBalance, (v) => { a.openingBalance = v ?? 0; }, '0'),
-        'What was in it when you started tracking. Spend adds and subtracts from here.');
+        'What was in it when you started tracking. Worthday adds and subtracts from here.');
       bal.hidden = !a.trackBalance;
       mount(kindFields,
         h('label', { class: 'switch-row' },
@@ -238,14 +239,14 @@ function cashbackEditor(id, cb, open) {
     cb.rates.map((r, i) => h('div', { class: 'rate-row' },
       h('select', { 'aria-label': 'Category', onchange: (e) => { r.categoryId = e.target.value; } },
         h('option', { value: '', text: 'Pick a category', selected: !r.categoryId }),
-        cats.map((c) => h('option', { value: c.id, text: `${c.icon} ${c.name}`, selected: r.categoryId === c.id }))),
+        cats.map((c) => h('option', { value: c.id, text: c.name, selected: r.categoryId === c.id }))),
       pctInput(r.pct, (v) => { r.pct = v; }, 'Percent'), h('span', { class: 'pct-sign', text: '%' }),
       h('button', { type: 'button', class: 'icon-btn', 'aria-label': 'Remove this rate', onclick: () => { cb.rates.splice(i, 1); renderRates(); } }, '×'))),
     h('button', { type: 'button', class: 'link-btn', text: '+ Add a category rate', onclick: () => { cb.rates.push({ categoryId: '', pct: null }); renderRates(); } }));
   const renderExcl = () => mount(exclEl, cats.map((c) => h('button', {
     type: 'button', class: 'chip sm' + (cb.excluded.has(c.id) ? ' on' : ''), 'aria-pressed': String(cb.excluded.has(c.id)),
     onclick: () => { if (cb.excluded.has(c.id)) cb.excluded.delete(c.id); else cb.excluded.add(c.id); renderExcl(); },
-  }, c.icon + ' ' + c.name)));
+  }, c.name)));
   renderRates();
   renderExcl();
   const d = h('details', { class: 'cashback-edit', open: open || (cb.defaultPct || cb.rates.length) ? true : null },
@@ -255,7 +256,7 @@ function cashbackEditor(id, cb, open) {
     h('div', { class: 'field' }, h('span', { class: 'label-like', text: 'Different rate for some categories' }), ratesEl),
     h('div', { class: 'field' }, h('span', { class: 'label-like', text: 'Earns nothing on' }), exclEl),
     field(id + 'cap', 'Cap per statement cycle', moneyInput(id + 'cap', cb.cap, (v) => { cb.cap = v; }, 'No cap')),
-    h('p', { class: 'hint', text: 'Spend shows this as an estimate. Refunds take back cashback at their category\'s rate.' }));
+    h('p', { class: 'hint', text: 'Worthday shows this as an estimate. Refunds take back cashback at their category\'s rate.' }));
   if (open) setTimeout(() => d.scrollIntoView({ block: 'start', behavior: 'smooth' }), 250);
   return d;
 }
@@ -271,7 +272,7 @@ export function openCategoryEditor(existing = null, { type = 'expense' } = {}) {
 
   const preview = h('span', { class: 'emoji-preview', 'aria-hidden': 'true' });
   const renderPreview = () => {
-    preview.textContent = c.icon || '?';
+    fillGlyph(preview, c, '?');
     if (SAFE_COLOR.test(c.color)) preview.style.setProperty('--c', c.color);
   };
   const emojiInput = h('input', {

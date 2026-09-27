@@ -44,7 +44,7 @@ export async function exportBackup({ quiet = false } = {}) {
   const today = todayStr();
   const text = JSON.stringify(buildBackup(snapshot()), null, 1);
   try {
-    const how = await saveFile(backupFilename(today), text, 'application/json', 'Spend backup');
+    const how = await saveFile(backupFilename(today), text, 'application/json', 'Worthday backup');
     await setSetting('lastBackupAt', new Date().toISOString());
     if (!quiet) toast(how === 'shared' ? 'Backup saved' : 'Backup downloaded');
     return true;
@@ -61,7 +61,7 @@ export async function exportCSV(txns, label = '') {
     category: (id) => categoryById(id)?.name,
   });
   try {
-    await saveFile(label ? `spend-transactions-${label}.csv` : `spend-transactions-${today}.csv`, csv, 'text/csv', 'Spend transactions');
+    await saveFile(label ? `worthday-transactions-${label}.csv` : `worthday-transactions-${today}.csv`, csv, 'text/csv', 'Worthday transactions');
     toast(`Exported ${txns.length} transaction${txns.length === 1 ? '' : 's'}`);
   } catch (e) {
     if (!isAbort(e)) toast('Could not export: ' + (e.message || e));
@@ -105,7 +105,7 @@ function openRestoreSheet(parsed, name) {
       // safety copy of what is here now, before anything is replaced
       const text = JSON.stringify(buildBackup(snapshot()), null, 1);
       try {
-        await saveFile(backupFilename(today, 'spend-before-restore'), text, 'application/json', 'Spend safety copy');
+        await saveFile(backupFilename(today, 'worthday-before-restore'), text, 'application/json', 'Worthday safety copy');
       } catch (err) {
         busy = false;
         btn.disabled = false;
@@ -118,7 +118,7 @@ function openRestoreSheet(parsed, name) {
     try {
       const settings = mergeSettings(backup.data.settings || {}, state.settings);
       await replaceAllData({ ...backup.data, settings });
-      applyTheme(settings.theme === 'light' ? 'light' : 'dark');
+      applyTheme(settings.theme === 'dark' ? 'dark' : 'light');
       // reload into the restored data (this also works from onboarding)
       try { sessionStorage.setItem('spend_toast', `Restored ${counts.transactions} transaction${counts.transactions === 1 ? '' : 's'}`); } catch { /* ignore */ }
       location.replace(location.pathname + '#/home');
@@ -140,7 +140,7 @@ function openRestoreSheet(parsed, name) {
       h('div', { class: 'note warn-note' },
         h('p', { class: 'strong', text: 'This replaces everything on this phone.' }),
         h('p', { text: hasData
-          ? 'Spend first saves a safety copy of your current data (spend-before-restore), then restores.'
+          ? 'Worthday first saves a safety copy of your current data (worthday-before-restore), then restores.'
           : 'There is nothing here yet, so no safety copy is needed.' })),
       status),
     footer: h('div', { class: 'qa-foot two' },
@@ -159,7 +159,7 @@ export function openDeleteAll() {
     if (input.value.trim() !== 'DELETE') return;
     go.disabled = true;
     await deleteAllData();
-    try { localStorage.removeItem('spend_theme'); } catch { /* ignore */ }
+    try { localStorage.removeItem('wd_theme'); } catch { /* ignore */ }
     location.replace(location.pathname); // back to onboarding
   });
   const sheet = openSheet({
@@ -194,7 +194,7 @@ export function storageSection() {
   const persist = state.settings.persistGranted
     ? 'Granted. The browser will not clear your data to free up space.'
     : state.settings.persistRequested
-      ? 'Not granted yet. On iPhone, add Spend to the Home Screen. Keep regular backups either way.'
+      ? 'Not granted yet. On iPhone, add Worthday to the Home Screen. Keep regular backups either way.'
       : 'Not requested yet.';
   const usage = h('span', { class: 'row-sub', text: '…' });
   navigator.storage?.estimate?.().then((e) => {
