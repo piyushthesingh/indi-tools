@@ -87,11 +87,11 @@ async function boot() {
     await load();
   } catch (err) {
     mount(app, h('div', { class: 'boot error' },
-      h('p', { text: 'Spend could not open its storage.' }),
+      h('p', { text: 'Worthday could not open its storage.' }),
       h('p', { class: 'hint', text: String(err.message || err) })));
     return;
   }
-  applyTheme(state.settings.theme === 'light' ? 'light' : 'dark');
+  applyTheme(state.settings.theme === 'dark' ? 'dark' : 'light');
   await runRecurring().catch((e) => console.error('recurring', e));
 
   // an installed app can stay open across midnight: when it comes back on a

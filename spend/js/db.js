@@ -40,7 +40,7 @@ export function openDB() {
       resolve(db);
     };
     req.onerror = () => reject(req.error);
-    req.onblocked = () => reject(new Error('Spend is open in another tab on an older version. Close it and reload.'));
+    req.onblocked = () => reject(new Error('Worthday is open in another tab on an older version. Close it and reload.'));
   });
   return dbPromise;
 }
