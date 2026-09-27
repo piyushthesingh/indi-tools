@@ -42,7 +42,7 @@ export function openBudgetEditor() {
           }))),
       h('h3', { class: 'label', style: { marginTop: '20px' }, text: 'Category limits (optional)' }),
       h('ul', { class: 'rows' }, cats.map((c) => h('li', { class: 'row budget-row' },
-        h('label', { for: 'bd-' + c.id, class: 'row-main' }, h('span', { 'aria-hidden': 'true', text: c.icon + ' ' }), c.name),
+        h('label', { for: 'bd-' + c.id, class: 'row-main' }, c.name),
         h('input', {
           id: 'bd-' + c.id, type: 'text', inputmode: 'decimal', autocomplete: 'off', placeholder: 'No limit', class: 'mini-amount',
           value: draft.categoryLimits[c.id] ? paiseToInput(draft.categoryLimits[c.id]) : '',
@@ -80,7 +80,7 @@ export function budgetSummary() {
     st && progressRow('Overall', st.spent, st.limit),
     cats.length > 0 && h('ul', { class: 'rows' }, cats.map((c) => {
       const cat = categoryById(c.categoryId);
-      return h('li', { class: 'row' }, progressRow(`${cat?.icon ?? ''} ${cat?.name ?? 'Category'}`, c.spent, c.limit));
+      return h('li', { class: 'row' }, progressRow(cat?.name ?? 'Category', c.spent, c.limit));
     })),
     h('div', { class: 'add-row' }, h('button', { type: 'button', class: 'btn block', text: b ? 'Edit budget' : 'Set a budget', onclick: openBudgetEditor })),
   );

@@ -6,6 +6,7 @@
    deep link, category chips only select and Save does the saving. */
 
 import { h, mount, icon } from './dom.js';
+import { glyph } from './caticon.js';
 import { openSheet } from './sheet.js';
 import { toast } from './toast.js';
 import {
@@ -238,7 +239,7 @@ export function openQuickAdd({ edit = null, prefill = {}, fromLink = false, onSa
             renderCats();
             if (autoSave()) fail('Enter an amount first.', amount);
           },
-        }, h('span', { class: 'emoji', 'aria-hidden': 'true', text: c.icon }), c.name))));
+        }, glyph(c, 'emoji'), c.name))));
   }
 
   function renderMore() {

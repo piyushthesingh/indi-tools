@@ -4,6 +4,7 @@
    memory so typing never rebuilds the whole screen. */
 
 import { h, mount, icon } from './dom.js';
+import { glyph } from './caticon.js';
 import { openSheet } from './sheet.js';
 import { openQuickAdd } from './quickadd.js';
 import { exportCSV } from './backup.js';
@@ -102,18 +103,18 @@ function dayTotal(g) {
 export function txRow(t, { onOpen, sign: forceSign } = {}) {
   const cat = categoryById(t.categoryId);
   const acc = accountById(t.accountId);
-  let title, sub, emoji, color;
+  let title, sub, mark, color;
   if (t.type === 'transfer') {
     const to = accountById(t.toAccountId);
     title = t.payee || (to?.kind === 'credit_card' ? 'Card payment' : to?.kind === 'investment' ? 'Investment'
       : acc?.kind === 'investment' ? 'Redemption' : 'Transfer');
     sub = `${acc?.name ?? '?'} → ${to?.name ?? '?'}`;
-    emoji = '⇄';
+    mark = to?.kind === 'investment' ? 'invest' : 'transfer';
     color = to?.color || 'var(--faint)';
   } else {
     title = t.payee || cat?.name || TYPE_LABELS[t.type];
     sub = [t.payee ? cat?.name : null, acc?.name, t.type === 'refund' ? 'Refund' : null].filter(Boolean).join(' · ');
-    emoji = cat?.icon || '•';
+    mark = cat;
     color = cat?.color || 'var(--faint)';
   }
   const sign = forceSign ?? (t.type === 'income' || t.type === 'refund' ? '+' : '');
@@ -121,7 +122,7 @@ export function txRow(t, { onOpen, sign: forceSign } = {}) {
     type: 'button', class: 'tx', onclick: () => (onOpen ? onOpen(t) : openQuickAdd({ edit: t })),
     'aria-label': `${title}, ${sign}${formatINR(t.amount)}, ${sub}${t.note ? ', ' + t.note : ''}`,
   },
-    h('span', { class: 'tx-ico', style: { '--c': color }, 'aria-hidden': 'true', text: emoji }),
+    h('span', { class: 'tx-ico-wrap', style: { '--c': color } }, glyph(mark, 'tx-ico')),
     h('span', { class: 'row-main' },
       h('span', { class: 'row-title', text: title }),
       h('span', { class: 'row-sub', text: t.note ? `${sub} · ${t.note}` : sub })),
@@ -207,7 +208,7 @@ function openFilterSheet(f) {
   const body = h('div', {},
     periodEl,
     select('f-type', 'Type', [['', 'Any type'], ...Object.entries(TYPE_LABELS)], draft.type, (v) => { draft.type = v; }),
-    select('f-cat', 'Category', [['', 'Any category'], ...cats.map((c) => [c.id, `${c.icon} ${c.name}${c.archived ? ' (archived)' : ''}`])], draft.categoryId, (v) => { draft.categoryId = v; }),
+    select('f-cat', 'Category', [['', 'Any category'], ...cats.map((c) => [c.id, `${c.name}${c.archived ? ' (archived)' : ''}`])], draft.categoryId, (v) => { draft.categoryId = v; }),
     select('f-acct', 'Payment method', [['', 'Any method'], ...accts.map((a) => [a.id, a.name + (a.archived ? ' (archived)' : '')])], draft.accountId, (v) => { draft.accountId = v; }),
     select('f-group', 'Group', [['', 'Any group'], ...GROUPS.map((g) => [g.id, g.name])], draft.group, (v) => { draft.group = v; }),
   );

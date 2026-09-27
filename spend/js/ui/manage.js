@@ -3,6 +3,7 @@
    categories. */
 
 import { h, icon } from './dom.js';
+import { glyph } from './caticon.js';
 import { makeSortable } from './sortable.js';
 import { openAccountEditor, openCategoryEditor } from './editors.js';
 import { state, byOrder, reorder } from '../state.js';
@@ -100,7 +101,7 @@ function categoriesView() {
   const row = (c) => [
     !c.archived && handle(c.name),
     h('button', { type: 'button', class: 'row-link', onclick: () => openCategoryEditor(c) },
-      h('span', { class: 'tx-ico', style: { '--c': c.color }, 'aria-hidden': 'true', text: c.icon }),
+      h('span', { class: 'tx-ico-wrap', style: { '--c': c.color } }, glyph(c, 'tx-ico')),
       h('span', { class: 'row-main' },
         h('span', { class: 'row-title', text: c.name }),
         h('span', { class: 'row-sub', text: usageText(categoryUsage(c.id, state.transactions)) })),

@@ -80,7 +80,7 @@ export function renderInsights(_params, query) {
 function describe(view, id) {
   if (view === 'category') {
     const c = categoryById(id);
-    return { name: c ? `${c.icon} ${c.name}` : 'Unknown category', color: c?.color || 'var(--faint)' };
+    return { name: c ? c.name : 'Unknown category', color: c?.color || 'var(--faint)' };
   }
   if (view === 'account') {
     const a = accountById(id);

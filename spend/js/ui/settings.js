@@ -5,17 +5,18 @@ import { recurringList } from './recurring.js';
 import { backupSection, storageSection, shortcutsSection, dangerSection } from './backup.js';
 
 export function applyTheme(theme) {
-  const light = theme === 'light';
-  if (light) document.documentElement.setAttribute('data-theme', 'light');
+  const dark = theme === 'dark';
+  if (dark) document.documentElement.setAttribute('data-theme', 'dark');
   else document.documentElement.removeAttribute('data-theme');
-  document.querySelector('meta[name=theme-color]').content = light ? '#EEF3F0' : '#0C1410';
+  // the browser bar takes the page colour, whichever look is active
+  document.querySelector('meta[name=theme-color]').content = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || (dark ? '#141310' : '#F6F2EA');
   // white status-bar text on a light page is unreadable; iOS applies this on next launch
-  document.querySelector('meta[name=apple-mobile-web-app-status-bar-style]').content = light ? 'default' : 'black-translucent';
-  try { localStorage.setItem('spend_theme', light ? 'light' : 'dark'); } catch { /* private mode */ }
+  document.querySelector('meta[name=apple-mobile-web-app-status-bar-style]').content = dark ? 'black-translucent' : 'default';
+  try { localStorage.setItem('wd_theme', dark ? 'dark' : 'light'); } catch { /* private mode */ }
 }
 
 export function renderSettings(rerender, query = '') {
-  const theme = state.settings.theme === 'light' ? 'light' : 'dark';
+  const theme = state.settings.theme === 'dark' ? 'dark' : 'light';
   const setTheme = async (t) => {
     applyTheme(t);
     await setSetting('theme', t);
@@ -62,7 +63,7 @@ export function renderSettings(rerender, query = '') {
     h('section', { class: 'group' },
       h('h2', { class: 'label', id: 'theme-label', text: 'Theme' }),
       h('div', { class: 'seg', role: 'radiogroup', 'aria-labelledby': 'theme-label' },
-        ['dark', 'light'].map((t) => h('button', {
+        ['light', 'dark'].map((t) => h('button', {
           type: 'button', role: 'radio', 'aria-checked': String(theme === t),
           class: theme === t ? 'on' : '', text: t === 'dark' ? 'Dark' : 'Light',
           onclick: () => setTheme(t),

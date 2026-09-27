@@ -25,8 +25,8 @@ export function renderHome() {
 
   let compare = null;
   if (m.hasHistory) {
-    if (m.diff === 0) compare = 'Same as this time last month';
-    else compare = `${formatINR(Math.abs(m.diff))} ${m.diff < 0 ? 'less' : 'more'} than this time last month`;
+    if (m.diff === 0) compare = 'Level with last month so far';
+    else compare = `${m.diff < 0 ? '↓' : '↑'} ${formatINR(Math.abs(m.diff))} ${m.diff < 0 ? 'less' : 'more'} than last month so far`;
   }
 
   const cardList = cards();
@@ -47,19 +47,18 @@ export function renderHome() {
 
   return h('div', { class: 'screen home' },
     h('header', { class: 'top' },
-      h('h1', { class: 'title', text: monthName(key) }),
+      h('div', { class: 'title-block' },
+        h('h1', { class: 'title', text: monthName(key) }),
+        h('p', { class: 'subtitle', text: new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' }) })),
       h('a', { class: 'icon-btn', href: '#/settings', 'aria-label': 'Settings' }, icon('gear'))),
 
-    h('a', { class: 'hero', href: '#/insights?month=' + key, 'aria-label': `This month so far ${formatINR(m.current)}. ${compare ?? ''} Open insights.` },
-      h('span', { class: 'label', text: 'This month so far' }),
-      h('span', { class: 'big', style: fitStyle(formatINR(m.current)), text: formatINR(m.current) }),
-      compare && h('span', { class: 'compare' + (m.diff > 0 ? ' up' : ''), text: compare })),
-
-    bst && budgetLine(bst),
+    heroBox(m, compare, bst, key),
     banners.length > 0 && h('div', { class: 'banners' }, banners.map(banner)),
 
     cardList.length > 0 && h('section', { class: 'group' },
-      h('h2', { class: 'label', text: 'Credit cards' }),
+      h('div', { class: 'section-head' },
+        h('h2', { class: 'label', text: 'Credit cards' }),
+        cardList.length > 1 && h('span', { class: 'section-note', text: `${cardList.length} cards` })),
       h('div', { class: 'card-strip' }, summaries.map(({ card, summary }) => cardTile(card, summary, today)))),
 
     h('section', { class: 'group' },
@@ -72,6 +71,42 @@ export function renderHome() {
   );
 }
 
+/* The month in one box: what has gone out, against the budget when there
+   is one, and how it compares with this point last month. The top links to
+   Insights, the budget line to the budget settings. */
+function heroBox(m, compare, b, key) {
+  const amount = formatINR(m.current);
+  const pct = b ? Math.round(b.pct * 100) : null;
+  const tone = b ? (b.pct >= 1 ? 'danger' : b.pct >= 0.8 ? 'warn' : '') : '';
+  const main = h('a', {
+    class: 'hero-main', href: '#/insights?month=' + key,
+    'aria-label': `Spent this month ${amount}${b ? ` of ${formatINR(b.limit)} budget` : ''}. ${compare ?? ''} Open insights.`,
+  },
+    h('span', { class: 'hero-text' },
+      h('span', { class: 'hero-label', text: 'Spent this month' }),
+      h('span', { class: 'big', style: fitStyle(amount), text: amount }),
+      b && h('span', { class: 'hero-sub', text: `of ${formatINR(b.limit)} budget` })),
+    b && ring(pct, tone),
+    compare && h('span', { class: 'compare', text: compare }));
+  if (!b) return h('div', { class: 'hero-box' }, main);
+  const days = b.daysLeft === 1 ? 'last day' : `${b.daysLeft} days left`;
+  return h('div', { class: 'hero-box ' + tone }, main,
+    h('a', { class: 'hero-foot', href: '#/settings?section=budget', 'aria-label': `Budget: ${b.left < 0 ? formatINR(-b.left) + ' over' : formatINR(b.left) + ' left, ' + formatINR(b.perDay) + ' a day'}. Edit budget.` },
+      b.left < 0
+        ? h('span', { class: 'over' }, h('strong', { text: formatINR(-b.left) }), ' over budget')
+        : h('span', {}, h('strong', { text: formatINR(b.left) }), ' left'),
+      h('span', {}, b.left > 0 && h('strong', { text: formatINR(b.perDay) + '/day' }), b.left > 0 ? ' · ' + days : days)));
+}
+
+function ring(pct, tone) {
+  const r = 26, c = 2 * Math.PI * r;
+  const shown = Math.min(100, Math.max(0, pct));
+  const el = h('span', { class: 'ring ' + tone, 'aria-hidden': 'true' });
+  el.innerHTML = `<svg viewBox="0 0 64 64"><circle class="ring-track" cx="32" cy="32" r="${r}"/><circle class="ring-fill" cx="32" cy="32" r="${r}" stroke-dasharray="${(c * shown / 100).toFixed(2)} ${c.toFixed(2)}" transform="rotate(-90 32 32)"/></svg>`;
+  el.append(h('span', { class: 'ring-pct', text: pct + '%' }));
+  return el;
+}
+
 function cardTile(c, s, today) {
   const due = dueLine(s, today);
   const pct = s.utilisation != null ? Math.round(s.utilisation * 100) : null;
@@ -80,27 +115,16 @@ function cardTile(c, s, today) {
     due?.text, s.credit ? `${formatINR(s.credit)} credit` : null, pct != null ? `${pct}% of limit used` : null,
   ].filter(Boolean).join(', ');
   return h('a', { class: 'card-tile', href: '#/account/' + c.id, style: { '--c': c.color }, 'aria-label': label },
-    h('span', { class: 'tile-name', text: c.name }),
-    h('span', { class: 'tile-amt', style: fitStyle(formatINR(s.unbilled)), text: formatINR(s.unbilled) }),
-    h('span', { class: 'tile-sub', text: 'Unbilled · ' + statementPhrase(s.daysToStatement) }),
+    h('span', { class: 'tile-name' }, h('span', { class: 'dot' }), h('span', { class: 'tile-name-text', text: c.name })),
+    h('span', { class: 'tile-amt-row' },
+      h('span', { class: 'tile-amt', style: fitStyle(formatINR(s.unbilled) + ' unbilled'), text: formatINR(s.unbilled) }),
+      h('span', { class: 'tile-unit', text: 'unbilled' })),
+    h('span', { class: 'tile-sub', text: cap(statementPhrase(s.daysToStatement)) }),
     due && h('span', { class: 'tile-due ' + due.tone, text: cap(due.text) }),
     !due && s.credit > 0 && h('span', { class: 'tile-due ok', text: `${formatINR(s.credit)} credit` }),
     pct != null && h('span', { class: 'tile-bar ' + (pct >= 80 ? 'danger' : pct >= 50 ? 'warn' : '') },
       h('span', { style: { width: Math.min(100, pct) + '%' } })),
   );
-}
-
-function budgetLine(b) {
-  const pct = Math.min(100, Math.round(b.pct * 100));
-  const tone = b.pct >= 1 ? 'danger' : b.pct >= 0.8 ? 'warn' : '';
-  const note = b.left < 0
-    ? `${formatINR(-b.left)} over budget`
-    : `${formatINR(b.perDay)} a day left for the rest of the month`;
-  return h('a', { class: 'budget-line ' + tone, href: '#/settings?section=budget', 'aria-label': `Budget: ${formatINR(b.spent)} of ${formatINR(b.limit)} spent. ${note}.` },
-    h('span', { class: 'util-text' },
-      h('span', { text: `${formatINR(b.spent)} of ${formatINR(b.limit)}` }),
-      h('span', { class: 'per-day', text: note })),
-    h('span', { class: 'bar', 'aria-hidden': 'true' }, h('span', { style: { width: pct + '%' } })));
 }
 
 function banner(b) {
@@ -110,7 +134,7 @@ function banner(b) {
   const text = (strong, rest) => h('span', { class: 'banner-text' }, h('strong', { text: strong }), rest ? ' ' + rest : '');
   switch (b.kind) {
     case 'recurring':
-      return wrap('info', text(`${b.count} to log`, b.count === 1 ? 'recurring item is due.' : 'recurring items are due.'), null, openToLog);
+      return wrap('info', text(b.count === 1 ? '1 recurring item' : `${b.count} recurring items`, 'waiting to be logged.'), null, openToLog);
     case 'due': {
       const s = b.summary;
       const when = s.daysToDue < 0 ? `overdue by ${-s.daysToDue} day${s.daysToDue === -1 ? '' : 's'}`
