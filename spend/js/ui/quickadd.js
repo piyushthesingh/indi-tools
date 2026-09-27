@@ -146,7 +146,14 @@ export function openQuickAdd({ edit = null, prefill = {}, fromLink = false, onSa
     else if (accountById(m.accountId)?.kind === 'investment') { m.accountId = null; m.accountPicked = false; }
     // only re-default the method if the user has not chosen one themselves
     const allowed = accounts.filter((a) => k === 'transfer' || SPENDABLE_KINDS.includes(a.kind)).map((a) => a.id);
-    if (!edit && !m.accountPicked) m.accountId = lastUsedAccountId(state.transactions, allowed, k) || m.accountId;
+    if (!edit && !m.accountPicked) {
+      let pick = lastUsedAccountId(state.transactions, allowed, k);
+      // no transfer yet: money usually moves out of a bank or UPI, not a card
+      if (!pick && k === 'transfer' && accountById(m.accountId)?.kind === 'credit_card') {
+        pick = accounts.find((a) => allowed.includes(a.id) && ['bank', 'upi', 'wallet', 'cash'].includes(a.kind))?.id;
+      }
+      m.accountId = pick || m.accountId;
+    }
     clearError();
     renderAll();
   }

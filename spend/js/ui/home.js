@@ -37,7 +37,7 @@ export function renderHome() {
   const banners = computeBanners({
     pendingCount: pendingItems(state.recurring).length,
     cardSummaries: summaries,
-    budget: bst,
+    budget: null, // the month box already shows the budget, in red when it is near or over
     categoryBudgets: catSt,
     lastBackupAt: state.settings.lastBackupAt || null,
     transactionCount: state.transactions.length,
@@ -102,8 +102,11 @@ function ring(pct, tone) {
   const r = 26, c = 2 * Math.PI * r;
   const shown = Math.min(100, Math.max(0, pct));
   const el = h('span', { class: 'ring ' + tone, 'aria-hidden': 'true' });
-  el.innerHTML = `<svg viewBox="0 0 64 64"><circle class="ring-track" cx="32" cy="32" r="${r}"/><circle class="ring-fill" cx="32" cy="32" r="${r}" stroke-dasharray="${(c * shown / 100).toFixed(2)} ${c.toFixed(2)}" transform="rotate(-90 32 32)"/></svg>`;
-  el.append(h('span', { class: 'ring-pct', text: pct + '%' }));
+  // a zero-length round-capped stroke would still draw a dot
+  const fill = shown > 0 ? `<circle class="ring-fill" cx="32" cy="32" r="${r}" stroke-dasharray="${(c * shown / 100).toFixed(2)} ${c.toFixed(2)}" transform="rotate(-90 32 32)"/>` : '';
+  el.innerHTML = `<svg viewBox="0 0 64 64"><circle class="ring-track" cx="32" cy="32" r="${r}"/>${fill}</svg>`;
+  const label = pct > 999 ? '999%+' : pct + '%';
+  el.append(h('span', { class: 'ring-pct', 'data-long': label.length > 4 || null, text: label }));
   return el;
 }
 

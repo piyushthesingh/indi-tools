@@ -8,6 +8,8 @@ let openCount = 0;
 
 export function openSheet({ title, body, footer, onClose, labelId = 'sheet-title-' + Date.now() }) {
   const opener = document.activeElement;
+  // a leftover toast ("Saved … Undo") would sit on top of the new sheet
+  document.querySelectorAll('#toasts .toast').forEach((t) => t.remove());
   const panel = h('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': labelId },
     h('div', { class: 'sheet-head' },
       h('h2', { class: 'sheet-title', id: labelId }, title),

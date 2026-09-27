@@ -136,6 +136,9 @@ export function renderOnboarding(root, onDone) {
       const missing = pickedCards().filter((c) => !c.statementDay || !c.dueDay);
       if (missing.length) {
         errors.textContent = `Pick a statement day and due day for ${missing.map((c) => c.name).join(', ')}.`;
+        // the message sits below the cards, off screen: take the user to the first gap
+        const first = missing[0], idx = pickedCards().indexOf(first);
+        document.getElementById('c' + idx + (first.statementDay ? 'dueDay' : 'statementDay'))?.focus();
         return;
       }
       go(4);
