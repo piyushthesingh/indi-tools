@@ -218,7 +218,7 @@ describe('cashback', () => {
 describe('banners follow the priority order', () => {
   const today = '2026-09-26';
   const card = (name) => ({ id: name, name });
-  const sum = (o) => ({ billedDue: 0, daysToDue: 20, daysToStatement: 20, ...o });
+  const sum = (o) => ({ billedDue: 0, daysToDue: 20, daysToStatement: 20, unbilled: 100, ...o });
   const all = {
     pendingCount: 3,
     cardSummaries: [
@@ -256,6 +256,7 @@ describe('banners follow the priority order', () => {
     assert.deepEqual(computeBanners({ ...quiet, cardSummaries: [{ card: card('x'), summary: sum({ billedDue: 0, daysToDue: 1 }) }] }), [], 'nothing billed');
     assert.deepEqual(computeBanners({ ...quiet, cardSummaries: [{ card: card('x'), summary: sum({ daysToStatement: 4 }) }] }), []);
     assert.deepEqual(kinds(computeBanners({ ...quiet, cardSummaries: [{ card: card('x'), summary: sum({ daysToStatement: 0 }) }] })), ['statement:x']);
+    assert.deepEqual(computeBanners({ ...quiet, cardSummaries: [{ card: card('x'), summary: sum({ daysToStatement: 1, unbilled: 0 }) }] }), [], 'nothing unbilled');
     assert.deepEqual(computeBanners({ ...quiet, budget: { pct: 0.79 } }), []);
     assert.deepEqual(kinds(computeBanners({ ...quiet, budget: { pct: 0.8 } })), ['budget']);
   });
