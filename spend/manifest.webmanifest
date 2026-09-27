@@ -1,14 +1,14 @@
 {
   "id": "/spend/",
-  "name": "Spend",
-  "short_name": "Spend",
-  "description": "Private, offline expense tracker that knows your credit card statement cycles.",
+  "name": "Worthday",
+  "short_name": "Worthday",
+  "description": "Private, offline money tracker that knows your credit card statement cycles.",
   "start_url": "/spend/",
   "scope": "/spend/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0C1410",
-  "theme_color": "#0C1410",
+  "background_color": "#F6F2EA",
+  "theme_color": "#F6F2EA",
   "categories": [
     "finance",
     "productivity"
