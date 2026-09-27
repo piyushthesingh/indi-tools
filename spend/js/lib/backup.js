@@ -25,7 +25,7 @@ export function buildBackup(data, exportedAt = new Date().toISOString()) {
   return { app: APP_ID, schemaVersion: SCHEMA_VERSION, exportedAt, data: out };
 }
 
-export function backupFilename(today, prefix = 'spend-backup') {
+export function backupFilename(today, prefix = 'worthday-backup') {
   return `${prefix}-${today}.json`;
 }
 
@@ -36,12 +36,12 @@ export function parseBackup(text) {
   try {
     obj = JSON.parse(text);
   } catch {
-    return { ok: false, error: 'This file is not a Spend backup (it is not valid JSON).' };
+    return { ok: false, error: 'This file is not a Worthday backup (it is not valid JSON).' };
   }
-  if (!obj || obj.app !== APP_ID) return { ok: false, error: 'This file is not a Spend backup.' };
+  if (!obj || obj.app !== APP_ID) return { ok: false, error: 'This file is not a Worthday backup.' };
   const v = obj.schemaVersion;
   if (!Number.isInteger(v) || v < 1) return { ok: false, error: 'This backup has no valid schema version.' };
-  if (v > SCHEMA_VERSION) return { ok: false, error: 'This backup was made by a newer version of Spend. Update the app, then try again.' };
+  if (v > SCHEMA_VERSION) return { ok: false, error: 'This backup was made by a newer version of Worthday. Update the app, then try again.' };
   const d = obj.data;
   if (!d || typeof d !== 'object') return { ok: false, error: 'This backup has no data in it.' };
   for (const k of DATA_KEYS) {
