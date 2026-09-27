@@ -17,12 +17,14 @@
    redirects /spend/index.html to /spend/, so the shell is cached as './'
    only, and every stored response is copied without its redirect flag. */
 
-const VERSION = '2026-09-26.14';
+const VERSION = '2026-09-27.1';
 const CACHE = 'spend-' + VERSION;
 
 const SHELL = [
   './',
   'manifest.webmanifest',
+  'fonts/manrope-latin.woff2',
+  'fonts/manrope-latin-ext.woff2',
   'css/app.css',
   'icons/apple-touch-icon.png',
   'icons/icon-192.png',
@@ -54,6 +56,7 @@ const SHELL = [
   'js/ui/activity.js',
   'js/ui/backup.js',
   'js/ui/budget.js',
+  'js/ui/caticon.js',
   'js/ui/cardtext.js',
   'js/ui/detail.js',
   'js/ui/dom.js',
