@@ -17,7 +17,7 @@
    redirects /spend/index.html to /spend/, so the shell is cached as './'
    only, and every stored response is copied without its redirect flag. */
 
-const VERSION = '2026-09-27.1';
+const VERSION = '2026-09-27.2';
 const CACHE = 'spend-' + VERSION;
 
 const SHELL = [
