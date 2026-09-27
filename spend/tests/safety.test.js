@@ -39,9 +39,9 @@ describe('backup', () => {
     assert.equal(JSON.stringify(buildBackup(shuffled, 'x')), JSON.stringify(buildBackup(data, 'x')));
   });
 
-  test('refuses what is not a Spend backup', () => {
+  test('refuses what is not a Worthday backup', () => {
     assert.match(parseBackup('nope').error, /not valid JSON/);
-    assert.match(parseBackup('{"app":"other"}').error, /not a Spend backup/);
+    assert.match(parseBackup('{"app":"other"}').error, /not a Worthday backup/);
     assert.match(parseBackup(JSON.stringify({ app: 'indi-spend', schemaVersion: SCHEMA_VERSION + 1, data: {} })).error, /newer version/);
     assert.match(parseBackup(JSON.stringify({ app: 'indi-spend', schemaVersion: 'x', data: {} })).error, /schema/);
     assert.match(parseBackup(JSON.stringify({ app: 'indi-spend', schemaVersion: 1, data: { transactions: [{ id: 'x', amount: 1.5, date: '2026-01-01' }] } })).error, /damaged/);
@@ -62,7 +62,7 @@ describe('backup', () => {
   });
 
   test('filename', () => {
-    assert.equal(backupFilename('2026-09-26'), 'spend-backup-2026-09-26.json');
+    assert.equal(backupFilename('2026-09-26'), 'worthday-backup-2026-09-26.json');
   });
 });
 

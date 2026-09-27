@@ -19,7 +19,7 @@ test('SHELL lists exactly the files the app needs offline', () => {
   const listed = [...block.matchAll(/'([^']+)'/g)].map((m) => m[1]).filter((f) => f !== './');
   const onDisk = [
     'manifest.webmanifest',
-    ...walk(join(root, 'css')), ...walk(join(root, 'js')), ...walk(join(root, 'icons')),
+    ...walk(join(root, 'css')), ...walk(join(root, 'fonts')), ...walk(join(root, 'js')), ...walk(join(root, 'icons')),
   ].filter((f) => !f.endsWith('.DS_Store')).map((f) => f.split('\\').join('/'));
 
   const missing = onDisk.filter((f) => !listed.includes(f));
